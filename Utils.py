@@ -8,5 +8,5 @@ def get_macro_block(x, y, image, macroblock_size):
     """
 
     return image[y:min(macroblock_size + y, image.shape[0]), x:min(macroblock_size + x, image.shape[1])]
-
+`    
     pass
