@@ -1,22 +1,27 @@
 import numpy as np
 
 
-def mad(i_frame_block: np.ndarray, current_frame_block: np.ndarray, macro_block_size: int):
+def mad(current_macro_block: np.ndarray, reference_frame_block: np.ndarray, macro_block_size: int) -> float:
     """
     Mean Absolute Difference (MAD).
 
-    :param i_frame_block: A macro-block from the i-frame which is a Numpy array containing RGB tuples.
-    :param current_frame_block: A macro-block from the current frame which is a Numpy array containing RGB tuples.
-    :param macro_block_size: An int representing the size of the macro-block.
-    :return:
+    :param current_macro_block: A macro-block from the current frame which is a Numpy array containing RGB triples.
+    :param reference_frame_block: A macro-block from the reference frame which is a Numpy array containing RGB triples.
+    :param macro_block_size: An int representing the size (width/high) of the macro-blocks.
+    :return: A float used as a metric for evaluating a macro-block with another macro-block.
     """
-    pass
+    differences = np.abs(current_macro_block - reference_frame_block)
+    return np.sum(differences) / (macro_block_size * macro_block_size)
 
 
-def mse():
+def mse(current_macro_block: np.ndarray, reference_frame_block: np.ndarray, macro_block_size: int) -> float:
     """
     Mean Squared Error (MSE).
 
-    :return:
+    :param current_macro_block: A macro-block from the current frame which is a Numpy array containing RGB triples.
+    :param reference_frame_block: A macro-block from the reference frame which is a Numpy array containing RGB triples.
+    :param macro_block_size: An int representing the size (width/high) of the macro-blocks.
+    :return: A float used as a metric for evaluating a macro-block with another macro-block.
     """
-    pass
+    differences = np.square(current_macro_block - reference_frame_block)
+    return np.sum(differences) / (macro_block_size * macro_block_size)
