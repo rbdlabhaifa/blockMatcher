@@ -49,10 +49,11 @@ def three_step_search(current_frame: np.ndarray, reference_frame: np.ndarray, x:
         for p in (p1, p2, p3, p4, p5, p6, p7, p8, p9):
             p_macro_block = slice_macro_block(p[0], p[1], reference_frame_search_area, block_size)
             # FIXME: for some reason this returns the same score over and over again...
-            cost = cost_function(current_frame_block, p_macro_block, block_size)
+            cost = cost_function(current_frame_block, p_macro_block)
             if cost < min_cost:
                 min_cost = cost
                 best_macro_block = p
         # Cut the step distance by 2.
         step //= 2
+    best_macro_block = max(0, best_macro_block[0]), max(0, best_macro_block[1])
     return best_macro_block
