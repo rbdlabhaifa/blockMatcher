@@ -7,7 +7,7 @@ from utils import get_macro_block
 
 
 def three_step_search(current_frame_block: np.ndarray, reference_frame_search_area: np.ndarray, block_size: int,
-                      cost_function: Callable = mad) -> np.ndarray:
+                      cost_function: Callable = mad) -> tuple:
     """
     Three-Step Search Algorithm.
 
@@ -18,7 +18,6 @@ def three_step_search(current_frame_block: np.ndarray, reference_frame_search_ar
     :return: A tuple containing the x-y coordinates of the center pixel of the best matching macro-block.
     """
     step = 4
-    half_block_size = block_size // 2
     x = current_frame_block.shape[0] // 2
     y = current_frame_block.shape[1] // 2
     best_macro_block = None
@@ -34,12 +33,11 @@ def three_step_search(current_frame_block: np.ndarray, reference_frame_search_ar
         p8 = (x + step, y - step)
         p9 = (x - step, y + step)
         for p in (p1, p2, p3, p4, p5, p6, p7, p8, p9):
-            p_macro_block = get_macro_block(p[0] - half_block_size, p[1] - half_block_size, reference_frame_search_area,
-                                            block_size)
+            p_macro_block = get_macro_block(p[0], p[1], reference_frame_search_area, block_size)
             cost = cost_function(current_frame_block, p_macro_block, block_size)
             if cost < min_cost:
                 min_cost = cost
-                best_macro_block = p_macro_block
+                best_macro_block = p
         step //= 2
     return best_macro_block
 
