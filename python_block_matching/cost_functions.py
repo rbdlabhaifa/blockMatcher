@@ -10,8 +10,8 @@ def mad(current_macro_block: np.ndarray, reference_frame_block: np.ndarray, macr
     :param macro_block_size: An int representing the size (width/high) of the macro-blocks.
     :return: A float used as a metric for evaluating a macro-block with another macro-block.
     """
-    differences = np.abs(current_macro_block - reference_frame_block)
-    return np.sum(differences) / (macro_block_size * macro_block_size)
+
+    return np.sum(np.abs(np.subtract(current_macro_block, reference_frame_block))) / (macro_block_size ** 2)
 
 
 def mse(current_macro_block: np.ndarray, reference_frame_block: np.ndarray, macro_block_size: int) -> float:
@@ -23,5 +23,4 @@ def mse(current_macro_block: np.ndarray, reference_frame_block: np.ndarray, macr
     :param macro_block_size: An int representing the size (width/height) of the macro-blocks.
     :return: A float used as a metric for evaluating a macro-block with another macro-block.
     """
-    differences = np.square(current_macro_block - reference_frame_block)
-    return np.sum(differences) / (macro_block_size * macro_block_size)
+    return np.sum(np.abs(np.subtract(current_macro_block, reference_frame_block))) / (macro_block_size ** 2)
