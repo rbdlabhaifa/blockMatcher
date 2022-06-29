@@ -14,9 +14,17 @@ def get_macro_blocks(frame: np.ndarray, size: int) -> tuple:
             yield (x, y), frame[y:y + size, x:x + size]
 
 
-def slice_macro_block(frame: np.ndarray, x: int, y: int, size: int):
-    x = max(x, 0)
-    y = max(y, 0)
-    x = min(x, frame.shape[1] - size)
-    y = min(y, frame.shape[0] - size)
-    return frame[y:y + size, x:x  + size]
+def slice_macro_block(frame: np.ndarray, x: int, y: int, size: int) -> np.ndarray:
+    """
+    Slice and return a macro-block from a frame.
+     The macro-block's size is guaranteed, but there is no guarantee that (x, y) will be the top-left corner.
+
+    :param frame: The frame to slice a block from.
+    :param x: The X-coordinate of the top-left corner of the macro-block.
+    :param y: The Y-coordinate of the top-left corner of the macro-block.
+    :param size: The size of the macro-block.
+    :return: The macro-block.
+    """
+    x, y = max(x, 0), max(y, 0)
+    x, y = min(x, frame.shape[1] - size), min(y, frame.shape[0] - size)
+    return frame[y:y + size, x:x + size]
