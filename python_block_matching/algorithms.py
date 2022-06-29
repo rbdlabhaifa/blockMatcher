@@ -3,7 +3,7 @@ from .utils import *
 
 
 def three_step_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: int, y: int, block_size: int,
-                      cost_function: str = 'MAD', steps: int = 4) -> tuple:
+                      cost_function: str = 'MAD', steps: int = 4) -> Tuple[int, int]:
     """
     Three-Step Search Algorithm for Block-Matching.
 
