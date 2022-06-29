@@ -62,7 +62,8 @@ def test_algorithm(source: Union[str, List[str]], algorithm: Callable, block_siz
             gray_current_frame = grayscale(current_frame)
             for (x, y), macro_block in get_macro_blocks(gray_current_frame, block_size):
                 best_point = algorithm(gray_current_frame, gray_reference_frame, x, y, block_size)
-                reference_frame = cv2.arrowedLine(reference_frame, (x, y), best_point, (100, 255, 50), 1)
+                p = (x + block_size // 2, y + block_size // 2)
+                reference_frame = cv2.arrowedLine(reference_frame, p, best_point, (100, 255, 50), 1)
             cv2.imshow('Press SPACE to continue.', reference_frame)
             cv2.waitKey(100000000)
             reference_frame = current_frame
@@ -78,7 +79,8 @@ def test_algorithm(source: Union[str, List[str]], algorithm: Callable, block_siz
             current_frame = grayscale(images[1].copy())
             for (x, y), macro_block in get_macro_blocks(current_frame, block_size):
                 best_point = algorithm(current_frame, reference_frame, x, y, block_size)
-                images[0] = cv2.arrowedLine(images[0], (x, y), best_point, (100, 255, 50), 1)
+                p = (x + block_size // 2, y + block_size // 2)
+                images[0] = cv2.arrowedLine(images[0], p, best_point, (100, 255, 50), 1)
             cv2.imshow('Press SPACE to continue.', images[0])
             cv2.waitKey(100000000)
             images = images[1:]
