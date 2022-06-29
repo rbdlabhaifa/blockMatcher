@@ -18,18 +18,20 @@ def angle_between(v1, v2):
     v2_u = unit_vector(v2)
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
-    def generate_vector_data_file(vec_array, file_path):
-        f = open(file_path, "a")
-        if len(vec_array) > 0:
-            for mv in vec_array:
-                f.write(f"{mv[0, 0]},{mv[0, 1]},{mv[1, 0]},{mv[1, 1]}|")
-        f.close()
+def generate_vector_data_file(vec_array, file_path):
+    f = open(file_path, "a")
+    s = ''
+    if len(vec_array) > 0:
+        for mv in vec_array:
+            s += f"{mv[0, 0]},{mv[0, 1]},{mv[1, 0]},{mv[1, 1]}|"
+    f.write(s)
+    f.close()
 
 
 if __name__ == '__main__':
 
-    url1 = "/home/rani/mv_extractor/OUTPUT/checkboard"
-    url2 = "/home/rani/mv_extractor/OUTPUT/checkboard"
+    url1 = "Benchmarks/Checkboard Video/mv_frame_data"
+    url2 = "output"
 
     sum_of_mag_errors = 0
     sum_of_angle_errors = 0
@@ -46,7 +48,8 @@ if __name__ == '__main__':
         try:
             frame_file1 = open(url1 + "/frame" + str(frame) + ".txt", "r")
             frame_file2 = open(url2 + "/frame" + str(frame) + ".txt", "r")
-        except FileNotFoundError:
+        except FileNotFoundError as e:
+            print(e)
             running = False
             continue
         frame += 1
@@ -58,7 +61,12 @@ if __name__ == '__main__':
 
         for j in range(len(vectors1) - 1):
             vec1 = np.array(vectors1[j].split(",")).astype(int)
-            vec2 = np.array(vectors2[j].split(",")).astype(int)
+            try:
+                vec2 = np.array(vectors2[j].split(",")).astype(int)
+            except ValueError as e:
+                print(e)
+                print(frame, vectors2)
+                exit()
             mag_error = np.sqrt((int(vec2[2]) - int(vec2[0])) ** 2 + (int(vec2[3]) - int(vec2[1])) ** 2) - np.sqrt(
                 (int(vec1[2]) - int(vec1[0])) ** 2 + (int(vec1[3]) - int(vec1[1])) ** 2)
 
