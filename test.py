@@ -255,35 +255,48 @@ def main(anchorFrame, targetFrame, outfile="OUTPUT", saveOutput=False, blockSize
     return residualMetric, residualFrame
 
 if __name__ == "__main__":
-    anchorPath = "frame1.png"
-    targetPath = "frame2.png"
+    from mv_compare import generate_vector_data_file
+
     blockSize = 16
     searchArea = 7
-    target = cv2.imread(targetPath)
-    anchor = cv2.imread(anchorPath)
-    print(anchor)
-    h, w = anchor.shape[0], anchor.shape[1]
-    hSegments, wSegments = segmentImage(anchor, blockSize)
 
-    arrows = []
+    vid = cv2.VideoCapture('checkboard.h264')
+    suc, f = vid.read()
+    frame = 0
+    all_arrows = []
+    while suc:
+        target = f
+        suc, f = vid.read()
 
-    predicted = np.ones((h, w))*255
-    bcount = 0
-    for y in range(0, int(hSegments*blockSize), blockSize):
-        for x in range(0, int(wSegments*blockSize), blockSize):
-            bcount+=1
-            targetBlock = target[y:y+blockSize, x:x+blockSize] #get current macroblock
+        anchor = f
+        h, w = anchor.shape[0], anchor.shape[1]
+        hSegments, wSegments = segmentImage(anchor, blockSize)
 
-            anchorSearchArea = getAnchorSearchArea(x, y, anchor, blockSize, searchArea) #get anchor search area
+        arrows = []
 
-            #print("AnchorSearchArea: ", anchorSearchArea.shape)
+        predicted = np.ones((h, w))*255
+        bcount = 0
+        for y in range(0, int(hSegments*blockSize), blockSize):
+            for x in range(0, int(wSegments*blockSize), blockSize):
 
-            anchorBlock = getBestMatch(targetBlock, anchorSearchArea, blockSize) #get best anchor macroblock
-            anchorBlock = (x + anchorBlock[0], y + anchorBlock[1])
-            arrows.append(((x, y), anchorBlock))
+                bcount+=1
+                targetBlock = target[y:y+blockSize, x:x+blockSize] #get current macroblock
 
-    img = cv2.imread('frame1.png')
-    for a, b in arrows:
-        img = cv2.arrowedLine(img, a, b, (0, 255, 0), 1)
-    cv2.imshow('hi', img)
-    cv2.waitKey(10000)
+                anchorSearchArea = getAnchorSearchArea(x, y, anchor, blockSize, searchArea) #get anchor search area
+
+                #print("AnchorSearchArea: ", anchorSearchArea.shape)
+                anchorBlock = getBestMatch(targetBlock, anchorSearchArea, blockSize) #get best anchor macroblock
+                anchorBlock = (x + anchorBlock[0], y + anchorBlock[1])
+
+
+                if (x,y ) != anchorBlock:
+                    arrows.append(((x + blockSize // 2, y + blockSize//2), anchorBlock))
+        all_arrows.append(arrows)
+        arrows = np.array(arrows)
+        print(frame)
+        cop = target.copy()
+        for arrow in arrows:
+            cop = cv2.arrowedLine(cop, arrow[0], arrow[1], (0, 255, 0), 1)
+        frame += 1
+        cv2.imshow('ur mom', cop)
+        cv2.waitKey(199999)
