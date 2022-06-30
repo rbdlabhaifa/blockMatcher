@@ -39,16 +39,16 @@ def diamond_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: in
         p3 = (cx, cy + step_size)
         p4 = (cx, cy - step_size)
         p5 = (cx - step_size, cy)
-        p6 = (cx + step_size//2, cy + step_size//2)
-        p7 = (cx - step_size//2, cy - step_size//2)
-        p8 = (cx + step_size//2, cy - step_size//2)
-        p9 = (cx - step_size//2, cy + step_size//2)
+        p6 = (cx + step_size // 2, cy + step_size // 2)
+        p7 = (cx - step_size // 2, cy - step_size // 2)
+        p8 = (cx + step_size // 2, cy - step_size // 2)
+        p9 = (cx - step_size // 2, cy + step_size // 2)
         for p in (p1, p2, p3, p4, p5, p6, p7, p8, p9):
             # Get the macro-block of the point from reference frame.
             ref_macro_block = slice_macro_block(reference_frame, p[0] - half_block_size, p[1] - half_block_size,
                                                 block_size)
             # Calculate the cost between the blocks.
-            cost = cost_function(ref_macro_block, macro_block)
+            cost = cost_function(macro_block, ref_macro_block)
             # Compare the cost to the minimum and update (cx, cy) and min_cost if a smaller cost was calculated.
             if cost < min_cost:
                 min_cost = cost
@@ -68,7 +68,7 @@ def diamond_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: in
         ref_macro_block = slice_macro_block(reference_frame, p[0] - half_block_size, p[1] - half_block_size,
                                             block_size)
         # Calculate the cost between the blocks.
-        cost = cost_function(ref_macro_block, macro_block)
+        cost = cost_function(macro_block, ref_macro_block)
         # Compare the cost to the minimum and update (cx, cy) and min_cost if a smaller cost was calculated.
         if cost < min_cost:
             min_cost = cost
