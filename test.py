@@ -2,5 +2,5 @@ from python_block_matching.utils import *
 from python_block_matching.cost_functions import *
 from python_block_matching.algorithms import *
 
-
-test_algorithm('vid.mp4', three_step_search)
+l = lambda *args: two_dimensional_logarithmic_search(*args, cost_function='MSE')
+test_algorithm('allmost360.h264', l)

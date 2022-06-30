@@ -65,7 +65,6 @@ if __name__ == '__main__':
                 vec2 = np.array(vectors2[j].split(",")).astype(int)
             except ValueError as e:
                 print(e)
-                print(frame, vectors2)
                 exit()
             mag_error = np.sqrt((int(vec2[2]) - int(vec2[0])) ** 2 + (int(vec2[3]) - int(vec2[1])) ** 2) - np.sqrt(
                 (int(vec1[2]) - int(vec1[0])) ** 2 + (int(vec1[3]) - int(vec1[1])) ** 2)

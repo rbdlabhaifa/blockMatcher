@@ -42,13 +42,14 @@ def grayscale(frame: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 
-def test_algorithm(source: Union[str, List[str]], algorithm: Callable, block_size: int = 16) -> None:
+def test_algorithm(source: Union[str, List[str]], algorithm: Callable, bsize: int = 16, cost_f: str = 'MAD') -> None:
     """
     Tests an algorithm (from algorithms.py) or any function that gets 2 frames, a point and size, and returns a point.
 
     :param source: Either a string of the path of a video or a list that contains strings of paths to specific images.
     :param algorithm: The algorithm function to check or any function that gets matching parameters and returns a point.
-    :param block_size: The size of the macro-blocks in the frame.
+    :param bsize: The size of the macro-blocks in the frame.
+    :param cost_f: The cost function to use, can only be either 'MAD' or 'MSE'.
     :return: None
     """
     if isinstance(source, str):
@@ -60,10 +61,11 @@ def test_algorithm(source: Union[str, List[str]], algorithm: Callable, block_siz
             if not read_successfully:
                 break
             gray_current_frame = grayscale(current_frame)
-            for (x, y), macro_block in get_macro_blocks(gray_current_frame, block_size):
-                best_point = algorithm(gray_current_frame, gray_reference_frame, x, y, block_size)
-                p = (x + block_size // 2, y + block_size // 2)
-                reference_frame = cv2.arrowedLine(reference_frame, p, best_point, (100, 255, 50), 1)
+            for (x, y), macro_block in get_macro_blocks(gray_current_frame, bsize):
+                best_point = algorithm(gray_current_frame, gray_reference_frame, x, y, bsize, cost_f)
+                p = (x + bsize // 2, y + bsize // 2)
+                if p != best_point:
+                    reference_frame = cv2.arrowedLine(reference_frame, best_point, p, (100, 255, 50), 1)
             cv2.imshow('Press SPACE to continue.', reference_frame)
             cv2.waitKey(100000000)
             reference_frame = current_frame
@@ -77,10 +79,11 @@ def test_algorithm(source: Union[str, List[str]], algorithm: Callable, block_siz
         while len(images) > 1:
             reference_frame = grayscale(images[0].copy())
             current_frame = grayscale(images[1].copy())
-            for (x, y), macro_block in get_macro_blocks(current_frame, block_size):
-                best_point = algorithm(current_frame, reference_frame, x, y, block_size)
-                p = (x + block_size // 2, y + block_size // 2)
-                images[0] = cv2.arrowedLine(images[0], p, best_point, (100, 255, 50), 1)
+            for (x, y), macro_block in get_macro_blocks(current_frame, bsize):
+                best_point = algorithm(current_frame, reference_frame, x, y, bsize, cost_f)
+                p = (x + bsize // 2, y + bsize // 2)
+                if p != best_point:
+                    images[0] = cv2.arrowedLine(images[0], best_point, p, (100, 255, 50), 1)
             cv2.imshow('Press SPACE to continue.', images[0])
             cv2.waitKey(100000000)
             images = images[1:]
