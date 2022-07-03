@@ -1,9 +1,10 @@
 import numpy as np
 import cv2
+from .cost_functions import *
 from typing import Tuple, Union, List, Callable
 
 
-def get_macro_blocks(frame: np.ndarray, size: int) -> Tuple[Tuple[int, int], np.ndarray]:
+def get_macro_blocks(frame: np.ndarray, size: int) -> Tuple[int, int]:
     """
     Returns a numpy array that contains the center points of all macro-blocks in the frame.
 
@@ -13,7 +14,32 @@ def get_macro_blocks(frame: np.ndarray, size: int) -> Tuple[Tuple[int, int], np.
     """
     for y in range(0, size * (frame.shape[0] // size), size):
         for x in range(0, size * (frame.shape[1] // size), size):
-            yield (x, y), frame[y:y + size, x:x + size]
+            yield x, y
+
+
+def intra_frame_mb_partition(frame: np.ndarray, max_size=16, min_size=8, threshold=30):
+    half_size = max_size // 2
+    for tlx, tly in get_macro_blocks(frame, max_size):
+        mb = slice_macro_block(frame, tlx, tly, max_size)
+        v1, v2 = mb[:half_size, :], mb[half_size:, :]
+        h1, h2 = mb[:, :half_size], mb[:, half_size:]
+        vertical_cost = sse(v1, v2)
+        horizontal_cost = sse(h1, h2)
+        print(f'vertical_cost={vertical_cost}', f'horizontal={horizontal_cost}')
+        if vertical_cost > threshold and horizontal_cost > threshold:
+            yield tlx, tly, half_size, half_size
+            yield tlx + half_size, tly, half_size, half_size
+            yield tlx, tly + half_size, half_size, half_size
+            yield tlx + half_size, tly + half_size, half_size, half_size
+        elif max(vertical_cost, horizontal_cost) > threshold:
+            if horizontal_cost > vertical_cost:
+                yield tlx, tly, half_size, max_size
+                yield tlx + half_size, tly, half_size, max_size
+            else:
+                yield tlx, tly, max_size, half_size
+                yield tlx, tly + half_size, max_size, half_size
+        else:
+            yield tlx, tly, max_size, max_size
 
 
 def slice_macro_block(frame: np.ndarray, x: int, y: int, size: int) -> np.ndarray:
