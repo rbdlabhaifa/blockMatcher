@@ -17,27 +17,48 @@ def get_macro_blocks(frame: np.ndarray, size: int) -> Tuple[int, int]:
             yield x, y
 
 
-def intra_frame_mb_partition(frame: np.ndarray, max_size=16, min_size=8, threshold=30):
+def intra_frame_mb_partition(frame: np.ndarray, threshold, frame2, max_size=16, min_size=4, func=''):
     half_size = max_size // 2
     for tlx, tly in get_macro_blocks(frame, max_size):
+        matching_mb = func(frame, frame2, tlx, tly, max_size)
+        matching_mb = matching_mb[0] - half_size, matching_mb[1] - half_size
+        matching_mb = slice_macro_block(frame2, *matching_mb, max_size)
         mb = slice_macro_block(frame, tlx, tly, max_size)
         v1, v2 = mb[:half_size, :], mb[half_size:, :]
         h1, h2 = mb[:, :half_size], mb[:, half_size:]
         vertical_cost = sse(v1, v2)
         horizontal_cost = sse(h1, h2)
-        print(f'vertical_cost={vertical_cost}', f'horizontal={horizontal_cost}')
         if vertical_cost > threshold and horizontal_cost > threshold:
-            yield tlx, tly, half_size, half_size
-            yield tlx + half_size, tly, half_size, half_size
-            yield tlx, tly + half_size, half_size, half_size
-            yield tlx + half_size, tly + half_size, half_size, half_size
-        elif max(vertical_cost, horizontal_cost) > threshold:
-            if horizontal_cost > vertical_cost:
-                yield tlx, tly, half_size, max_size
-                yield tlx + half_size, tly, half_size, max_size
-            else:
-                yield tlx, tly, max_size, half_size
-                yield tlx, tly + half_size, max_size, half_size
+            b1 = (tlx, tly, half_size, half_size)
+            b2 = (tlx + half_size, tly, half_size, half_size)
+            b3 = (tlx, tly + half_size, half_size, half_size)
+            b4 = (tlx + half_size, tly + half_size, half_size, half_size)
+            q_size = half_size // 2
+            for b in (b1, b2, b3, b4):
+                mb = slice_macro_block(frame, b[0], b[1], b[2])
+                v1, v2 = mb[:q_size, :], mb[q_size:, :]
+                h1, h2 = mb[:, :q_size], mb[:, q_size:]
+                vertical_cost = sse(v1, v2)
+                horizontal_cost = sse(h1, h2)
+                if vertical_cost > threshold and horizontal_cost > threshold:
+                    yield b[0], b[1], q_size, q_size
+                    yield b[0] + q_size, b[1], q_size, q_size
+                    yield b[0], b[1] + q_size, q_size, q_size
+                    yield b[0] + q_size, b[1] + q_size, q_size, q_size
+                elif vertical_cost > threshold:
+                    yield b[0], b[1], half_size, q_size
+                    yield b[0], b[1] + q_size, half_size, q_size
+                elif horizontal_cost > threshold:
+                    yield b[0], b[1], q_size, half_size
+                    yield b[0], b[1] + q_size, q_size, half_size
+                else:
+                    yield b
+        elif vertical_cost > threshold:
+            yield tlx, tly, half_size, max_size
+            yield tlx + half_size, tly, half_size, max_size
+        elif horizontal_cost > threshold:
+            yield tlx, tly, max_size, half_size
+            yield tlx, tly + half_size, max_size, half_size
         else:
             yield tlx, tly, max_size, max_size
 
