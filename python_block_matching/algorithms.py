@@ -16,11 +16,14 @@ def three_step_search(current_frame: np.ndarray, reference_frame: np.ndarray, x:
     :param step_size: The distance of points to search from the origin search point. (SHOULD NOT BE CHANGED!)
     :return: The center point of the best matching macro-block in the reference frame.
     """
-    # Set the cost function to be 'MAD' or 'MSE'.
     if cost_function == 'MAD':
         cost_function = mad
     elif cost_function == 'MSE':
         cost_function = mse
+    elif cost_function == 'SAD':
+        cost_function = sad
+    elif cost_function == 'SSE':
+        cost_function = sse
     else:
         raise ValueError(f'cost_function can only be \'MAD\' or \'MSE\', not {cost_function}.')
     # Get the macro-block from the current frame.
@@ -64,6 +67,10 @@ def exhaustive_search(current_frame: np.ndarray, reference_frame: np.ndarray, x,
         cost_function = mad
     elif cost_function == 'MSE':
         cost_function = mse
+    elif cost_function == 'SAD':
+        cost_function = sad
+    elif cost_function == 'SSE':
+        cost_function = sse
     else:
         raise ValueError(f'cost_function can only be \'MAD\' or \'MSE\', not {cost_function}.')
     # Get the macro-block from the current frame.
