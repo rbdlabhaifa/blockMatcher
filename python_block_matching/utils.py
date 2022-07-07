@@ -88,6 +88,11 @@ def grayscale(frame: np.ndarray) -> np.ndarray:
     """
     return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
+def luminance(frame):
+    frame = np.multiply(frame, np.array([0.0722, 0.7152, 0.2126]), casting='safe')
+    frame = np.sum(frame, axis=2)
+    return frame
+
 
 def test_algorithm(source: Union[str, List[str]], algorithm: Callable, bsize: int = 16, cost_f: str = 'MAD') -> None:
     """
