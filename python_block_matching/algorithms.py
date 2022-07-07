@@ -56,6 +56,31 @@ def three_step_search(current_frame: np.ndarray, reference_frame: np.ndarray, x:
     return cx, cy
 
 
+def exhaustive_search(current_frame: np.ndarray, reference_frame: np.ndarray, x, y,
+                                       block_size: tuple, cost_function: str = 'MAD',
+                                       search_size: int = 54) -> Tuple[int, int]:
+    # Set the cost function to be 'MAD' or 'MSE'.
+    if cost_function == 'MAD':
+        cost_function = mad
+    elif cost_function == 'MSE':
+        cost_function = mse
+    else:
+        raise ValueError(f'cost_function can only be \'MAD\' or \'MSE\', not {cost_function}.')
+    # Get the macro-block from the current frame.
+    macro_block = slice_macro_block(current_frame, x, y, block_size)
+    # Set the starting point as the center of the macro-block.
+    half_block_size = block_size[0] // 2, block_size[1] // 2
+    cx, cy = x + half_block_size, y + half_block_size
+    # Keep the cost of (cx, cy), and update it and (cx, cy) if a block with smaller cost is found.
+    min_cost = float('inf')
+
+
+    return cx, cy
+
+
+
+
+
 def two_dimensional_logarithmic_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: int, y: int,
                                        block_size: int, cost_function: str = 'MAD',
                                        step_size: int = 4) -> Tuple[int, int]:
