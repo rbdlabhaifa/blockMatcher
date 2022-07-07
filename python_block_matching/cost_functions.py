@@ -33,7 +33,6 @@ def sse(current_macro_block: np.ndarray, reference_frame_block: np.ndarray) -> f
     :param reference_frame_block: A macro-block from the reference frame which is a Numpy array containing RGB triples.
     :return: A float used as a metric for evaluating a macro-block with another macro-block.
     """
-    block_area = current_macro_block.shape[0] * current_macro_block.shape[1]
     return np.sum(np.square(np.subtract(current_macro_block, reference_frame_block)))
 
 

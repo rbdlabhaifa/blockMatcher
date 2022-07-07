@@ -62,8 +62,7 @@ def intra_frame_mb_partition(frame: np.ndarray, threshold, max_size=16):
             yield tlx, tly, max_size, max_size
 
 
-
-def slice_macro_block(frame: np.ndarray, x: int, y: int, size: int) -> np.ndarray:
+def slice_macro_block(frame: np.ndarray, x: int, y: int, size: tuple) -> np.ndarray:
     """
     Slice and return a macro-block from a frame.
     The macro-block's size is guaranteed, but there is no guarantee that (x, y) will be the top-left corner.
@@ -71,12 +70,13 @@ def slice_macro_block(frame: np.ndarray, x: int, y: int, size: int) -> np.ndarra
     :param frame: The frame to slice a block from.
     :param x: The X-coordinate of the top-left corner of the macro-block.
     :param y: The Y-coordinate of the top-left corner of the macro-block.
-    :param size: The size of the macro-block.
+    :param size: The size of the macro-block (width, height).
     :return: The macro-block.
     """
+    x, y = int(x), int(y)
     x, y = max(x, 0), max(y, 0)
-    x, y = min(x, frame.shape[1] - size), min(y, frame.shape[0] - size)
-    return frame[y:y + size, x:x + size]
+    x, y = min(x, frame.shape[1] - size[0]), min(y, frame.shape[0] - size[1])
+    return frame[y:y + size[1], x:x + size[0]]
 
 
 def grayscale(frame: np.ndarray) -> np.ndarray:

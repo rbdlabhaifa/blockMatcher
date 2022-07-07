@@ -2,7 +2,7 @@ from .cost_functions import *
 from .utils import *
 
 
-def three_step_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: int, y: int, block_size: int,
+def three_step_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: int, y: int, block_size: (int, int),
                       cost_function: str = 'MAD', step_size: int = 4) -> Tuple[int, int]:
     """
     Three-Step Search Algorithm for Block-Matching.
@@ -11,7 +11,7 @@ def three_step_search(current_frame: np.ndarray, reference_frame: np.ndarray, x:
     :param reference_frame: The reference frame gray-scaled and represented as a numpy array.
     :param x: The X-coordinate of the top-left point of a macro-block in the current frame to perform the search on.
     :param y: The Y-coordinate of the top-left point of a macro-block in the current frame to perform the search on.
-    :param block_size: The size of the macro-block.
+    :param block_size: (width, height) of the macro block.
     :param cost_function: The cost function to use. Can be either 'MAD' or 'MSE'.
     :param step_size: The distance of points to search from the origin search point. (SHOULD NOT BE CHANGED!)
     :return: The center point of the best matching macro-block in the reference frame.
@@ -26,8 +26,8 @@ def three_step_search(current_frame: np.ndarray, reference_frame: np.ndarray, x:
     # Get the macro-block from the current frame.
     macro_block = slice_macro_block(current_frame, x, y, block_size)
     # Set the starting point as the center of the macro-block.
-    half_block_size = block_size // 2
-    cx, cy = x + half_block_size, y + half_block_size
+    half_block_size = (block_size[0] // 2, block_size[1] // 2)
+    cx, cy = x + half_block_size[0], y + half_block_size[1]
     # Keep the cost of (cx, cy), and update it and (cx, cy) if a block with smaller cost is found.
     min_cost = float('inf')
     while step_size >= 1:
@@ -43,7 +43,7 @@ def three_step_search(current_frame: np.ndarray, reference_frame: np.ndarray, x:
         p9 = (cx - step_size, cy + step_size)
         for p in (p1, p2, p3, p4, p5, p6, p7, p8, p9):
             # Get the macro-block of the point from reference frame.
-            ref_macro_block = slice_macro_block(reference_frame, p[0] - half_block_size, p[1] - half_block_size,
+            ref_macro_block = slice_macro_block(reference_frame, p[0] - half_block_size[0], p[1] - half_block_size[1],
                                                 block_size)
             # Calculate the cost between the blocks.
             cost = cost_function(macro_block, ref_macro_block)
@@ -128,8 +128,8 @@ def two_dimensional_logarithmic_search(current_frame: np.ndarray, reference_fram
     return cx, cy
 
 
-def diamond_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: int, y: int, block_width: int,
-                   block_height: int, cost_function: str = 'MAD', step_size: int = 2) -> Tuple[int, int]:
+def diamond_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: int, y: int, block_size: tuple,
+                   cost_function: str = 'MAD', step_size: int = 2) -> Tuple[int, int]:
     """
     Diamond Search Algorithm for Block-Matching.
 
@@ -137,7 +137,7 @@ def diamond_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: in
     :param reference_frame: The reference frame gray-scaled and represented as a numpy array.
     :param x: The X-coordinate of the top-left point of a macro-block in the current frame to perform the search on.
     :param y: The Y-coordinate of the top-left point of a macro-block in the current frame to perform the search on.
-    :param block_width: The size of the macro-block.
+    :param block_size: (width, height)
     :param cost_function: The cost function to use. Can be either 'MAD' or 'MSE'.
     :param step_size: distance of searched points from the search origin. (SHOULD NOT BE CHANGED!)
     :return: The center point of the best matching macro-block in the reference frame.
@@ -147,13 +147,17 @@ def diamond_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: in
         cost_function = mad
     elif cost_function == 'MSE':
         cost_function = mse
+    elif cost_function == 'SAD':
+        cost_function = sad
+    elif cost_function == 'SSE':
+        cost_function = sse
     else:
         raise ValueError(f'cost_function can only be \'MAD\' or \'MSE\', not {cost_function}.')
     # Get the macro-block from the current frame.
     macro_block = slice_macro_block(current_frame, x, y, block_size)
     # Set the starting point as the center of the macro-block.
-    half_block_size = block_size // 2
-    cx, cy = x + half_block_size, y + half_block_size
+    half_block_size = (block_size[0]//2,block_size[1]//2)
+    cx, cy = x + half_block_size[0], y + half_block_size[1]
     # Keep the cost of (cx, cy), and update it and (cx, cy) if a block with smaller cost is found.
     min_cost = float('inf')
 
@@ -171,7 +175,7 @@ def diamond_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: in
         p9 = (cx - step_size // 2, cy + step_size // 2)
         for p in (p1, p2, p3, p4, p5, p6, p7, p8, p9):
             # Get the macro-block of the point from reference frame.
-            ref_macro_block = slice_macro_block(reference_frame, p[0] - half_block_size, p[1] - half_block_size,
+            ref_macro_block = slice_macro_block(reference_frame, p[0] - half_block_size[0], p[1] - half_block_size[1],
                                                 block_size)
             # Calculate the cost between the blocks.
             cost = cost_function(macro_block, ref_macro_block)
@@ -191,7 +195,7 @@ def diamond_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: in
     p5 = (cx, cy + step_size)
     for p in (p1, p2, p3, p4, p5):
         # Get the macro-block of the point from reference frame.
-        ref_macro_block = slice_macro_block(reference_frame, p[0] - half_block_size, p[1] - half_block_size,
+        ref_macro_block = slice_macro_block(reference_frame, p[0] - half_block_size[0], p[1] - half_block_size[1],
                                             block_size)
         # Calculate the cost between the blocks.
         cost = cost_function(macro_block, ref_macro_block)
