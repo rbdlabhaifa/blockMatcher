@@ -72,10 +72,17 @@ class BMVideo:
         if isinstance(self.frames, str):
             video = cv2.VideoCapture(self.frames)
             frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+            if frame_count < 0:
+                frame_count = 1
+                video_copy = cv2.VideoCapture(self.frames)
+                read_successfully, frame = video_copy.read()
+                while read_successfully:
+                    read_successfully, frame = video_copy.read()
+                    frame_count += 1
             item = (frame_count + item) if item < 0 else item
             assert 0 <= item < frame_count
             _, frame = video.read()
-            for i in range(item):
+            for i in range(item - 1):
                 _, frame = video.read()
             return BMFrame(frame)
         else:
