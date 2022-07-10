@@ -115,8 +115,8 @@ class BlockMatching:
         pass
 
     @staticmethod
-    def generate_macro_blocks(frame: np.ndarray, block_width: int, block_height: int,
-                              partition_function: str, cost_function: str = 'SAD') -> Tuple[int, int, int, int]:
+    def generate_macro_blocks(frame: np.ndarray, block_width: int = 16, block_height: int = 16,
+                              partition_function: str = 'FIXED', cost_function: str = 'SAD') -> Tuple[int, int, int, int]:
         """
         Generate macro-blocks in a frame.
 
