@@ -14,7 +14,7 @@ def fixed_size_macro_blocks(frame: np.ndarray, block_width: int,
     :param block_height: The height of the macro-block.
     :return: The top-left points and of all macro-blocks in a frame and the macro-blocks.
     """
-    frame_width, frame_height = frame.shape
+    frame_width, frame_height = frame.shape[:2]
     for y in range(0, block_height * (frame_height // block_height), block_height):
         for x in range(0, block_width * (frame_width // block_width), block_width):
             yield x, y, frame[y:y + block_height, x:x + block_width]

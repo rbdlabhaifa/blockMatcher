@@ -62,7 +62,7 @@ class BMVideo:
         assert isinstance(video_or_frames, str) or isinstance(video_or_frames, list)
         self.frames = video_or_frames
 
-    def __getitem__(self, item) -> Union[BMFrame, List[BMFrame, ...]]:
+    def __getitem__(self, item) -> BMFrame:
         if isinstance(item, slice):
             frames = []
             for i in range(item.start, item.stop, item.step):
@@ -108,7 +108,7 @@ class BlockMatching:
         search_function = SEARCH_FUNCTIONS[search_function]
         for x, y, w, h in current_frame_blocks:
             sx, sy = search_function(current_frame, reference_frame, x, y, w, h, cost_function, step_size)
-            yield sx, sy, x, y
+            yield sx + w // 2, sy + h // 2, x + w // 2, y + h // 2
 
     @staticmethod
     def extract_motion_vectors():
@@ -129,7 +129,7 @@ class BlockMatching:
         """
         partition_function = PARTITIONING_FUNCTION[partition_function]
         for x, y, macro_block in partition_function(frame, block_width, block_height, cost_function):
-            yield x, y, *macro_block.shape
+            yield x, y, *macro_block.shape[:2]
 
     @staticmethod
     def extract_macro_blocks():

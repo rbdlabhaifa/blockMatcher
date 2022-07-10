@@ -1,6 +1,8 @@
 from .cost_functions import *
 from .utils import *
 
+from typing import Tuple
+
 
 def three_step_search(current_frame: np.ndarray, reference_frame: np.ndarray, x: int, y: int, block_size: (int, int),
                       cost_function: str = 'MAD', step_size: int = 4) -> Tuple[int, int]:
