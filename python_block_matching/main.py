@@ -90,21 +90,23 @@ class BMVideo:
 class BlockMatching:
 
     @staticmethod
-    def generate_motion_vectors(current_frame: np.ndarray, reference_frame: np.ndarray,
-                                current_frame_blocks: List[Tuple[int, int, int, int]],
-                                search_function: str, cost_function: str,
-                                step_size: int = 0) -> Tuple[int, int, int, int]:
+    def get_motion_vectors(current_frame: np.ndarray, reference_frame: np.ndarray,
+                           search_function: str = 'DS', cost_function: str = 'SAD', step_size: int = 0,
+                           current_frame_blocks: List[Tuple[int, int, int, int]] = None
+                           ) -> Tuple[int, int, int, int]:
         """
         Generates motion vectors from the reference frame to the current frame.
 
         :param current_frame: The current frame as a numpy array.
         :param reference_frame: The reference frame as a numpy array.
-        :param current_frame_blocks: The macro-blocks in the current frame.
         :param search_function: The function to search for the best macro-blocks with.
         :param cost_function: The cost function to use for the search.
         :param step_size: The step size to use in the search (0 to use the default of the search function).
+        :param current_frame_blocks: The macro-blocks int the current frame to run the search on.
         :return: The start and end points of the vectors.
         """
+        if current_frame_blocks is None:
+            current_frame_blocks = BlockMatching.get_macro_blocks(current_frame)
         search_function = SEARCH_FUNCTIONS[search_function]
         for x, y, w, h in current_frame_blocks:
             sx, sy = search_function(current_frame, reference_frame, x, y, w, h, cost_function, step_size)
@@ -116,8 +118,9 @@ class BlockMatching:
         pass
 
     @staticmethod
-    def generate_macro_blocks(frame: np.ndarray, block_width: int, block_height: int,
-                              partition_function: str, cost_function: str = 'SAD') -> Tuple[int, int, int, int]:
+    def get_macro_blocks(frame: np.ndarray, block_width: int = 16, block_height: int = 16,
+                         partition_function: str = 'FIXED',
+                         cost_function: str = 'SAD') -> List[Tuple[int, int, int, int]]:
         """
         Generate macro-blocks in a frame.
 
@@ -126,11 +129,13 @@ class BlockMatching:
         :param block_height: The max height of the macro-blocks.
         :param partition_function: The function to partition the frame with.
         :param cost_function: The cost function to use for the partitioning function.
-        :return: The macro-blocks top-left point and their width and height.
+        :return: A list that contains the top-left point of the macro-blocks and their width and height.
         """
+        macro_blocks = []
         partition_function = PARTITIONING_FUNCTION[partition_function]
         for x, y, macro_block in partition_function(frame, block_width, block_height, cost_function):
-            yield x, y, *macro_block.shape
+            macro_blocks.append((x, y, int(macro_block.shape[0]), int(macro_block.shape[1])))
+        return macro_blocks
 
     @staticmethod
     def extract_macro_blocks():
