@@ -62,7 +62,7 @@ class BMVideo:
         assert isinstance(video_or_frames, str) or isinstance(video_or_frames, list)
         self.frames = video_or_frames
 
-    def __getitem__(self, item) -> Union[BMFrame, List[BMFrame, ...]]:
+    def __getitem__(self, item) -> Union[BMFrame, List[BMFrame]]:
         if isinstance(item, slice):
             frames = []
             for i in range(item.start, item.stop, item.step):
@@ -108,15 +108,16 @@ class BlockMatching:
         search_function = SEARCH_FUNCTIONS[search_function]
         for x, y, w, h in current_frame_blocks:
             sx, sy = search_function(current_frame, reference_frame, x, y, w, h, cost_function, step_size)
-            yield sx, sy, x, y
+            hw, hh = w // 2, h // 2
+            yield sx + hw, sy + hh, x + hw, y + hh
 
     @staticmethod
     def extract_motion_vectors():
         pass
 
     @staticmethod
-    def generate_macro_blocks(frame: np.ndarray, block_width: int = 16, block_height: int = 16,
-                              partition_function: str = 'FIXED', cost_function: str = 'SAD') -> Tuple[int, int, int, int]:
+    def generate_macro_blocks(frame: np.ndarray, block_width: int, block_height: int,
+                              partition_function: str, cost_function: str = 'SAD') -> Tuple[int, int, int, int]:
         """
         Generate macro-blocks in a frame.
 
