@@ -1,4 +1,4 @@
-from typing import Tuple, Union, List
+from typing import Tuple, Union, List, Dict
 import numpy as np
 import cv2
 
@@ -18,7 +18,7 @@ class BMFrame:
         Draw a block on the frame.
 
         :param blocks: The macro-blocks to draw (top_left_x, top_left_y, width, height).
-        :param color: The RGB color of the rectangle.
+        :param color: The BGR color of the rectangle.
         :param thickness: The thickness of the rectangle.
         """
         for x, y, w, h in blocks:
@@ -30,7 +30,7 @@ class BMFrame:
         Draw a vector on the frame.
 
         :param vectors: The start and end of the vector (start_x, start_y, end_x, end_y).
-        :param color: The RGB color of the arrow.
+        :param color: The BGR color of the arrow.
         :param thickness: The thickness of the arrow.
         """
         for x1, y1, x2, y2 in vectors:
@@ -62,13 +62,12 @@ class BMVideo:
         assert isinstance(video_or_frames, str) or isinstance(video_or_frames, list)
         self.frames = video_or_frames
 
-    def __getitem__(self, item) -> Union[BMFrame, List[BMFrame]]:
-        if isinstance(item, slice):
-            frames = []
-            for i in range(item.start, item.stop, item.step):
-                frames.append(self[i])
-            return frames
-        assert isinstance(item, int)
+    def get_frame_count(self) -> int:
+        """
+        Get the count of frames in this video.
+
+        :return: The amount of frames.
+        """
         if isinstance(self.frames, str):
             video = cv2.VideoCapture(self.frames)
             frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -79,6 +78,19 @@ class BMVideo:
                 while read_successfully:
                     read_successfully, frame = video_copy.read()
                     frame_count += 1
+            return frame_count
+        return len(self.frames)
+
+    def __getitem__(self, item) -> Union[BMFrame, List[BMFrame]]:
+        if isinstance(item, slice):
+            frames = []
+            for i in range(item.start, item.stop, item.step):
+                frames.append(self[i])
+            return frames
+        assert isinstance(item, int)
+        if isinstance(self.frames, str):
+            video = cv2.VideoCapture(self.frames)
+            frame_count = self.get_frame_count()
             item = (frame_count + item) if item < 0 else item
             assert 0 <= item < frame_count
             _, frame = video.read()
@@ -99,8 +111,7 @@ class BlockMatching:
     @staticmethod
     def get_motion_vectors(current_frame: np.ndarray, reference_frame: np.ndarray,
                            search_function: str = 'DS', cost_function: str = 'SAD', step_size: int = 0,
-                           current_frame_blocks: List[Tuple[int, int, int, int]] = None
-                           ) -> Tuple[int, int, int, int]:
+                           current_frame_blocks: List[Tuple[int, int, int, int]] = None) -> Tuple[int, int, int, int]:
         """
         Generates motion vectors from the reference frame to the current frame.
 
@@ -121,8 +132,26 @@ class BlockMatching:
             yield sx + hw, sy + hh, x + hw, y + hh
 
     @staticmethod
-    def extract_motion_vectors():
-        pass
+    def extract_motion_vectors(file_path: str) -> Dict[int, List[Tuple[int, int, int, int]]]:
+        """
+        Gets a file that was generated using extract_mvs.c and returns the motion vectors for each frame.
+
+        :param file_path: The path for the file.
+        :return: A dictionary where the frame's index is the key and a list containing the motion-vectors is the value.
+        """
+        motion_vectors_by_frame = {0: []}
+        with open(file_path) as file:
+            file.readline()
+            for line in file:
+                frame_num, _, _, _, x2, y2, x1, y1, _ = eval(line)
+                if frame_num != len(motion_vectors_by_frame):
+                    if frame_num - 1 > len(motion_vectors_by_frame):
+                        motion_vectors_by_frame[frame_num - 2] = []
+                    else:
+                        motion_vectors_by_frame[frame_num - 1] = [(x1, y1, x2, y2)]
+                else:
+                    motion_vectors_by_frame[frame_num - 1].append((x1, y1, x2, y2))
+        return motion_vectors_by_frame
 
     @staticmethod
     def get_macro_blocks(frame: np.ndarray, block_width: int = 16, block_height: int = 16,
@@ -141,9 +170,29 @@ class BlockMatching:
         macro_blocks = []
         partition_function = PARTITIONING_FUNCTION[partition_function]
         for x, y, macro_block in partition_function(frame, block_width, block_height, cost_function):
-            macro_blocks.append((x, y, int(macro_block.shape[0]), int(macro_block.shape[1])))
+            macro_blocks.append((x, y, int(macro_block.shape[1]), int(macro_block.shape[0])))
         return macro_blocks
 
     @staticmethod
-    def extract_macro_blocks():
-        pass
+    def extract_macro_blocks(file_path: str) -> Dict[int, List[Tuple[int, int, int, int]]]:
+        """
+        Gets a file that was generated using extract_mvs.c and returns the macro-blocks for each frame.
+
+        :param file_path: The path for the file.
+        :return: A dictionary where the frame's index is the key and a list containing the macro-blocks is the value.
+        """
+        macro_blocks_by_frame = {0: []}
+        with open(file_path) as file:
+            file.readline()
+            for line in file:
+                frame_num, _, block_w, block_h, _, _, x, y, _ = eval(line)
+                x -= block_w // 2
+                y -= block_h // 2
+                if frame_num != len(macro_blocks_by_frame):
+                    if frame_num - 1 > len(macro_blocks_by_frame):
+                        macro_blocks_by_frame[frame_num - 2] = []
+                    else:
+                        macro_blocks_by_frame[frame_num - 1] = [(x, y, block_w, block_h)]
+                else:
+                    macro_blocks_by_frame[frame_num - 1].append((x, y, block_w, block_h))
+        return macro_blocks_by_frame
