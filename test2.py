@@ -1,10 +1,8 @@
 import cv2
 import numpy as np
 
-from python_block_matching.utils import *
+from python_block_matching import BlockMatching
 from python_block_matching.cost_functions import *
-from python_block_matching.algorithms import *
-
 ras_blocks = set()
 
 with open('frame10.txt') as f:
@@ -17,11 +15,10 @@ with open('frame10.txt') as f:
 block_info = {}
 
 frame = cv2.imread('frame10.png')
-frame = grayscale(frame)
-for x, y in get_macro_blocks(frame, 16):
-    v_cost = sse(frame[y:y + 16, x:x + 8], frame[y:y + 16, x + 8:x + 16])
-    h_cost = sse(frame[y:y + 8, x:x + 16], frame[y + 8:y + 16, x:x + 16])
-    average_color = np.sum(frame[y:y+16, x:x+16]) / (16*16)
+for x, y, w, h in BlockMatching.get_macro_blocks(frame):
+    v_cost = sad(frame[y:y + 16, x:x + 8], frame[y:y + 16, x + 8:x + 16])
+    h_cost = sad(frame[y:y + 8, x:x + 16], frame[y + 8:y + 16, x:x + 16])
+    average_color = np.sum(frame[y:y+16, x:x+16])
     if (x, y, 16, 16) in ras_blocks:
         block_info[(x, y)] = ('f', v_cost, h_cost, average_color)
     elif (x, y, 8, 16) in ras_blocks:
