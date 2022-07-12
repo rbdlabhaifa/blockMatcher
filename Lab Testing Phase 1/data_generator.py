@@ -1,8 +1,5 @@
-import random
-
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
 from typing import List
 from PIL import Image
 
@@ -32,10 +29,10 @@ class DataGenerator:
 
         return np.asarray(ref_frame), np.asarray(cur_frame)
 
-
-# if __name__ == '__main__':
-#     # for i in range(15):
-#     #     arr = np.random.randint(0, 256, (10, 10, 3), dtype=np.uint8)
-#     #     arr = cv2.resize(arr, (160, 160), interpolation=cv2.INTER_AREA)
-#     #     img = Image.fromarray(arr, "RGB")
-#     #     img.save("Image"+str(i)+".png")
+if __name__ == '__main__':
+    # for i in range(15):
+    arr = np.full((10,10,3),[0,0,0], dtype=np.uint8)
+    # arr = np.random.randint(0, 256, (10, 10, 3), dtype=np.uint8)
+    arr = cv2.resize(arr, (160, 160), interpolation=cv2.INTER_AREA)
+    img = Image.fromarray(arr, "RGB")
+    img.save("/home/txp2/RPI-BMA-RE/Lab Testing Phase 1/Benchmark_Pictures/Black.png")
