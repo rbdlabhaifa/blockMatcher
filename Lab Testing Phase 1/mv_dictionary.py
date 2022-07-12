@@ -27,28 +27,32 @@ class MVDictUtils:
 class MVDict(dict):
 
     @staticmethod
-    def cost_function(key1, key2):
-        s_errors = []
-        a_errors = []
-        for i in range(len(key1)):
-            x1, y1, x2, y2 = key1[i]
-            size1 = np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-            if x2 - x1 == 0:
-                angle1 = math.pi / 2
-            else:
-                angle1 = np.arctan(np.abs(y2 - y1) / np.abs(x2 - x1))
-            x3, y3, x4, y4 = key2[i]
-            size2 = np.sqrt((x4 - x3) ** 2 + (y4 - y3) ** 2)
-            if x4 - x3 == 0:
-                angle2 = math.pi / 2
-            else:
-                angle2 = np.arctan(np.abs(y4 - y3) / np.abs(x4 - x3))
+    def vector_diff(new_vec, key_vec, norm=1):
+        if key_vec == (0, 0):
+            return 1 if new_vec == key_vec else 0
+        new_vec = np.array([new_vec[2] - new_vec[0], new_vec[3] - new_vec[1]], dtype=np.float128)
+        key_vec = np.array([key_vec[2] - key_vec[0], key_vec[3] - key_vec[1]], dtype=np.float128)
+        if norm == 1:
+            diff = np.abs(new_vec - key_vec).sum()
+            key_vec = np.abs(key_vec).sum()
+            return diff / key_vec
+        elif norm == 2:
+            diff = np.square(new_vec - key_vec).sum()
+            key_vec = np.square(key_vec).sum()
+            return np.sqrt(diff / key_vec)
+        else:
+            diff = np.abs(new_vec - key_vec).max()
+            key_vec = np.abs(key_vec).max()
+            if key_vec == 0:
+                return 0
+            return diff / key_vec
 
-            size_diff = np.abs(size2 - size1)
-            angle_diff = np.abs(angle2 - angle1)
-            s_errors.append(size_diff)
-            a_errors.append(angle_diff)
-        return (sum(s_errors) / len(s_errors) + sum(a_errors) / len(a_errors)) / 2
+    @staticmethod
+    def cost_function(key1, key2):
+        diff = 0
+        for i in range(len(key1)):
+            diff += MVDict.vector_diff(key2[i], key1[i])
+        return diff
 
     def __setitem__(self, key, value: List[int]):
         """
@@ -93,7 +97,7 @@ if __name__ == '__main__':
         mvs = [*BlockMatching.get_motion_vectors(f2, f1)]
         mv_dict[tuple(mvs)] = translation
 
-    translation = [20, 0]
+    translation = [40, 0]
     f1, f2 = DataGenerator.generate_movement([160 + 16 * 6, 160 + 16 * 6], "Benchmark_Pictures/Black.png",
                                              tuple(translation))
     mvs = [*BlockMatching.get_motion_vectors(f2, f1)]
