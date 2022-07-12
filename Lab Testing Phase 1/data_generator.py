@@ -1,11 +1,13 @@
+import random
+
+import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 from typing import List
 from PIL import Image
-import cv2
 
 
 class DataGenerator:
-
     @staticmethod
     def generate_movement(frame_size: List[int], img_url: str, translation):
         """
@@ -31,9 +33,9 @@ class DataGenerator:
         return np.asarray(ref_frame), np.asarray(cur_frame)
 
 
-if __name__ == '__main__':
-    for i in range(15):
-        arr = np.random.randint(0, 256, (10, 10, 3), dtype=np.uint8)
-        arr = cv2.resize(arr, (160, 160), interpolation=cv2.INTER_AREA)
-        img = Image.fromarray(arr, "RGB")
-        img.save("Image"+str(i)+".png")
+# if __name__ == '__main__':
+#     # for i in range(15):
+#     #     arr = np.random.randint(0, 256, (10, 10, 3), dtype=np.uint8)
+#     #     arr = cv2.resize(arr, (160, 160), interpolation=cv2.INTER_AREA)
+#     #     img = Image.fromarray(arr, "RGB")
+#     #     img.save("Image"+str(i)+".png")
