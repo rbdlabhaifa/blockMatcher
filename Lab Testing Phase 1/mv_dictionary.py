@@ -4,10 +4,6 @@ from scipy.spatial import KDTree
 
 
 class MVMapping:
-    """
-    This class maps a list of vectors to a tuple representing its displacements in the x and y directions.
-    The list of vectors are transformed to a kd-tree.
-    """
 
     def __init__(self):
         self.keys = []
@@ -35,19 +31,19 @@ class MVMapping:
         """
         as_array = np.array(item)
         best_index = 0
-        min_distance, min_index = self.keys[best_index].quary(as_array)[0]
-        for i in range(len(self.keys)):
-            distance = self.keys[i].quary(as_array)[0]
+        distances = self.keys[best_index].query(as_array)[0]
+        min_distance = sum(distances) / len(distances)
+        for i in range(1, len(self.keys)):
+            distances = self.keys[i].query(as_array)[0]
+            distance = sum(distances) / len(distances)
             if distance < min_distance:
                 min_distance = distance
                 best_index = i
         return self.values[best_index]
 
 
-# HOW TO USE KDTREE:
 # a = np.array([(1, 2), (2, 4), (1000, 1000)])
 # b = KDTree(a)
 # v = np.array([600, 600])
-# print(b.query(v, k=3, p=23, workers=1))
+# print(b.query(v, k=1, p=1, workers=1))
 # print(a[b.query(v)[1]])
-

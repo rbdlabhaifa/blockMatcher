@@ -5,23 +5,23 @@ import cv2
 import numpy as np
 
 if __name__ == '__main__':
-    url = "Benchmark_Pictures/Black.png"
+    url = "Benchmark_Pictures/Image0.png"
     img = cv2.imread(url)
     mv_dict = MVMapping()
     for flip in range(-1, 2, 2):
         for i in range(10, 110, 10):
-            translation = [flip * i, 0]
+            translation = (flip * i, 0)
             f1, f2 = DataGenerator.generate_movement([360, 360], url, translation)
-            mv_dict[BlockMatching.get_motion_vectors(f2, f1)] = translation
-            translation = [0, flip * i]
+            mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+            translation = (0, flip * i)
             f1, f2 = DataGenerator.generate_movement([360, 360], url, translation)
-            mv_dict[BlockMatching.get_motion_vectors(f2, f1)] = translation
-            translation = [flip * i, flip * i]
+            mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+            translation = (flip * i, flip * i)
             f1, f2 = DataGenerator.generate_movement([360, 360], url, translation)
-            mv_dict[BlockMatching.get_motion_vectors(f2, f1)] = translation
-            translation = [-flip * i, flip * i]
+            mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+            translation = (-flip * i, flip * i)
             f1, f2 = DataGenerator.generate_movement([360, 360], url, translation)
-            mv_dict[BlockMatching.get_motion_vectors(f2, f1)] = translation
+            mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
 
     x_trans = input("Enter translation on the X-axis. To Exit enter none number value")
     y_trans = input("Enter translation on the Y-axis. To Exit enter none number value")
@@ -29,5 +29,7 @@ if __name__ == '__main__':
     while x_trans.isnumeric() and y_trans.isnumeric():
         translation = [int(x_trans), int(y_trans)]
         f1, f2 = DataGenerator.generate_movement([360, 360], url, translation)
-        prediction = mv_dict[BlockMatching.get_motion_vectors(f2, f1)]
+        prediction = mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]]
         print(f"User Entered: [{x_trans},{y_trans}], Dictionary returned: {prediction}")
+        x_trans = input("Enter translation on the X-axis. To Exit enter none number value")
+        y_trans = input("Enter translation on the Y-axis. To Exit enter none number value")
