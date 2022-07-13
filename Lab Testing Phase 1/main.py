@@ -1,4 +1,4 @@
-from mv_dictionary import MVDict
+from mv_dictionary import MVMapping
 from python_block_matching import BlockMatching, BMFrame, BMVideo
 from data_generator import DataGenerator
 import cv2
@@ -7,7 +7,7 @@ import numpy as np
 if __name__ == '__main__':
     url = "Benchmark_Pictures/Black.png"
     img = cv2.imread(url)
-    mv_dict = MVDict()
+    mv_dict = MVMapping()
     for flip in range(-1, 2, 2):
         for i in range(10, 110, 10):
             translation = [flip * i, 0]
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     y_trans = input("Enter translation on the Y-axis. To Exit enter none number value")
 
     while x_trans.isnumeric() and y_trans.isnumeric():
-        translation = [x_trans, y_trans]
+        translation = [int(x_trans), int(y_trans)]
         f1, f2 = DataGenerator.generate_movement([360, 360], url, translation)
         prediction = mv_dict[BlockMatching.get_motion_vectors(f2, f1)]
         print(f"User Entered: [{x_trans},{y_trans}], Dictionary returned: {prediction}")
