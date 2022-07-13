@@ -13,7 +13,8 @@ class BMFrame:
         self.base_image = image.copy()
         self.drawn_image = image.copy()
 
-    def draw_macro_block(self, *blocks: Tuple[int, int, int, int], color: Tuple[int, int, int], thickness: int) -> None:
+    def draw_macro_block(self, blocks: List[Tuple[int, int, int, int]], color: Tuple[int, int, int],
+                         thickness: int) -> None:
         """
         Draw a block on the frame.
 
@@ -24,7 +25,7 @@ class BMFrame:
         for x, y, w, h in blocks:
             self.drawn_image = cv2.rectangle(self.drawn_image, (x, y), (x + w, y + h), color, thickness)
 
-    def draw_motion_vector(self, *vectors: Tuple[int, int, int, int], color: Tuple[int, int, int],
+    def draw_motion_vector(self, vectors: List[Tuple[int, int, int, int]], color: Tuple[int, int, int],
                            thickness: int) -> None:
         """
         Draw a vector on the frame.
