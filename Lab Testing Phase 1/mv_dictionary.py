@@ -1,9 +1,13 @@
 import numpy as np
 from typing import List, Tuple
-import scipy
+from scipy.spatial import KDTree
 
 
 class MVMapping:
+    """
+    This class maps a list of vectors to a tuple representing its displacements in the x and y directions.
+    The list of vectors are transformed to a kd-tree.
+    """
 
     def __init__(self):
         self.keys = []
@@ -17,58 +21,33 @@ class MVMapping:
         :param value: A tuple of the displacements in the x and y directions.
         """
         # Transform the vector field to a valid key.
-        self.keys.append(MVMapping.vector_field_to_key(key))
+        self.keys.append(KDTree(key, balanced_tree=True))
         # Make sure value is a tuple that contains the displacements in the x and y directions.
         assert isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], int) and isinstance(value[1], int)
         self.values.append(value)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: List[Tuple[int, int, int, int]]) -> Tuple[int, int]:
         """
         Get the displacements in the x and y directions from a vector field.
 
         :param item: A vector field as a list of vectors.
         :return: A tuple of the displacements in the x and y directions.
         """
-        key = MVMapping.vector_field_to_key(item)
-        best_match, best_cost = 0, float('inf')
+        as_array = np.array(item)
+        best_index = 0
+        min_distance, min_index = self.keys[best_index].quary(as_array)[0]
         for i in range(len(self.keys)):
-            cost = MVMapping.cost_function(self.keys[i], key)
-            if cost < best_cost:
-                best_match = i
-                best_cost = cost
-        return
+            distance = self.keys[i].quary(as_array)[0]
+            if distance < min_distance:
+                min_distance = distance
+                best_index = i
+        return self.values[best_index]
 
 
+# HOW TO USE KDTREE:
+# a = np.array([(1, 2), (2, 4), (1000, 1000)])
+# b = KDTree(a)
+# v = np.array([600, 600])
+# print(b.query(v, k=3, p=23, workers=1))
+# print(a[b.query(v)[1]])
 
-    @staticmethod
-    def vector_difference(new_vec: Tuple[int, int, int, int], key_vec: Tuple[int, int, int, int],
-                          mode: int = 1) -> float:
-        if key_vec == (0, 0):
-            return 1 if new_vec == key_vec else 0
-        new_vec = np.array([new_vec[2] - new_vec[0], new_vec[3] - new_vec[1]], dtype=np.float128)
-        key_vec = np.array([key_vec[2] - key_vec[0], key_vec[3] - key_vec[1]], dtype=np.float128)
-        if mode == 1:
-            diff = np.abs(new_vec - key_vec).sum()
-            key_vec = np.abs(key_vec).sum()
-            return diff / key_vec
-        elif mode == 2:
-            diff = np.square(new_vec - key_vec).sum()
-            key_vec = np.square(key_vec).sum()
-            return np.sqrt(diff / key_vec)
-        elif mode == 3:
-            diff = np.abs(new_vec - key_vec).max()
-            key_vec = np.abs(key_vec).max()
-            if key_vec == 0:
-                return 0
-            return diff / key_vec
-
-    @staticmethod
-    def cost_function(key1, key2):
-        diff = 0
-        for i in range(len(key1)):
-            diff += MVMapping.vector_difference(key2[i], key1[i])
-        return diff
-
-    @staticmethod
-    def vector_field_to_key():
-        pass
