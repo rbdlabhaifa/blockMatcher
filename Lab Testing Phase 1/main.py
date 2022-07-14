@@ -7,26 +7,27 @@ import numpy as np
 if __name__ == '__main__':
     url = "Benchmark_Pictures/Image0.png"
     img = cv2.imread(url)
-    mv_dict = MVMapping()
-    for flip in range(-1, 2, 2):
-        for i in range(10, 110, 10):
-            translation = (flip * i, 0, 0)
-            f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
-            mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
-            translation = (0, flip * i, 0)
-            f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
-            mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
-            translation = (flip * i, flip * i, 0)
-            f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
-            mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
-            translation = (-flip * i, flip * i, 0)
-            f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
-            mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
-
-    for i in range(0, 360):
-        f1, f2 = DataGenerator.generate_rotation([360, 360], url, i)
-        mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = [0, 0, i]
-
+    mv_dict = MVMapping("dict.pickle")
+    # for flip in range(-1, 2, 2):
+    #     for i in range(10, 110, 10):
+    #         translation = (flip * i, 0, 0)
+    #         f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
+    #         mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+    #         translation = (0, flip * i, 0)
+    #         f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
+    #         mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+    #         translation = (flip * i, flip * i, 0)
+    #         f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
+    #         mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+    #         translation = (-flip * i, flip * i, 0)
+    #         f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
+    #         mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+    #
+    # for i in range(0, 360):
+    #     f1, f2 = DataGenerator.generate_rotation([360, 360], url, i)
+    #     mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = [0, 0, i]
+    #
+    # mv_dict.save_to("dict.pickle")
     is_trans = input("T = Trans, R = Rotation") == "T"
 
     if is_trans:
@@ -43,7 +44,7 @@ if __name__ == '__main__':
             print(f"User Entered: [{x_trans},{y_trans}], Dictionary returned: {prediction}")
 
         else:
-            f1, f2 = DataGenerator.generate_rotation(angle, url, translation)
+            f1, f2 = DataGenerator.generate_rotation([360,360], url, int(angle))
             prediction = mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]]
             print(f"User Entered: {angle}, Dictionary returned: {prediction}")
 
