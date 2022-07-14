@@ -27,13 +27,30 @@ if __name__ == '__main__':
         f1, f2 = DataGenerator.generate_rotation([360, 360], url, i)
         mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = [0, 0, i]
 
-    x_trans = input("Enter translation on the X-axis. To Exit enter none number value")
-    y_trans = input("Enter translation on the Y-axis. To Exit enter none number value")
+    is_trans = input("T = Trans, R = Rotation") == "T"
 
-    while x_trans.isnumeric() and y_trans.isnumeric():
-        translation = [int(x_trans), int(y_trans)]
-        f1, f2 = DataGenerator.generate_translation([360, 360], url, translation)
-        prediction = mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]]
-        print(f"User Entered: [{x_trans},{y_trans}], Dictionary returned: {prediction}")
+    if is_trans:
         x_trans = input("Enter translation on the X-axis. To Exit enter none number value")
         y_trans = input("Enter translation on the Y-axis. To Exit enter none number value")
+    else:
+        angle = input("Enter Angle. To Exit enter none number value")
+
+    while (is_trans and (x_trans.isnumeric() and y_trans.isnumeric())) or angle.isnumeric():
+        if is_trans:
+            translation = [int(x_trans), int(y_trans)]
+            f1, f2 = DataGenerator.generate_translation([360, 360], url, translation)
+            prediction = mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]]
+            print(f"User Entered: [{x_trans},{y_trans}], Dictionary returned: {prediction}")
+
+        else:
+            f1, f2 = DataGenerator.generate_rotation(angle, url, translation)
+            prediction = mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]]
+            print(f"User Entered: {angle}, Dictionary returned: {prediction}")
+
+        is_trans = input("T = Trans, R = Rotation") == "T"
+
+        if is_trans:
+            x_trans = input("Enter translation on the X-axis. To Exit enter none number value")
+            y_trans = input("Enter translation on the Y-axis. To Exit enter none number value")
+        else:
+            angle = input("Enter Angle. To Exit enter none number value")

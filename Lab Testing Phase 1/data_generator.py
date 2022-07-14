@@ -39,8 +39,6 @@ class DataGenerator:
         @param angle: angle of rotation in degrees. positive = clockwise, negative = counter-clockwise
         @return: The frame before the motion (Reference), The frame after the motion (Current)
         """
-        frame_size.append(frame_size.pop(0))
-        frame_size.append(3)
         ref_frame = Image.fromarray(np.full(frame_size, 255, dtype=np.uint8), 'RGB')
         cur_frame = ref_frame.copy()
         img = Image.open(img_url)
