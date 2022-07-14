@@ -10,25 +10,29 @@ if __name__ == '__main__':
     mv_dict = MVMapping()
     for flip in range(-1, 2, 2):
         for i in range(10, 110, 10):
-            translation = (flip * i, 0)
-            f1, f2 = DataGenerator.generate_movement([360, 360], url, translation)
+            translation = (flip * i, 0, 0)
+            f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
             mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
-            translation = (0, flip * i)
-            f1, f2 = DataGenerator.generate_movement([360, 360], url, translation)
+            translation = (0, flip * i, 0)
+            f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
             mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
-            translation = (flip * i, flip * i)
-            f1, f2 = DataGenerator.generate_movement([360, 360], url, translation)
+            translation = (flip * i, flip * i, 0)
+            f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
             mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
-            translation = (-flip * i, flip * i)
-            f1, f2 = DataGenerator.generate_movement([360, 360], url, translation)
+            translation = (-flip * i, flip * i, 0)
+            f1, f2 = DataGenerator.generate_translation([360, 360], url, translation[:2])
             mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+
+    for i in range(0, 360):
+        f1, f2 = DataGenerator.generate_rotation([360, 360], url, i)
+        mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = [0, 0, i]
 
     x_trans = input("Enter translation on the X-axis. To Exit enter none number value")
     y_trans = input("Enter translation on the Y-axis. To Exit enter none number value")
 
     while x_trans.isnumeric() and y_trans.isnumeric():
         translation = [int(x_trans), int(y_trans)]
-        f1, f2 = DataGenerator.generate_movement([360, 360], url, translation)
+        f1, f2 = DataGenerator.generate_translation([360, 360], url, translation)
         prediction = mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]]
         print(f"User Entered: [{x_trans},{y_trans}], Dictionary returned: {prediction}")
         x_trans = input("Enter translation on the X-axis. To Exit enter none number value")
