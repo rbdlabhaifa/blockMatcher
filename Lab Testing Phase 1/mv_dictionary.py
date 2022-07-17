@@ -1,8 +1,11 @@
 import pickle
-
 import numpy as np
 from typing import List, Tuple
 from scipy.spatial import KDTree
+
+
+from python_block_matching import BlockMatching
+from data_generator import DataGenerator
 
 
 class MVMapping:
@@ -71,3 +74,19 @@ class MVMapping:
             for i in range(len(self.keys)):
                 pickle.dump(self.keys[i], f)
                 pickle.dump(self.values[i], f)
+
+    def train(self, image_path: str, start: int = 10, target: int = 110, step: int = 10) -> None:
+        for flip in range(-1, 2, 2):
+            for i in range(start, target, step):
+                translation = (flip * i, 0, 0)
+                f1, f2 = DataGenerator.generate_translation([360, 360], image_path, translation[:2])
+                self[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+                translation = (0, flip * i, 0)
+                f1, f2 = DataGenerator.generate_translation([360, 360], image_path, translation[:2])
+                self[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+                translation = (flip * i, flip * i, 0)
+                f1, f2 = DataGenerator.generate_translation([360, 360], image_path, translation[:2])
+                self[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+                translation = (-flip * i, flip * i, 0)
+                f1, f2 = DataGenerator.generate_translation([360, 360], image_path, translation[:2])
+                self[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
