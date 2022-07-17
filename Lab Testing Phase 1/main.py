@@ -5,9 +5,10 @@ import cv2
 import numpy as np
 
 if __name__ == '__main__':
-    url = "Benchmark_Pictures/Image0.png"
+    url = "Benchmark_Pictures/Black.png"
     img = cv2.imread(url)
-    mv_dict = MVMapping("dict.pickle")
+    mv_dict = MVMapping("smooth_dict.pickle")
+    # mv_dict = MVMapping()
     # for flip in range(-1, 2, 2):
     #     for i in range(10, 110, 10):
     #         translation = (flip * i, 0, 0)
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     #     f1, f2 = DataGenerator.generate_rotation([360, 360], url, i)
     #     mv_dict[[*BlockMatching.get_motion_vectors(f2, f1)]] = [0, 0, i]
     #
-    # mv_dict.save_to("dict.pickle")
+    # mv_dict.save_to("smooth_dict.pickle")
     is_trans = input("T = Trans, R = Rotation") == "T"
 
     if is_trans:
