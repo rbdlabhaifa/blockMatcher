@@ -112,7 +112,7 @@ class BlockMatching:
     @staticmethod
     def get_motion_vectors(current_frame: np.ndarray, reference_frame: np.ndarray,
                            search_function: str = 'DS', cost_function: str = 'SAD', step_size: int = 0,
-                           current_frame_blocks: List[Tuple[int, int, int, int]] = None) -> Tuple[int, int, int, int]:
+                           current_frame_mb: List[Tuple[int, int, int, int]] = None) -> List[Tuple[int, int, int, int]]:
         """
         Generates motion vectors from the reference frame to the current frame.
 
@@ -121,16 +121,18 @@ class BlockMatching:
         :param search_function: The function to search for the best macro-blocks with.
         :param cost_function: The cost function to use for the search.
         :param step_size: The step size to use in the search (0 to use the default of the search function).
-        :param current_frame_blocks: The macro-blocks int the current frame to run the search on.
+        :param current_frame_mb: The macro-blocks int the current frame to run the search on.
         :return: The start and end points of the vectors.
         """
-        if current_frame_blocks is None:
-            current_frame_blocks = BlockMatching.get_macro_blocks(current_frame)
+        if current_frame_mb is None:
+            current_frame_mb = BlockMatching.get_macro_blocks(current_frame)
+        motion_vectors = []
         search_function = SEARCH_FUNCTIONS[search_function]
-        for x, y, w, h in current_frame_blocks:
+        for x, y, w, h in current_frame_mb:
             sx, sy = search_function(current_frame, reference_frame, x, y, w, h, cost_function, step_size)
             hw, hh = w // 2, h // 2
-            yield sx + hw, sy + hh, x + hw, y + hh
+            motion_vectors.append((sx + hw, sy + hh, x + hw, y + hh))
+        return motion_vectors
 
     @staticmethod
     def extract_motion_vectors(file_path: str) -> Dict[int, List[Tuple[int, int, int, int]]]:

@@ -2,8 +2,6 @@ import pickle
 import numpy as np
 from typing import List, Tuple
 from scipy.spatial import KDTree
-
-
 from python_block_matching import BlockMatching
 from data_generator import DataGenerator
 
@@ -16,7 +14,7 @@ class MVMapping:
         if save_file is not None:
             self.load_from(save_file)
 
-    def __setitem__(self, key: List[Tuple[int, int, int, int]], value: Tuple[int, int]) -> None:
+    def __setitem__(self, key: List[Tuple[int, int, int, int]], value: Tuple[int, int, int]) -> None:
         """
         Add a key-value pair to the map.
 
@@ -27,7 +25,7 @@ class MVMapping:
         self.keys.append(KDTree(key, balanced_tree=True))
         self.values.append(value)
 
-    def __getitem__(self, item: List[Tuple[int, int, int, int]]) -> Tuple[int, int]:
+    def __getitem__(self, item: List[Tuple[int, int, int, int]]) -> Tuple[int, int, int]:
         """
         Get the displacements in the x and y directions from a vector field.
 
@@ -76,17 +74,29 @@ class MVMapping:
                 pickle.dump(self.values[i], f)
 
     def train(self, image_path: str, start: int = 10, target: int = 110, step: int = 10) -> None:
+        """
+        Trains the dictionary for translation and rotation detection from an image.
+
+        :param image_path: The path of the image to train the dictionary with.
+        :param start: The start value of the translation.
+        :param target: The end value of the translation.
+        :param step: The step between each iteration.
+        """
+        image_dimensions = [360, 360]
         for flip in range(-1, 2, 2):
             for i in range(start, target, step):
                 translation = (flip * i, 0, 0)
-                f1, f2 = DataGenerator.generate_translation([360, 360], image_path, translation[:2])
-                self[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+                f1, f2 = DataGenerator.generate_translation(image_dimensions, image_path, translation[:2])
+                self[BlockMatching.get_motion_vectors(f2, f1)] = translation
                 translation = (0, flip * i, 0)
-                f1, f2 = DataGenerator.generate_translation([360, 360], image_path, translation[:2])
-                self[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+                f1, f2 = DataGenerator.generate_translation(image_dimensions, image_path, translation[:2])
+                self[BlockMatching.get_motion_vectors(f2, f1)] = translation
                 translation = (flip * i, flip * i, 0)
-                f1, f2 = DataGenerator.generate_translation([360, 360], image_path, translation[:2])
-                self[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+                f1, f2 = DataGenerator.generate_translation(image_dimensions, image_path, translation[:2])
+                self[BlockMatching.get_motion_vectors(f2, f1)] = translation
                 translation = (-flip * i, flip * i, 0)
-                f1, f2 = DataGenerator.generate_translation([360, 360], image_path, translation[:2])
-                self[[*BlockMatching.get_motion_vectors(f2, f1)]] = translation
+                f1, f2 = DataGenerator.generate_translation(image_dimensions, image_path, translation[:2])
+                self[BlockMatching.get_motion_vectors(f2, f1)] = translation
+        for i in range(0, 360):
+            f1, f2 = DataGenerator.generate_rotation(image_dimensions, image_path, i)
+            self[BlockMatching.get_motion_vectors(f2, f1)] = (0, 0, i)
