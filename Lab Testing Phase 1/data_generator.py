@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
 from typing import Tuple, Union, List, Dict
-from PIL import Image
+from PIL import Image, ImageDraw
 
-from python_block_matching import BMFrame
+from python_block_matching import BMFrame, BlockMatching
 
 
 class DataGenerator:
@@ -55,11 +55,16 @@ class DataGenerator:
 
 
 if __name__ == '__main__':
-    ref, cur = DataGenerator.generate_rotation([360, 360],
-                                               "/home/txp2/RPI-BMA-RE/Lab Testing Phase 1/Benchmark_Pictures/Image0.png",
-                                               20)
-    ref = BMFrame(ref)
-    cur = BMFrame(cur)
-    ref.show()
-    cur.show()
-    cv2.destroyAllWindows()
+    image = np.full((160, 160, 3), 255, dtype=np.uint8)
+
+    cv2.circle(img=image, center=(80, 80), radius=80, color=(0, 255, 0), thickness=-1)
+
+    # cv2.imwrite("Benchmark_Pictures/Circle_full.png", image)
+    f1, f2 = DataGenerator.generate_translation([360, 360], "Benchmark_Pictures/Circle_full.png", [40, 0])
+    f1 = BMFrame(f1)
+    f2 = BMFrame(f2)
+    mv = list(BlockMatching.get_motion_vectors(f2.base_image, f1.base_image))
+    f1.draw_motion_vector(mv, (255, 0, 0), 1)
+    while True:
+        f1.show()
+        f2.show()
