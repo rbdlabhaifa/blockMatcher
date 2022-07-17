@@ -1,3 +1,5 @@
+import pickle
+
 import numpy as np
 from typing import List, Tuple
 from scipy.spatial import KDTree
@@ -5,9 +7,11 @@ from scipy.spatial import KDTree
 
 class MVMapping:
 
-    def __init__(self):
+    def __init__(self, save_file: str = None):
         self.keys = []
         self.values = []
+        if save_file is not None:
+            self.load_from(save_file)
 
     def __setitem__(self, key: List[Tuple[int, int, int, int]], value: Tuple[int, int]) -> None:
         """
@@ -18,8 +22,6 @@ class MVMapping:
         """
         # Transform the vector field to a valid key.
         self.keys.append(KDTree(key, balanced_tree=True))
-        # Make sure value is a tuple that contains the displacements in the x and y directions.
-        assert isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], int) and isinstance(value[1], int)
         self.values.append(value)
 
     def __getitem__(self, item: List[Tuple[int, int, int, int]]) -> Tuple[int, int]:
@@ -41,9 +43,31 @@ class MVMapping:
                 best_index = i
         return self.values[best_index]
 
+    def load_from(self, save_file: str) -> None:
+        """
+        Load the keys and values of a MVMapping object from a file.
 
-# a = np.array([(1, 2), (2, 4), (1000, 1000)])
-# b = KDTree(a)
-# v = np.array([600, 600])
-# print(b.query(v, k=1, p=1, workers=1))
-# print(a[b.query(v)[1]])
+        :param save_file: The path to the save file.
+        """
+        if len(self.keys) != 0:
+            self.keys = []
+        if len(self.values) != 0:
+            self.values = []
+        with open(save_file, 'rb') as f:
+            while True:
+                try:
+                    self.keys.append(pickle.load(f))
+                    self.values.append(pickle.load(f))
+                except EOFError:
+                    break
+
+    def save_to(self, save_file: str) -> None:
+        """
+        Save the keys and values of a MVMapping object to a file.
+
+        :param save_file: The path to the save file.
+        """
+        with open(save_file, 'wb') as f:
+            for i in range(len(self.keys)):
+                pickle.dump(self.keys[i], f)
+                pickle.dump(self.values[i], f)
