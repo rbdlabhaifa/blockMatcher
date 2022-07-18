@@ -15,7 +15,7 @@ class DataGenerator:
         @param translation: [translation in the x-axis, translation in the y-axis]
         @return: The frame before the motion (Reference), The frame after the motion (Current)
         """
-        frame_size.append(frame_size.pop(0))
+        frame_size = frame_size.copy()
         frame_size.append(3)
         ref_frame = Image.fromarray(np.full(frame_size, 255, dtype=np.uint8), 'RGB')
         cur_frame = ref_frame.copy()
