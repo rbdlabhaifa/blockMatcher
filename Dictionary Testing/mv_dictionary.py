@@ -34,10 +34,10 @@ class MVMapping:
         as_array = np.array(item)
         best_index = 0
         distances = self.keys[best_index].query(as_array)[0]
-        min_distance = sum(distances) / len(distances)
+        min_distance = min((sum(distances) / len(distances)), 5)
         for i in range(1, len(self.keys)):
             distances = self.keys[i].query(as_array)[0]
-            distance = sum(distances) / len(distances)
+            distance = min((sum(distances) / len(distances)), 5)
             if distance < min_distance:
                 min_distance = distance
                 best_index = i
