@@ -52,13 +52,15 @@ class MVMapping:
         """
         as_array = np.array(vectors)
         distances = self.keys[0].query(as_array)[0]
+        best_distances = distances
         min_distance = sum(distances) / len(distances)
         for i in range(1, len(self.keys)):
             distances = self.keys[i].query(as_array)[0]
             distance = sum(distances) / len(distances)
             if distance < min_distance:
-                min_distance = distances
-        return min_distance
+                min_distance = distance
+                best_distances = distances
+        return best_distances
 
     def load_from(self, save_file: str) -> None:
         """
