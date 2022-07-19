@@ -120,6 +120,11 @@ class MVMapping:
             self[BlockMatching.get_motion_vectors(f2, f1)] = (0, 0, i)
 
     def try_dictionary(self, image: str) -> None:
+        """
+        A function to check the dictionary.
+
+        :param image: The path to an image to test the dictionary with.
+        """
         while True:
             mode = input('enter mode (t - translation, r - rotation, c - change image): ').lower()
             if mode == 'c':
@@ -135,6 +140,12 @@ class MVMapping:
 
     @staticmethod
     def remove_zeroes(vectors: List[Tuple[int, int, int, int]]) -> np.ndarray:
+        """
+        Removes vectors that have a magnitude of 0.
+
+        :param vectors: A list of vectors.
+        :return: A list of vectors without vectors of length 0.
+        """
         new_vector_list = []
         for x1, y1, x2, y2 in vectors:
             if x1 != x2 or y1 != y2:
