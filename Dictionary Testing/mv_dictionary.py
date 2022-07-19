@@ -43,6 +43,23 @@ class MVMapping:
                 best_index = i
         return self.values[best_index]
 
+    def get_min_distances(self, vectors: List[Tuple[int, int, int, int]]) -> List[float]:
+        """
+        Get the distance of the vectors with the best tree.
+
+        :param vectors: A list of vectors.
+        :return: A list of distances.
+        """
+        as_array = np.ndarray(vectors)
+        distances = self.keys[0].query(as_array)[0]
+        min_distance = sum(distances) / len(distances)
+        for i in range(1, len(self.keys)):
+            distances = self.keys[i].query(as_array)[0]
+            distance = sum(distances) / len(distances)
+            if distance < min_distance:
+                min_distance = distances
+        return min_distance
+
     def load_from(self, save_file: str) -> None:
         """
         Load the keys and values of a MVMapping object from a file.
