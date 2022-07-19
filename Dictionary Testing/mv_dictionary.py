@@ -50,7 +50,7 @@ class MVMapping:
         :param vectors: A list of vectors.
         :return: A list of distances.
         """
-        as_array = np.ndarray(vectors)
+        as_array = np.array(vectors)
         distances = self.keys[0].query(as_array)[0]
         min_distance = sum(distances) / len(distances)
         for i in range(1, len(self.keys)):
