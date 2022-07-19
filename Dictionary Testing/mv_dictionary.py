@@ -21,7 +21,7 @@ class MVMapping:
         :param key: A vector field as a list of vectors.
         :param value: A tuple of the displacements in the x and y directions.
         """
-        self.keys.append(KDTree(key, balanced_tree=True))
+        self.keys.append(KDTree(MVMapping.remove_zeroes(key), balanced_tree=True))
         self.values.append(value)
 
     def __getitem__(self, item: List[Tuple[int, int, int, int]]) -> Tuple[int, int, int]:
@@ -31,7 +31,7 @@ class MVMapping:
         :param item: A vector field as a list of vectors.
         :return: A tuple of the displacements in the x and y directions.
         """
-        as_array = np.array(item)
+        as_array = MVMapping.remove_zeroes(item)
         best_index = 0
         distances = self.keys[best_index].query(as_array)[0]
         min_distance = min((sum(distances) / len(distances)), 5)
@@ -50,7 +50,7 @@ class MVMapping:
         :param vectors: A list of vectors.
         :return: A list of distances.
         """
-        as_array = np.array(vectors)
+        as_array = MVMapping.remove_zeroes(vectors)
         distances = self.keys[0].query(as_array)[0]
         best_distances = distances
         min_distance = sum(distances) / len(distances)
@@ -118,3 +118,25 @@ class MVMapping:
         for i in range(0, 360):
             f1, f2 = DataGenerator.generate_rotation(image_dimensions, image_path, i)
             self[BlockMatching.get_motion_vectors(f2, f1)] = (0, 0, i)
+
+    def try_dictionary(self, image: str) -> None:
+        while True:
+            mode = input('enter mode (t - translation, r - rotation, c - change image): ').lower()
+            if mode == 'c':
+                image = input('enter image path: ')
+            elif mode == 't':
+                translation = eval(input('enter translation (x, y): ').replace(' ', ','))
+                f1, f2 = DataGenerator.generate_translation([360, 360], image, translation)
+                print('dictionary found: ', self[BlockMatching.get_motion_vectors(f2, f1)])
+            elif mode == 'r':
+                rotation = int(input('enter rotation: '))
+                f1, f2 = DataGenerator.generate_rotation([360, 360], image, rotation)
+                print('dictionary found: ', self[BlockMatching.get_motion_vectors(f2, f1)])
+
+    @staticmethod
+    def remove_zeroes(vectors: List[Tuple[int, int, int, int]]) -> np.ndarray:
+        new_vector_list = []
+        for x1, y1, x2, y2 in vectors:
+            if x1 != x2 or y1 != y2:
+                new_vector_list.append((x1, y1, x2, y2))
+        return np.array(vectors)
