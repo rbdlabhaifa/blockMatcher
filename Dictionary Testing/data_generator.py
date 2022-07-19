@@ -1,12 +1,12 @@
 import cv2
 import numpy as np
-from typing import Tuple, Union, List, Dict
-from PIL import Image, ImageDraw
-
+from typing import Union, List
+from PIL import Image
 from python_block_matching import BMFrame, BlockMatching
 
 
 class DataGenerator:
+
     @staticmethod
     def generate_translation(frame_size: List[int], img_url: str, translation):
         """
@@ -55,18 +55,3 @@ class DataGenerator:
 
         return np.asarray(ref_frame), np.asarray(cur_frame)
 
-
-if __name__ == '__main__':
-    image = np.full((160, 160, 3), 255, dtype=np.uint8)
-
-    cv2.circle(img=image, center=(80, 80), radius=80, color=(0, 255, 0), thickness=-1)
-
-    # cv2.imwrite("syn data/Circle_full.png", image)
-    f1, f2 = DataGenerator.generate_translation([360, 360], "syn data/Circle_full.png", [40, 0])
-    f1 = BMFrame(f1)
-    f2 = BMFrame(f2)
-    mv = list(BlockMatching.get_motion_vectors(f2.base_image, f1.base_image))
-    f1.draw_motion_vector(mv, (255, 0, 0), 1)
-    while True:
-        f1.show()
-        f2.show()
