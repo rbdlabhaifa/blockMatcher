@@ -54,4 +54,3 @@ class DataGenerator:
                               ref_frame.size[0] // 2 + img.size[0] // 2, ref_frame.size[1] // 2 + img.size[1] // 2))
 
         return np.asarray(ref_frame), np.asarray(cur_frame)
-

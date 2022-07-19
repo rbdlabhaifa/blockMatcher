@@ -72,14 +72,6 @@ class MVMapping:
                 pickle.dump(self.keys[i], f)
                 pickle.dump(self.values[i], f)
 
-    @staticmethod
-    def get_median_vector(vectors: List[Tuple[int, int, int, int]]) -> Tuple[int, int]:
-        x_sum, y_sum = 0, 0
-        for x1, y1, x2, y2 in vectors:
-            x_sum = x2 - x1
-            y_sum = y2 - y1
-        return x_sum, y_sum
-
     def train(self, image_path: str, start: int = 10, target: int = 110, step: int = 10) -> None:
         """
         Trains the dictionary for translation and rotation detection from an image.

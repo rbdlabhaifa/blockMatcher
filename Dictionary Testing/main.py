@@ -7,11 +7,11 @@ import numpy as np
 
 if __name__ == '__main__':
     mv_dict = MVMapping()
-    mv_dict.train('syn data/Black.png')
+    mv_dict.train('synthetic data/Black.png')
     mv_dict.save_to('trained dicts/square')
     mv_dict = MVMapping()
-    mv_dict.train('syn data/Circle_full.png')
+    mv_dict.train('synthetic data/Circle_full.png')
     mv_dict.save_to('trained dicts/circle')
     mv_dict = MVMapping()
-    mv_dict.train('syn data/Triangle_full.png')
+    mv_dict.train('synthetic data/Triangle_full.png')
     mv_dict.save_to('trained dicts/triangle')
