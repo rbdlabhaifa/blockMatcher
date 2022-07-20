@@ -10,7 +10,7 @@ size = (1280,720)
 # the angle in degrees in which the video stops (it always starts at 0)
 end_angle = 45
 # the change in angle in degrees in every frame
-step_size = 0.5
+step_size = 1.5
 # the size of the square on the chess board
 square_size = 32
 # the created video name

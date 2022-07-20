@@ -154,21 +154,20 @@ class MVMapping:
         return np.array(vectors)
 
     @staticmethod
-    def calculate_camera_x_rotation(vector: Tuple[int, int, int, int], height: int, resolution: Tuple[int, int],
-                                    fov: int) -> float:
+    def calculate_camera_x_rotation(vector: Tuple[int, int, int, int], resolution: Tuple[int, int], x_fov: int) -> float:
         """
         Calculates the rotation of the camera along the x-axis of the frame.
 
         :param vector: The motion vector.
-        :param height: The distance from the camera's pinhole to the view plane (the frame).
         :param resolution: The resolution of the frame.
-        :param fov: The angle of the camera's pinhole with the view plane.
+        :param x_fov: The angle of the camera's pinhole with the view plane on the x axis.
         :return: The rotation of the camera along the x-axis of the frame.
         """
-        meter_to_pixel_ratio = (2 * (height / np.tan(fov))) / resolution[0]
-        h_length = (vector[2]-vector[0]) * meter_to_pixel_ratio
-        h_2 = h_length ** 2
-        x = abs(vector[2] - vector[0])
-        x_2 = x ** 2
-        x_h = x_2 + h_2
-        return np.arcsin((2 * height * h_length) / np.sqrt(x_h * (x_h + h_2 + x * h_length)))
+        x_fov = np.deg2rad(x_fov)
+        vector_length = abs(vector[2] - vector[0])
+        cam_to_frame = (resolution[0] / 2) / np.tan(x_fov / 2)
+        half_width = resolution[0] // 2
+        distance_from_center = min(abs(half_width - vector[0]), abs(half_width - vector[2]))
+        a = np.sqrt(cam_to_frame ** 2 + distance_from_center ** 2)
+        b = np.sqrt(cam_to_frame ** 2 + (distance_from_center + vector_length) ** 2)
+        return np.rad2deg(np.arcsin((cam_to_frame * vector_length) / (a * b)))
