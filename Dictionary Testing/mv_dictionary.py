@@ -1,3 +1,4 @@
+import math
 import pickle
 import numpy as np
 from typing import List, Tuple
@@ -151,3 +152,23 @@ class MVMapping:
             if x1 != x2 or y1 != y2:
                 new_vector_list.append((x1, y1, x2, y2))
         return np.array(vectors)
+
+    @staticmethod
+    def calculate_camera_x_rotation(vector: Tuple[int, int, int, int], height: int, resolution: Tuple[int, int],
+                                    fov: int) -> float:
+        """
+        Calculates the rotation of the camera along the x-axis of the frame.
+
+        :param vector: The motion vector.
+        :param height: The distance from the camera's pinhole to the view plane (the frame).
+        :param resolution: The resolution of the frame.
+        :param fov: The angle of the camera's pinhole with the view plane.
+        :return: The rotation of the camera along the x-axis of the frame.
+        """
+        meter_to_pixel_ratio = (2 * (height / np.tan(fov))) / resolution[0]
+        h_length = (vector[2]-vector[0]) * meter_to_pixel_ratio
+        h_2 = h_length ** 2
+        x = abs(vector[2] - vector[0])
+        x_2 = x ** 2
+        x_h = x_2 + h_2
+        return np.arcsin((2 * height * h_length) / np.sqrt(x_h * (x_h + h_2 + x * h_length)))
