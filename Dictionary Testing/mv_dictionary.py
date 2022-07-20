@@ -92,6 +92,15 @@ class MVMapping:
                 pickle.dump(self.keys[i], f)
                 pickle.dump(self.values[i], f)
 
+    def train_by_images(self, frame_after_motion, frame_before_motion, motion):
+        """
+        @param frame_after_motion: The frame after the motion happened (Type: numpy array of size (N, M, 3) RGB colors)
+        @param frame_before_motion: The frame before the motion happened (Type: numpy array of size (N, M, 3) RGB colors)
+        @param motion: The motion in to 6 DOF
+        @return:
+        """
+        self[BlockMatching.get_motion_vectors(frame_after_motion, frame_before_motion)] = motion
+
     def train(self, image_path: str, start: int = 10, target: int = 110, step: int = 10) -> None:
         """
         Trains the dictionary for translation and rotation detection from an image.
