@@ -24,12 +24,13 @@ class DataGenerator:
         """
         frame_size = frame_size.copy()
         frame_size.append(frame_size.pop(0))
-        # frame_size.append(3)
-        ref_frame = Image.open("synthetic data/gradient.jpeg")
-        ref_frame = ref_frame.resize(frame_size)
+        frame_size.append(3)
+        # ref_frame = Image.open("synthetic data/wall.jpg")
+        # ref_frame = ref_frame.resize(frame_size)
+        ref_frame = Image.fromarray(np.full(frame_size, 255, dtype=np.uint8), "RGB")
         cur_frame = ref_frame.copy()
         img = Image.open(img_url)
-        # assert ref_frame.size[0] > img.size[0] and ref_frame.size[1] > img.size[1]
+        assert ref_frame.size[0] > img.size[0] and ref_frame.size[1] > img.size[1]
         ref_frame.paste(img, (ref_frame.size[0] // 2 - img.size[0] // 2, ref_frame.size[1] // 2 - img.size[1] // 2,
                               ref_frame.size[0] // 2 + img.size[0] // 2, ref_frame.size[1] // 2 + img.size[1] // 2))
         cur_frame.paste(img, (
@@ -51,7 +52,7 @@ class DataGenerator:
         frame_size = frame_size.copy()
         frame_size.append(frame_size.pop(0))
         # frame_size.append(3)
-        ref_frame = Image.open("synthetic data/gradient.jpeg")
+        ref_frame = Image.open("synthetic data/wall.jpg")
         ref_frame = ref_frame.resize(frame_size)
         cur_frame = ref_frame.copy()
         img = Image.open(img_url)
@@ -68,6 +69,16 @@ class DataGenerator:
 
 
 if __name__ == '__main__':
-    f1, f2 = DataGenerator.generate_rotation([360, 360], "synthetic data/Image0.png", 30)
-    f2 = BMFrame(f2)
-    f2.show()
+    f1, f2 = DataGenerator.generate_translation([480, 480], "synthetic data/Image0.png", [30, 0])
+    cv2.imshow("Frame0.png", f1)
+    cv2.waitKey()
+    cv2.imshow("Frame1.png", f2)
+    cv2.waitKey()
+    print(f1.shape)
+    cv2.imwrite("Frame0.png",f1)
+    # mvs = BlockMatching.get_motion_vectors(f2, f1)
+    # f1 = BMFrame(f1)
+    # f1.draw_motion_vector(mvs, (255, 0, 0), 2)
+    # f1.show()
+    # f2 = BMFrame(f2)
+    # f2.show()
