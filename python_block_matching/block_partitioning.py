@@ -17,7 +17,7 @@ def fixed_size_macro_blocks(frame: np.ndarray, block_width: int,
     frame_height, frame_width = frame.shape[:2]
     for y in range(0, block_height * (frame_height // block_height), block_height):
         for x in range(0, block_width * (frame_width // block_width), block_width):
-            yield x, y, frame[y:y + block_height, x:x + block_width]
+            yield x, y, block_width, block_height
 
 
 def variable_size_macro_blocks(frame: np.ndarray, block_width: int,

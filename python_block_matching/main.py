@@ -172,8 +172,8 @@ class BlockMatching:
         """
         macro_blocks = []
         partition_function = PARTITIONING_FUNCTION[partition_function]
-        for x, y, macro_block in partition_function(frame, block_width, block_height, cost_function):
-            macro_blocks.append((x, y, int(macro_block.shape[1]), int(macro_block.shape[0])))
+        for x, y, w, h in partition_function(frame, block_width, block_height, cost_function):
+            macro_blocks.append((x, y, w, h))
         return macro_blocks
 
     @staticmethod
