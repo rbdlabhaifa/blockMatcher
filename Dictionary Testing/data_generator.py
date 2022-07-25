@@ -1,8 +1,6 @@
-import cv2
 import numpy as np
 from typing import Union, List
 from PIL import Image
-from python_block_matching import BMFrame, BlockMatching
 
 
 class DataGenerator:
@@ -66,19 +64,3 @@ class DataGenerator:
                         img)
 
         return np.asarray(ref_frame), np.asarray(cur_frame)
-
-
-if __name__ == '__main__':
-    f1, f2 = DataGenerator.generate_translation([480, 480], "synthetic data/Image0.png", [30, 0])
-    cv2.imshow("Frame0.png", f1)
-    cv2.waitKey()
-    cv2.imshow("Frame1.png", f2)
-    cv2.waitKey()
-    print(f1.shape)
-    cv2.imwrite("Frame0.png",f1)
-    # mvs = BlockMatching.get_motion_vectors(f2, f1)
-    # f1 = BMFrame(f1)
-    # f1.draw_motion_vector(mvs, (255, 0, 0), 2)
-    # f1.show()
-    # f2 = BMFrame(f2)
-    # f2.show()

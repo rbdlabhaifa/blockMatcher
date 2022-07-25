@@ -100,12 +100,12 @@ if __name__ == "__main__":
         img = mapImage(chess,T,im_shape)
         img_array.append(img)
 
-    print("Saveing...")
-    out = cv2.VideoWriter(name,cv2.VideoWriter_fourcc(*'H264'),30.0,size)
+    print(f"Saving into {name}.mp4 ...")
+    out = cv2.VideoWriter(name,cv2.VideoWriter_fourcc(*'mp4v'),30.0,size)
     frame = 0
     for im in img_array:
-        # out.write(im)
-        cv2.imwrite("rot/Frame"+str(frame)+".jpeg", im)
+        out.write(im)
+        # cv2.imwrite("rot/Frame"+str(frame)+".jpeg", im)
         frame +=1
     print("Saved")
     out.release()

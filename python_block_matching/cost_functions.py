@@ -22,7 +22,7 @@ def mad(current_frame_macro_block: np.ndarray, reference_frame_macro_block: np.n
 
 def mse(current_frame_macro_block: np.ndarray, reference_frame_macro_block: np.ndarray) -> float:
     """
-    Sum of Squared Errors (SSE).
+    Mean Squared Errors (MSE).
 
     :param current_frame_macro_block: A slice from the current frame as a Numpy array of shape (y, x, 3).
     :param reference_frame_macro_block: A slice from the reference frame as a Numpy array of shape (y, x, 3).
@@ -41,7 +41,7 @@ def mse(current_frame_macro_block: np.ndarray, reference_frame_macro_block: np.n
 
 def sse(current_frame_macro_block: np.ndarray, reference_frame_macro_block: np.ndarray) -> float:
     """
-    Mean Squared Error (MSE).
+    Sum of Squared Error (SSE).
 
     :param current_frame_macro_block: A slice from the current frame as a Numpy array of shape (y, x, 3).
     :param reference_frame_macro_block: A slice from the reference frame as a Numpy array of shape (y, x, 3).
