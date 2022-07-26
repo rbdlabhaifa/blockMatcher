@@ -66,7 +66,6 @@ class points_cloud:
                 if tZ[idx] > zBuffer[i, ys[idx]]:
                     image[i, ys[idx]] = inv_norm_color
                     zBuffer[i, ys[idx]] = tZ[idx]
-
         return image
 
 
@@ -84,19 +83,17 @@ if __name__ == '__main__':
     eye_location = np.array([10., -10., 10.])
     hom_matrix = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]])
     # Read .ply file
-    input_file = "spider.ply"
+    input_file = "cube.ply"
     # Create calibration matrix
     cam_mat = np.array([[size[1] /  (2 * np.tan(np.deg2rad(fov_y))), 0, size[1] / 2],
                         [0, size[0] / (2 * np.tan(np.deg2rad(fov_x))), size[0] / 2],
                         [0, 0, 1]])
 
     #Creating unit sphere (not finish)
-    '''
-    a = o3d.geometry.TriangleMesh.create_sphere(radius=0.5, resolution=255)
-    points_cloud_obj = points_cloud(pcd = a.vertices ,eye_location=eye_location)
-    point_cloud_in_numpy = np.asarray(points_cloud_obj.pcd)
-    o3d.visualization.draw_geometries([point_cloud_in_numpy])
-    '''
+    a = o3d.create_mesh_sphere(radius=0.5, resolution=255)
+    print(type(a))
+    # points_cloud_obj = points_cloud(pcd = a.vertices ,eye_location=eye_location)
+    o3d.visualization.draw_geometries([a])
 
     #Dont touch
     '''
@@ -117,9 +114,8 @@ if __name__ == '__main__':
     img_points = np.empty_like(point_cloud_in_numpy)
     # Points projection
     for alpha in np.arange(0,end_angle,step_size):
-        #image = points_cloud_obj.openCVprojection(alpha)
-        image = points_cloud_obj.manualProjection(alpha)
-
+        image = points_cloud_obj.openCVprojection(alpha)
+        # image = points_cloud_obj.manualProjection(alpha)
         '''
         image2 = np.zeros((max(ys) - min(ys) + 1, max(xs) - min(xs) + 1, 3), np.uint8)
         if min(ys) < 0:
