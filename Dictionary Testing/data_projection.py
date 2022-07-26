@@ -2,6 +2,7 @@ import numpy as np
 import open3d as o3d
 import cv2
 import matplotlib.pyplot as plt
+from open3d.open3d.geometry import TriangleMesh
 
 class points_cloud:
     def __init__(self,pcd,eye_location):
@@ -10,7 +11,7 @@ class points_cloud:
 
     def visualize(self):
         # Visualize the point cloud within open3d
-        mesh_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(
+        mesh_frame = o3d.geometry.create_mesh_coordinate_frame(
             size=6, origin=eye_location)
         o3d.visualization.draw_geometries_with_custom_animation([self.pcd, mesh_frame])
 
@@ -70,6 +71,9 @@ class points_cloud:
 
 
 if __name__ == '__main__':
+
+    # NOTE: the code works on python 3.7 with open3d version 7.0.0
+
     # Initialization
     img_array = []
     size = (1280, 1024)
@@ -80,7 +84,7 @@ if __name__ == '__main__':
     eye_location = np.array([10., -10., 10.])
     hom_matrix = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]])
     # Read .ply file
-    input_file = "/home/txp1/Downloads/city-quay/base.ply"
+    input_file = "spider.ply"
     # Create calibration matrix
     cam_mat = np.array([[size[1] /  (2 * np.tan(np.deg2rad(fov_y))), 0, size[1] / 2],
                         [0, size[0] / (2 * np.tan(np.deg2rad(fov_x))), size[0] / 2],
@@ -106,6 +110,9 @@ if __name__ == '__main__':
     points_cloud_obj = points_cloud(pcd=o3d.io.read_point_cloud(input_file) ,eye_location=eye_location)
     # Convert open3d format to numpy array
     point_cloud_in_numpy = np.asarray(points_cloud_obj.pcd.points)
+    if not points_cloud_obj.pcd.has_colors():
+        # paints all points with a single a color because an error will occur if there's no color.
+        points_cloud_obj.pcd.paint_uniform_color((0, 255, 0))
     point_color = np.asarray(points_cloud_obj.pcd.colors)
     img_points = np.empty_like(point_cloud_in_numpy)
     # Points projection
@@ -125,9 +132,9 @@ if __name__ == '__main__':
 
         image = cv2.GaussianBlur(image,(3,3),0)
         img_array.append(image)
-        cv2.imwrite("/home/txp1/Downloads/city-quay/res/result" + str(alpha) + ".png", image)
+        cv2.imwrite("projection/result" + str(alpha) + ".png", image)
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter("/home/txp1/Downloads/city-quay/res/result11.mp4", fourcc, 30.0, size)
+    out = cv2.VideoWriter("result11.mp4", fourcc, 30.0, size)
     for im in img_array:
         out.write(im)
     out.release()
