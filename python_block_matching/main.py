@@ -93,7 +93,7 @@ class BMVideo:
             video = cv2.VideoCapture(self.frames)
             frame_count = self.get_frame_count()
             item = (frame_count + item) if item < 0 else item
-            assert 0 <= item < frame_count
+            # assert 0 <= item < frame_count
             _, frame = video.read()
             for i in range(item - 1):
                 _, frame = video.read()
