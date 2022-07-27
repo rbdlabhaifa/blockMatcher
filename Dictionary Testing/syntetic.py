@@ -107,10 +107,28 @@ def generate_pictures_2_angles(image, angle1, angle2, out_size):
 
 
 if __name__ == "__main__":
-    out1, out2 = generate_pictures_2_angles("/home/txp2/RPI-BMA-RE/Dictionary Testing/amogus.png", 10, 70, [450, 450])
-    cv2.imshow("out1", out1)
-    cv2.imshow("out2", out2)
-    cv2.waitKey()
+    from mv_dictionary import MVMapping
+    from python_block_matching import BlockMatching
+
+    mv_dict = MVMapping()
+    chess = np.zeros((im_shape[0] * 4, int(im_shape[1] * 4), 3), dtype=np.uint8)
+    for i in range(int(chess.shape[0] / square_size)):
+        for j in range(int(chess.shape[1] / square_size)):
+            chess[square_size * j:square_size * (j + 1), square_size * i:square_size * (i + 1)] = np.random.randint(0,
+                                                                                                                    256,
+                                                                                                                    3,
+                                                                                                                    np.uint8)
+    for angle in range(0, 60):
+        for step in range(0, 8):
+            cur, ref = generate_pictures_2_angles(chess, angle, angle + step, [480,480])
+            mv = BlockMatching.get_motion_vectors(cur, ref)
+            mv_dict[mv] = step
+    mv_dict.save_to("trained dicts/chess_plane_ego_rot_0-8_steps.pickle")
+    # Test
+    # out1, out2 = generate_pictures_2_angles("/home/txp2/RPI-BMA-RE/Dictionary Testing/amogus.png", 10, 70, [450, 450])
+    # cv2.imshow("out1", out1)
+    # cv2.imshow("out2", out2)
+    # cv2.waitKey()
 
     # img_array = []
     #
