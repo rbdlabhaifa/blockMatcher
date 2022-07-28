@@ -4,8 +4,8 @@ from python_block_matching import *
 from mv_dictionary import MVMapping
 
 
-def test_ego_rotation_dicts():
-    im_shape = [480, 480]
+def try_ego_rotation_dicts():
+    im_shape = [360, 360]
     square_size = 32
     mv_dict = MVMapping('trained dicts/chess_plane_ego_rot_0-8_steps.pickle')
     while True:
@@ -19,10 +19,15 @@ def test_ego_rotation_dicts():
                     3,
                     np.uint8)
         f1, f2 = generate_pictures_2_angles(chess, angle, angle + step, im_shape)
+        # a = BMFrame(f1)
+        # a.draw_motion_vector(BlockMatching.get_motion_vectors(f2, f1), (0, 255, 0), 2)
+        # a.show()
+        # BMFrame(f2).show()
         print('dictionary found: ', mv_dict[BlockMatching.get_motion_vectors(f2, f1)])
 
 
 if __name__ == '__main__':
+    try_ego_rotation_dicts()
     mv_dict = MVMapping('trained dicts/square')
 
     vid = BMVideo([f'rot/Frame{i}.jpeg' for i in range(90)])
