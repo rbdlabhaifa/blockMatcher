@@ -1,3 +1,4 @@
+from random import randint
 import numpy as np
 import open3d as o3d
 import cv2
@@ -140,7 +141,7 @@ def view_geometries(*geometries: o3d.Geometry) -> None:
 
 
 def project_point_clouds(resolution: Tuple[int, int], theta: float, eye_location: Tuple[int, int, int],
-                         camera_matrix: np.ndarray, *clouds: o3d.Geometry) -> np.ndarray:
+                         camera_matrix: np.ndarray, *clouds: o3d.geometry.PointCloud) -> np.ndarray:
     """
     Projects geometries onto an image using openCV.
 
@@ -172,6 +173,33 @@ def project_point_clouds(resolution: Tuple[int, int], theta: float, eye_location
     return view_plane
 
 
+def project_meshes(resolution: Tuple[int, int], theta: float, eye_location: Tuple[int, int, int],
+                   camera_matrix: np.ndarray, *meshes: o3d.geometry.TriangleMesh) -> np.ndarray:
+    points = np.array([p for geometry in meshes for p in np.asarray(geometry.vertices)])
+    radians = np.deg2rad(theta)
+    view_plane = np.zeros((resolution[1], resolution[0], 3))
+    rotation_matrix = np.array([
+        [np.cos(radians), -np.sin(radians), 0],
+        [np.sin(radians), np.cos(radians), 0],
+        [0, 0, 1]
+    ])
+    projected_points = cv2.projectPoints(points, rotation_matrix, eye_location, camera_matrix, distCoeffs=0,
+                                         aspectRatio=(resolution[0] / resolution[1]))
+    projected_points = np.asarray(projected_points[0])
+    for mesh in meshes:
+        for pt1, pt2, pt3 in mesh.triangles:
+            pt1 = projected_points[pt1][0].astype(int)
+            pt2 = projected_points[pt2][0].astype(int)
+            pt3 = projected_points[pt3][0].astype(int)
+            rnd_color = (randint(0, 255) / 255, randint(0, 255) / 255, randint(0, 255) / 255)
+            cv2.circle(view_plane, pt1, 2, rnd_color, -1)
+            cv2.circle(view_plane, pt2, 2, rnd_color, -1)
+            cv2.circle(view_plane, pt3, 2, rnd_color, -1)
+            triangle_cnt = np.array([pt1, pt2, pt3])
+            view_plane = cv2.drawContours(view_plane, [triangle_cnt], 0, rnd_color, -1)
+    return view_plane
+
+
 # ================================================== main ================================================== #
 
 
@@ -180,31 +208,24 @@ if __name__ == '__main__':
     # NOTE: SOME THINGS WORK ON POINT CLOUDS AND NOT ON MESHES, THE OPPOSITE IS TRUE AS WELL.
 
     # CAMERA SETTINGS
-    _resolution = (1280, 1024)
+    _resolution = (500, 500)
     _theta = 0
-    _eye_location = (0, 0, -90)
+    _eye_location = (0, 0, -40)
     _fov_x = 60
     _fov_y = 40
     _camera_matrix = np.array([
-        [_resolution[1] / (2 * np.tan(np.deg2rad(_fov_y))), 0, _resolution[1] / 2],
-        [0, _resolution[0] / (2 * np.tan(np.deg2rad(_fov_x))), _resolution[0] / 2],
+        [_resolution[0] / (2 * np.tan(np.deg2rad(_fov_x))), 0, _resolution[0] / 2],
+        [0, _resolution[1] / (2 * np.tan(np.deg2rad(_fov_y))), _resolution[1] / 2],
         [0, 0, 1]
     ])
 
-    # READ GEOMETRY OBJECT
+    # READ/CREATE GEOMETRY OBJECT
     geometry_object = create_sphere(10, (10, 255, 0))
-
-    geometry_object = mesh_to_point_cloud(geometry_object, 8000)
-
-    # APPLY TRANSFORMATIONS
-    # geometry_object = scale_geometry(geometry_object, 10)
-    # geometry_object = translate_geometry(geometry_object, (1, 1, 20))
 
     # ROTATE THE CAMERA
     for _theta in range(30, 2000, 10):
-
         # PROJECT THE OBJECT ONTO AN IMAGE
-        image = project_point_clouds(_resolution, _theta, _eye_location, _camera_matrix, geometry_object)
+        image = project_meshes(_resolution, _theta, _eye_location, _camera_matrix, geometry_object)
 
         # SHOW THE IMAGE
         cv2.imshow('', image)
