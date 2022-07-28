@@ -79,6 +79,17 @@ def create_cylinder(radius: int, height: int, color: Tuple[int, int, int] = None
     return mesh
 
 
+def mesh_to_point_cloud(mesh: o3d.geometry.TriangleMesh, numer_of_points: int):
+    """
+    Transform mesh to point cloud.
+
+    :param mesh: A TriangleMesh object.
+    :param numer_of_points: The density of points.
+    :return: A point cloud object.
+    """
+    return o3d.geometry.sample_points_uniformly(deepcopy(mesh), number_of_points=numer_of_points)
+
+
 # ======================================= transform geometries ======================================= #
 
 
@@ -128,21 +139,20 @@ def view_geometries(*geometries: o3d.Geometry) -> None:
     o3d.visualization.draw_geometries_with_custom_animation(geometries)
 
 
-def project_geometries(resolution: Tuple[int, int], theta: float, eye_location: Tuple[int, int, int],
-                       camera_matrix: np.ndarray, *geometries: o3d.Geometry) -> np.ndarray:
+def project_point_clouds(resolution: Tuple[int, int], theta: float, eye_location: Tuple[int, int, int],
+                         camera_matrix: np.ndarray, *clouds: o3d.Geometry) -> np.ndarray:
     """
     Projects geometries onto an image using openCV.
-    FIXME: For now it only works on point clouds, fix only if necessary.
 
     :param resolution: The resolution of the image.
     :param theta: The rotation of the camera.
     :param eye_location: The coordinates of the camera in 3D space.
     :param camera_matrix: The transformation defined by the camera (?).
-    :param geometries: A list of geometries objects to project.
+    :param clouds: A list of geometries objects to project.
     :return:
     """
-    points = np.array([p for geometry in geometries for p in np.asarray(geometry.points)])
-    colors = np.array([p for geometry in geometries for p in np.asarray(geometry.colors)])
+    points = np.array([p for geometry in clouds for p in np.asarray(geometry.points)])
+    colors = np.array([p for geometry in clouds for p in np.asarray(geometry.colors)])
     radians = np.deg2rad(theta)
     view_plane = np.zeros((resolution[1], resolution[0], 3))
     rotation_matrix = np.array([
@@ -172,7 +182,7 @@ if __name__ == '__main__':
     # CAMERA SETTINGS
     _resolution = (1280, 1024)
     _theta = 0
-    _eye_location = (10, -10, 10)
+    _eye_location = (0, 0, -90)
     _fov_x = 60
     _fov_y = 40
     _camera_matrix = np.array([
@@ -182,17 +192,19 @@ if __name__ == '__main__':
     ])
 
     # READ GEOMETRY OBJECT
-    geometry_object = read_ply_file('spider.ply', 'point cloud', (10, 0, 0))
+    geometry_object = create_sphere(10, (10, 255, 0))
+
+    geometry_object = mesh_to_point_cloud(geometry_object, 8000)
 
     # APPLY TRANSFORMATIONS
-    geometry_object = scale_geometry(geometry_object, 10)
-    geometry_object = translate_geometry(geometry_object, (1, 1, 20))
+    # geometry_object = scale_geometry(geometry_object, 10)
+    # geometry_object = translate_geometry(geometry_object, (1, 1, 20))
 
     # ROTATE THE CAMERA
     for _theta in range(30, 2000, 10):
 
         # PROJECT THE OBJECT ONTO AN IMAGE
-        image = project_geometries(_resolution, _theta, _eye_location, _camera_matrix, geometry_object)
+        image = project_point_clouds(_resolution, _theta, _eye_location, _camera_matrix, geometry_object)
 
         # SHOW THE IMAGE
         cv2.imshow('', image)
