@@ -1,137 +1,202 @@
 import numpy as np
 import open3d as o3d
 import cv2
-import matplotlib.pyplot as plt
-from open3d.open3d.geometry import TriangleMesh
+from copy import deepcopy
+from typing import Tuple
 
-class points_cloud:
-    def __init__(self,pcd,eye_location):
-        self.pcd = pcd
-        self.eye_location = eye_location
 
-    def visualize(self):
-        # Visualize the point cloud within open3d
-        mesh_frame = o3d.geometry.create_mesh_coordinate_frame(
-            size=6, origin=eye_location)
-        o3d.visualization.draw_geometries_with_custom_animation([self.pcd, mesh_frame])
+# ======================================= create or read geometries ======================================= #
 
-    def openCVprojection(self,alpha):
-        img_points = np.empty_like(self.pcd.points)
-        rad = np.deg2rad(alpha)
-        image = np.zeros((size[1], size[0], 3), np.uint8)
-        rotation_mat = np.array([[np.cos(rad), -np.sin(rad), 0], [np.sin(rad), np.cos(rad), 0], [0, 0, 1]])
-        img_points = cv2.projectPoints(point_cloud_in_numpy, rotation_mat, eye_location, cam_mat, distCoeffs=0,
-                           aspectRatio=(size[0] / size[1]))
-        img_points = np.asarray(img_points[0])
-        xs = np.round([x[0][0] for x in img_points])
-        ys = np.round([x[0][1] for x in img_points])
-        xs = xs.astype(int)
-        ys = ys.astype(int)
 
-        for idx, i in enumerate(xs):
-            if 0 <= i < len(image[:, ]) and 0 <= ys[idx] < len(image[0]):
-                inv_norm_color = (point_color[idx] * 255).astype(int)
-                image[i, ys[idx]] = inv_norm_color
+def read_ply_file(file_path: str, read_as: str = 'mesh', color: Tuple[int, int, int] = None) -> o3d.Geometry:
+    """
+    Read a .ply file using open3D.
 
-        return image
+    :param file_path: The path to the .ply file.
+    :param read_as: Read the file as a 'mesh' or as a 'point cloud'.
+    :param color: Paint the 3D object with a uniform color (optional).
+    :return: A geometry::PointCloud object for point clouds and geometry::TriangleMesh object for meshes.
+    """
+    if read_as == 'mesh':
+        geometry = o3d.io.read_triangle_mesh(file_path)
+        if color is not None:
+            geometry.paint_uniform_color(color)
+        return geometry
+    elif read_as == 'point cloud':
+        geometry = o3d.io.read_point_cloud(file_path)
+        if color is not None:
+            geometry.paint_uniform_color(color)
+        return geometry
+    else:
+        raise ValueError(f'parameter \'read_as\' can only be \'mesh\' or \'point cloud\', not {read_as}.')
 
-    def manualProjection(self,alpha):
-        rad = np.deg2rad(alpha)
-        image = np.zeros((size[1], size[0], 3), np.uint8)
-        zBuffer = np.zeros((size[1], size[0]), np.uint8)
-        rotation_mat = np.array([[np.cos(rad), -np.sin(rad), 0], [np.sin(rad), np.cos(rad), 0], [0, 0, 1]])
-        img_points = np.empty_like(self.pcd.points)
-        T = np.column_stack([rotation_mat,eye_location])
-        T = np.row_stack([T,[0,0,0,1]])
-        C = np.matmul(cam_mat,hom_matrix)
-        T = np.matmul(C,T)
-        for idx,i in enumerate(point_cloud_in_numpy):
-            x = np.append(i,1)
-            x = np.matmul(T,x)
-            img_points[idx][0] = x[0]/x[2]
-            img_points[idx][1] = x[1]/x[2]
-            img_points[idx][2] = x[2]
 
-        tX = img_points[:,0]
-        tY = img_points[:,1]
-        tZ = img_points[:,2]
-        xs = np.round(tX)
-        ys = np.round(tY)
-        xs = xs.astype(int)
-        ys = ys.astype(int)
+def create_box(width: int, height: int, depth: int, color: Tuple[int, int, int] = None) -> o3d.Geometry:
+    """
+    Creates a box.
 
-        for idx, i in enumerate(xs):
-            if 0 <= i < len(image[:, ]) and 0 <= ys[idx] < len(image[0]):
-                inv_norm_color = (point_color[idx] * 255).astype(int)
-                if tZ[idx] > zBuffer[i, ys[idx]]:
-                    image[i, ys[idx]] = inv_norm_color
-                    zBuffer[i, ys[idx]] = tZ[idx]
-        return image
+    :param width: The width of the box.
+    :param height: The height of the box.
+    :param depth: The depth of the box.
+    :param color: The color of the box.
+    :return: A mesh of a box.
+    """
+    mesh = o3d.geometry.create_mesh_box(width, height, depth)
+    if color is not None:
+        mesh.paint_uniform_color(color)
+    mesh.compute_vertex_normals()
+    return mesh
+
+
+def create_sphere(radius: int, color: Tuple[int, int, int] = None) -> o3d.Geometry:
+    """
+    Creates a sphere.
+
+    :param radius: The radius of the sphere.
+    :param color: The color of the sphere.
+    :return: A mesh of a sphere.
+    """
+    mesh = o3d.geometry.create_mesh_sphere(radius)
+    if color is not None:
+        mesh.paint_uniform_color(color)
+    mesh.compute_vertex_normals()
+    return mesh
+
+
+def create_cylinder(radius: int, height: int, color: Tuple[int, int, int] = None) -> o3d.Geometry:
+    """
+    Creates a cylinder.
+
+    :param radius: The radius of the cylinder.
+    :param height: the height of the cylinder.
+    :param color: The color of the cylinder.
+    :return: A mesh of a cylinder.
+    """
+    mesh = o3d.geometry.create_mesh_cylinder(radius, height)
+    if color is not None:
+        mesh.paint_uniform_color(color)
+    mesh.compute_vertex_normals()
+    return mesh
+
+
+# ======================================= transform geometries ======================================= #
+
+
+def translate_geometry(geometry: o3d.Geometry, translation: Tuple[int, int, int]):
+    """
+    Translate a Geometry object.
+
+    :param geometry: The geometry object to transform.
+    :param translation: The translation to perform.
+    :return: A transformed copy of the geometry.
+    """
+    return deepcopy(geometry).translate(translation)
+
+
+def rotate_geometry(geometry: o3d.Geometry, rotation_matrix: np.ndarray, center: Tuple[int, int, int] = (0, 0, 0)):
+    """
+        Rotate a Geometry object.
+
+        :param geometry: The geometry object to transform.
+        :param rotation_matrix: The rotation matrix to use.
+        :param center: The center point of the rotation.
+        :return: A transformed copy of the geometry.
+    """
+    return deepcopy(geometry).rotate(rotation_matrix, center=center)
+
+
+def scale_geometry(geometry: o3d.Geometry, scalar: float):
+    """
+        Scale a Geometry object.
+
+        :param geometry: The geometry object to transform.
+        :param scalar: The scalar to scale with.
+        :return: A transformed copy of the geometry.
+    """
+    return deepcopy(geometry).scale(scalar)
+
+
+# ======================================= view or project geometries ======================================= #
+
+
+def view_geometries(*geometries: o3d.Geometry) -> None:
+    """
+    View one or more Geometry objects.
+
+    :param geometries: A Geometry object.
+    """
+    o3d.visualization.draw_geometries_with_custom_animation(geometries)
+
+
+def project_geometries(resolution: Tuple[int, int], theta: float, eye_location: Tuple[int, int, int],
+                       camera_matrix: np.ndarray, *geometries: o3d.Geometry) -> np.ndarray:
+    """
+    Projects geometries onto an image using openCV.
+    FIXME: For now it only works on point clouds, fix only if necessary.
+
+    :param resolution: The resolution of the image.
+    :param theta: The rotation of the camera.
+    :param eye_location: The coordinates of the camera in 3D space.
+    :param camera_matrix: The transformation defined by the camera (?).
+    :param geometries: A list of geometries objects to project.
+    :return:
+    """
+    points = np.array([p for geometry in geometries for p in np.asarray(geometry.points)])
+    colors = np.array([p for geometry in geometries for p in np.asarray(geometry.colors)])
+    radians = np.deg2rad(theta)
+    view_plane = np.zeros((resolution[1], resolution[0], 3))
+    rotation_matrix = np.array([
+        [np.cos(radians), -np.sin(radians), 0],
+        [np.sin(radians), np.cos(radians), 0],
+        [0, 0, 1]
+    ])
+    projected_points = cv2.projectPoints(points, rotation_matrix, eye_location, camera_matrix, distCoeffs=0,
+                                         aspectRatio=(resolution[0] / resolution[1]))
+    projected_points = np.asarray(projected_points[0])
+    xs = np.round([x[0][0] for x in projected_points]).astype(int)
+    ys = np.round([x[0][1] for x in projected_points]).astype(int)
+    for idx, i in enumerate(xs):
+        if 0 <= i < len(view_plane[:, ]) and 0 <= ys[idx] < len(view_plane[0]):
+            inv_norm_color = (colors[idx] * 255).astype(int)
+            view_plane[i, ys[idx]] = inv_norm_color
+    return view_plane
+
+
+# ================================================== main ================================================== #
 
 
 if __name__ == '__main__':
 
-    # NOTE: the code works on python 3.7 with open3d version 7.0.0
+    # NOTE: SOME THINGS WORK ON POINT CLOUDS AND NOT ON MESHES, THE OPPOSITE IS TRUE AS WELL.
 
-    # Initialization
-    img_array = []
-    size = (1280, 1024)
-    fov_x = 60
-    fov_y = 40
-    end_angle = 360
-    step_size = 0.5
-    eye_location = np.array([10., -10., 10.])
-    hom_matrix = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]])
-    # Read .ply file
-    input_file = "cube.ply"
-    # Create calibration matrix
-    cam_mat = np.array([[size[1] /  (2 * np.tan(np.deg2rad(fov_y))), 0, size[1] / 2],
-                        [0, size[0] / (2 * np.tan(np.deg2rad(fov_x))), size[0] / 2],
-                        [0, 0, 1]])
+    # CAMERA SETTINGS
+    _resolution = (1280, 1024)
+    _theta = 0
+    _eye_location = (10, -10, 10)
+    _fov_x = 60
+    _fov_y = 40
+    _camera_matrix = np.array([
+        [_resolution[1] / (2 * np.tan(np.deg2rad(_fov_y))), 0, _resolution[1] / 2],
+        [0, _resolution[0] / (2 * np.tan(np.deg2rad(_fov_x))), _resolution[0] / 2],
+        [0, 0, 1]
+    ])
 
-    #Creating unit sphere (not finish)
-    a = o3d.create_mesh_sphere(radius=0.5, resolution=255)
-    print(type(a))
-    # points_cloud_obj = points_cloud(pcd = a.vertices ,eye_location=eye_location)
-    o3d.visualization.draw_geometries([a])
+    # READ GEOMETRY OBJECT
+    geometry_object = read_ply_file('spider.ply', 'point cloud', (10, 0, 0))
 
-    #Dont touch
-    '''
-    im_shape = (size[1],size[0],3)    
-    chess = np.zeros(int((im_shape[0]*4),int(im_shape[1]*4),3),dtype=np.uint8)
-    for i in range(int(chess.shape[0]/square_size)):
-        for j in range(int(chess.shape[1]/square_size)):
-            chess[square_size*j:square_size*(j+1),square_size*i:square_size*(i+1)] = np.random.randint(0,256,3,np.uint8)
+    # APPLY TRANSFORMATIONS
+    geometry_object = scale_geometry(geometry_object, 10)
+    geometry_object = translate_geometry(geometry_object, (1, 1, 20))
 
-    '''
-    points_cloud_obj = points_cloud(pcd=o3d.io.read_point_cloud(input_file) ,eye_location=eye_location)
-    # Convert open3d format to numpy array
-    point_cloud_in_numpy = np.asarray(points_cloud_obj.pcd.points)
-    if not points_cloud_obj.pcd.has_colors():
-        # paints all points with a single a color because an error will occur if there's no color.
-        points_cloud_obj.pcd.paint_uniform_color((0, 255, 0))
-    point_color = np.asarray(points_cloud_obj.pcd.colors)
-    img_points = np.empty_like(point_cloud_in_numpy)
-    # Points projection
-    for alpha in np.arange(0,end_angle,step_size):
-        image = points_cloud_obj.openCVprojection(alpha)
-        # image = points_cloud_obj.manualProjection(alpha)
-        '''
-        image2 = np.zeros((max(ys) - min(ys) + 1, max(xs) - min(xs) + 1, 3), np.uint8)
-        if min(ys) < 0:
-            ys = ys + (-min(ys))
-        if min(xs) < 0:
-            xs = xs + (-min(xs))
-        for idx, i in enumerate(xs):
-            image2[ys[idx],i] = (255, 255,255)
-        '''
+    # ROTATE THE CAMERA
+    for _theta in range(30, 2000, 10):
 
-        image = cv2.GaussianBlur(image,(3,3),0)
-        img_array.append(image)
-        cv2.imwrite("projection/result" + str(alpha) + ".png", image)
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter("result11.mp4", fourcc, 30.0, size)
-    for im in img_array:
-        out.write(im)
-    out.release()
-    points_cloud_obj.visualize()
+        # PROJECT THE OBJECT ONTO AN IMAGE
+        image = project_geometries(_resolution, _theta, _eye_location, _camera_matrix, geometry_object)
+
+        # SHOW THE IMAGE
+        cv2.imshow('', image)
+        cv2.waitKey()
+
+        # SAVE THE IMAGE TO A FILE
+        pass
