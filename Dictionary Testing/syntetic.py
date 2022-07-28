@@ -118,9 +118,9 @@ if __name__ == "__main__":
                                                                                                                     256,
                                                                                                                     3,
                                                                                                                     np.uint8)
-    for angle in range(0, 60):
+    for angle in range(0, 40):
         for step in range(0, 8):
-            cur, ref = generate_pictures_2_angles(chess, angle, angle + step, [480,480])
+            ref, cur = generate_pictures_2_angles(chess, angle, angle + step, [360,360])
             mv = BlockMatching.get_motion_vectors(cur, ref)
             mv_dict[mv] = step
     mv_dict.save_to("trained dicts/chess_plane_ego_rot_0-8_steps.pickle")
