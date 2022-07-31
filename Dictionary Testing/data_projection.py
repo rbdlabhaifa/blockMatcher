@@ -1,4 +1,3 @@
-from random import randint
 import numpy as np
 import open3d as o3d
 import cv2
@@ -85,6 +84,7 @@ def create_sphere_point_cloud(radius: int = 360, degree_step: int = 1):
             sphere_array.append(x)
     pcl = o3d.geometry.PointCloud()
     pcl.points = o3d.utility.Vector3dVector(sphere_array)
+    pcl.colors = o3d.utility.Vector3dVector(sphere_array)
     return pcl
 
 
@@ -207,7 +207,7 @@ if __name__ == '__main__':
     # CAMERA SETTINGS
     _resolution = (500, 500)
     _theta = 0
-    _eye_location = (0, 0, -40)
+    _eye_location = (0, 0, 0)
     _fov_x = 60
     _fov_y = 40
     _camera_matrix = np.array([
