@@ -29,21 +29,33 @@ class points_cloud:
             if 0 <= i < len(image[:, ]) and 0 <= ys[idx] < len(image[0]):
                 inv_norm_color = abs(point_color[idx] * 255).astype(int)
                 image[i, ys[idx]] = inv_norm_color
-                # image[min(i + 1, image.shape[0] - 1), min(ys[idx] + 1, image.shape[1] - 1)] = inv_norm_color
-                # image[max(0, i - 1), max(ys[idx] - 1, 0)] = inv_norm_color
-                # image[i, min(ys[idx] + 1, image.shape[1]-1)] = inv_norm_color
-                # image[i, max(ys[idx] - 1, 0)] = inv_norm_color
-                # image[min(i + 1, image.shape[0] - 1), max(ys[idx] - 1, 0)] = inv_norm_color
-                # image[max(0, i - 1), min(ys[idx] + 1, image.shape[1] - 1)] = inv_norm_color
-                # image[min(i + 1, image.shape[0] - 1), ys[idx]] = inv_norm_color
-                # image[max(0, i - 1), ys[idx]] = inv_norm_color
+                image[min(i + 1, image.shape[0] - 1), min(ys[idx] + 1, image.shape[1] - 1)] = inv_norm_color
+                image[max(0, i - 1), max(ys[idx] - 1, 0)] = inv_norm_color
+                image[i, min(ys[idx] + 1, image.shape[1]-1)] = inv_norm_color
+                image[i, max(ys[idx] - 1, 0)] = inv_norm_color
+                image[min(i + 1, image.shape[0] - 1), max(ys[idx] - 1, 0)] = inv_norm_color
+                image[max(0, i - 1), min(ys[idx] + 1, image.shape[1] - 1)] = inv_norm_color
+                image[min(i + 1, image.shape[0] - 1), ys[idx]] = inv_norm_color
+                image[max(0, i - 1), ys[idx]] = inv_norm_color
         return image
 
     def manualProjection(self, alpha):
         rad = np.deg2rad(alpha)
-        image = np.zeros((size[1], size[0], 3), np.uint8)
+        image = np.full((size[1], size[0], 3), 255, dtype=np.uint8)
         zBuffer = np.zeros((size[1], size[0]), np.uint8)
         rotation_mat = np.array([[np.cos(rad), -np.sin(rad), 0], [np.sin(rad), np.cos(rad), 0], [0, 0, 1]])
+
+        theta_x = np.deg2rad(90)
+        theta_y = np.deg2rad(0)
+        theta_z = np.deg2rad(90)
+        x_rot = np.array([[1, 0, 0], [0, np.cos(theta_x), -np.sin(theta_x)], [0, np.sin(theta_x), np.cos(theta_x)]])
+        y_rot = np.array([[np.cos(theta_y), 0, np.sin(theta_y)], [0, 1, 0], [-np.sin(theta_y), 0, np.cos(theta_y)]])
+        z_rot = np.array([[np.cos(theta_z), -np.sin(theta_z), 0], [np.sin(theta_z), np.cos(theta_z), 0], [0, 0, 1]])
+
+        rotation_mat = np.matmul(x_rot, rotation_mat)
+        rotation_mat = np.matmul(y_rot, rotation_mat)
+        rotation_mat = np.matmul(z_rot, rotation_mat)
+
         img_points = np.empty_like(self.pcd.points)
         T = np.column_stack([rotation_mat, eye_location])
         T = np.row_stack([T, [0, 0, 0, 1]])
@@ -74,6 +86,21 @@ class points_cloud:
                 inv_norm_color = abs(point_color[idx] * 255).astype(int)
                 if tZ[idx] > zBuffer[i, ys[idx]]:
                     image[i, ys[idx]] = inv_norm_color
+                    cy, cx = i, ys[idx]
+                    s = 1
+                    p1 = (cx, cy)
+                    p2 = (cx + s, cy)
+                    p3 = (cx, cy + s)
+                    p4 = (cx + s, cy + s)
+                    p5 = (cx - s, cy)
+                    p6 = (cx, cy - s)
+                    p7 = (cx - s, cy - s)
+                    p8 = (cx + s, cy - s)
+                    p9 = (cx - s, cy + s)
+                    for px, py in (p1, p2, p3, p4, p5, p6, p7, p8, p9):
+                        px, py = max(px, 0), max(py, 0)
+                        px, py = min(size[0] - 1, px), min(size[1] - 1, py)
+                        image[py, px] = inv_norm_color
                     zBuffer[i, ys[idx]] = tZ[idx]
 
         return image
@@ -82,8 +109,8 @@ class points_cloud:
 def create_sphere():
     sphere_array = []
     longitude = 360
-    deg_step_1 = 1
-    deg_step_2 = 1
+    deg_step_1 = 0.25
+    deg_step_2 = 0.25
     latitude = 360
     i, j = 0, 0
     while i < latitude:
@@ -108,10 +135,10 @@ if __name__ == '__main__':
     fov_x = 60
     fov_y = 40
     end_angle = 360
-    step_size = 0.5
+    step_size = 1
     eye_location = np.array([0., 0., 0.])
     hom_matrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]])
-    manualProjection = False
+    manualProjection = True
     sphere = True
     # Read .ply file
     input_file = "/home/txp1/Downloads/city-quay/base.ply"
@@ -128,7 +155,6 @@ if __name__ == '__main__':
     y_rot = np.array([[np.cos(theta_y), 0, np.sin(theta_y)], [0, 1, 0], [-np.sin(theta_y), 0, np.cos(theta_y)]])
     z_rot = np.array([[np.cos(theta_z), -np.sin(theta_z), 0], [np.sin(theta_z), np.cos(theta_z), 0], [0, 0, 1]])
 
-    cam_mat *= x_rot * y_rot * z_rot
 
     # unit 3d sphere
     pcl = create_sphere()
@@ -163,6 +189,6 @@ if __name__ == '__main__':
         # Gaussian Blur
         image = cv2.GaussianBlur(image, (3, 3), 0)
         img_array.append(image)
-        # TODO: uncomment this
+        cv2.imshow('',image)
+        cv2.waitKey()
         # cv2.imwrite("projection/image" + str(alpha) + ".png", image)
-        cv2.imshow('', image)
