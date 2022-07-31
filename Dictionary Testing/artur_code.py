@@ -29,14 +29,14 @@ class points_cloud:
             if 0 <= i < len(image[:, ]) and 0 <= ys[idx] < len(image[0]):
                 inv_norm_color = abs(point_color[idx] * 255).astype(int)
                 image[i, ys[idx]] = inv_norm_color
-                image[min(i + 1, image.shape[0] - 1), min(ys[idx] + 1, image.shape[1] - 1)] = inv_norm_color
-                image[max(0, i - 1), max(ys[idx] - 1, 0)] = inv_norm_color
-                image[i, min(ys[idx] + 1, image.shape[1]-1)] = inv_norm_color
-                image[i, max(ys[idx] - 1, 0)] = inv_norm_color
-                image[min(i + 1, image.shape[0] - 1), max(ys[idx] - 1, 0)] = inv_norm_color
-                image[max(0, i - 1), min(ys[idx] + 1, image.shape[1] - 1)] = inv_norm_color
-                image[min(i + 1, image.shape[0] - 1), ys[idx]] = inv_norm_color
-                image[max(0, i - 1), ys[idx]] = inv_norm_color
+                # image[min(i + 1, image.shape[0] - 1), min(ys[idx] + 1, image.shape[1] - 1)] = inv_norm_color
+                # image[max(0, i - 1), max(ys[idx] - 1, 0)] = inv_norm_color
+                # image[i, min(ys[idx] + 1, image.shape[1]-1)] = inv_norm_color
+                # image[i, max(ys[idx] - 1, 0)] = inv_norm_color
+                # image[min(i + 1, image.shape[0] - 1), max(ys[idx] - 1, 0)] = inv_norm_color
+                # image[max(0, i - 1), min(ys[idx] + 1, image.shape[1] - 1)] = inv_norm_color
+                # image[min(i + 1, image.shape[0] - 1), ys[idx]] = inv_norm_color
+                # image[max(0, i - 1), ys[idx]] = inv_norm_color
         return image
 
     def manualProjection(self, alpha):
@@ -80,17 +80,21 @@ class points_cloud:
 
 
 def create_sphere():
+    sphere_array = []
+    longitude = 360
     deg_step_1 = 1
     deg_step_2 = 1
     latitude = 360
-    longitude = 360
-    sphere_array = []
-    for i in range(0, latitude, deg_step_1):
-        for j in range(0, longitude, deg_step_2):
+    i, j = 0, 0
+    while i < latitude:
+        j = 0
+        while j < longitude:
             x = np.array([np.cos(np.deg2rad(i)) * np.sin(np.deg2rad(j)),
                           np.cos(np.deg2rad(i)) * np.cos(np.deg2rad(j)),
                           np.sin(np.deg2rad(i))])
             sphere_array.append(x)
+            j += deg_step_2
+        i += deg_step_1
     pcl = o3d.geometry.PointCloud()
     pcl.points = o3d.utility.Vector3dVector(sphere_array)
     # o3d.visualization.draw_geometries([pcl])
@@ -100,10 +104,10 @@ def create_sphere():
 if __name__ == '__main__':
     # Initialization
     img_array = []
-    size = (1280, 1024)
+    size = (480, 480)
     fov_x = 60
     fov_y = 40
-    end_angle = 1
+    end_angle = 360
     step_size = 0.5
     eye_location = np.array([0., 0., 0.])
     hom_matrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]])
@@ -116,6 +120,15 @@ if __name__ == '__main__':
     cam_mat = np.array([[size[0] / (2 * np.tan(np.deg2rad(fov_x))), 0, size[0] / 2],
                         [0, size[1] / (2 * np.tan(np.deg2rad(fov_y))), size[1] / 2],
                         [0, 0, 1]])
+
+    theta_x = np.rad2deg(0)
+    theta_y = np.rad2deg(0)
+    theta_z = np.rad2deg(0)
+    x_rot = np.array([[1, 0, 0], [0, np.cos(theta_x), -np.sin(theta_x)], [0, np.sin(theta_x), np.cos(theta_x)]])
+    y_rot = np.array([[np.cos(theta_y), 0, np.sin(theta_y)], [0, 1, 0], [-np.sin(theta_y), 0, np.cos(theta_y)]])
+    z_rot = np.array([[np.cos(theta_z), -np.sin(theta_z), 0], [np.sin(theta_z), np.cos(theta_z), 0], [0, 0, 1]])
+
+    cam_mat *= x_rot * y_rot * z_rot
 
     # unit 3d sphere
     pcl = create_sphere()
@@ -150,12 +163,6 @@ if __name__ == '__main__':
         # Gaussian Blur
         image = cv2.GaussianBlur(image, (3, 3), 0)
         img_array.append(image)
-        cv2.imwrite("res/result" + str(alpha) + ".png", image)
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter("res/result11.mp4", fourcc, 30.0, size)
-    for im in img_array:
-        # out.write(im)
-        cv2.imshow("Frame", im)
-        cv2.waitKey()
-    out.release()
-    # points_cloud_obj.visualize()
+        # TODO: uncomment this
+        # cv2.imwrite("projection/image" + str(alpha) + ".png", image)
+        cv2.imshow('', image)
