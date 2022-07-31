@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 import open3d as o3d
 import cv2
@@ -82,6 +84,7 @@ def create_sphere_point_cloud(radius: int = 360, degree_step: int = 1):
                           np.cos(np.deg2rad(i)) * np.cos(np.deg2rad(j)),
                           np.sin(np.deg2rad(i))])
             sphere_array.append(x)
+    sphere_array = np.array(sphere_array)
     pcl = o3d.geometry.PointCloud()
     pcl.points = o3d.utility.Vector3dVector(sphere_array)
     pcl.colors = o3d.utility.Vector3dVector(sphere_array)
@@ -192,8 +195,7 @@ def project_point_clouds(resolution: Tuple[int, int], theta: float, eye_location
     ys = np.round([x[0][1] for x in projected_points]).astype(int)
     for idx, i in enumerate(xs):
         if 0 <= i < len(view_plane[:, ]) and 0 <= ys[idx] < len(view_plane[0]):
-            inv_norm_color = (colors[idx] * 255).astype(int)
-            view_plane[i, ys[idx]] = inv_norm_color
+            view_plane[i, ys[idx]] = colors[idx]
     return view_plane
 
 
@@ -221,6 +223,7 @@ if __name__ == '__main__':
 
     # ROTATE THE CAMERA
     for _theta in range(30, 2000, 10):
+
         # PROJECT THE OBJECT ONTO AN IMAGE
         image = project_point_clouds(_resolution, _theta, _eye_location, _camera_matrix, geometry_object)
 
