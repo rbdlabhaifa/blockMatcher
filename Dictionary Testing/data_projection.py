@@ -64,6 +64,30 @@ def create_sphere(radius: int, color: Tuple[int, int, int] = None) -> o3d.Geomet
     return mesh
 
 
+def create_sphere_point_cloud(radius: int = 360, degree_step: int = 1):
+    """
+    Create sphere point cloud.
+
+    :param radius: Radius of the sphere.
+    :param degree_step: The step in degrees. For the density of points.
+    :return: A list of points as an open3d.utility.Vector3dVector object.
+    """
+    deg_step_1 = degree_step
+    deg_step_2 = degree_step
+    latitude = radius
+    longitude = radius
+    sphere_array = []
+    for i in range(0, latitude, deg_step_1):
+        for j in range(0, longitude, deg_step_2):
+            x = np.array([np.cos(np.deg2rad(i)) * np.sin(np.deg2rad(j)),
+                          np.cos(np.deg2rad(i)) * np.cos(np.deg2rad(j)),
+                          np.sin(np.deg2rad(i))])
+            sphere_array.append(x)
+    pcl = o3d.geometry.PointCloud()
+    pcl.points = o3d.utility.Vector3dVector(sphere_array)
+    return pcl
+
+
 def create_cylinder(radius: int, height: int, color: Tuple[int, int, int] = None) -> o3d.Geometry:
     """
     Creates a cylinder.
@@ -173,33 +197,6 @@ def project_point_clouds(resolution: Tuple[int, int], theta: float, eye_location
     return view_plane
 
 
-def project_meshes(resolution: Tuple[int, int], theta: float, eye_location: Tuple[int, int, int],
-                   camera_matrix: np.ndarray, *meshes: o3d.geometry.TriangleMesh) -> np.ndarray:
-    points = np.array([p for geometry in meshes for p in np.asarray(geometry.vertices)])
-    radians = np.deg2rad(theta)
-    view_plane = np.zeros((resolution[1], resolution[0], 3))
-    rotation_matrix = np.array([
-        [np.cos(radians), -np.sin(radians), 0],
-        [np.sin(radians), np.cos(radians), 0],
-        [0, 0, 1]
-    ])
-    projected_points = cv2.projectPoints(points, rotation_matrix, eye_location, camera_matrix, distCoeffs=0,
-                                         aspectRatio=(resolution[0] / resolution[1]))
-    projected_points = np.asarray(projected_points[0])
-    for mesh in meshes:
-        for pt1, pt2, pt3 in mesh.triangles:
-            pt1 = projected_points[pt1][0].astype(int)
-            pt2 = projected_points[pt2][0].astype(int)
-            pt3 = projected_points[pt3][0].astype(int)
-            rnd_color = (randint(0, 255) / 255, randint(0, 255) / 255, randint(0, 255) / 255)
-            cv2.circle(view_plane, pt1, 2, rnd_color, -1)
-            cv2.circle(view_plane, pt2, 2, rnd_color, -1)
-            cv2.circle(view_plane, pt3, 2, rnd_color, -1)
-            triangle_cnt = np.array([pt1, pt2, pt3])
-            view_plane = cv2.drawContours(view_plane, [triangle_cnt], 0, rnd_color, -1)
-    return view_plane
-
-
 # ================================================== main ================================================== #
 
 
@@ -220,12 +217,12 @@ if __name__ == '__main__':
     ])
 
     # READ/CREATE GEOMETRY OBJECT
-    geometry_object = create_sphere(10, (10, 255, 0))
+    geometry_object = create_sphere_point_cloud()
 
     # ROTATE THE CAMERA
     for _theta in range(30, 2000, 10):
         # PROJECT THE OBJECT ONTO AN IMAGE
-        image = project_meshes(_resolution, _theta, _eye_location, _camera_matrix, geometry_object)
+        image = project_point_clouds(_resolution, _theta, _eye_location, _camera_matrix, geometry_object)
 
         # SHOW THE IMAGE
         cv2.imshow('', image)
