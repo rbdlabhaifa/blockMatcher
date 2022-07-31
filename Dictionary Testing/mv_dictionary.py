@@ -1,6 +1,6 @@
 import pickle
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Any
 from scipy.spatial import KDTree
 from python_block_matching import BlockMatching
 from data_generator import DataGenerator
@@ -21,10 +21,13 @@ class MVMapping:
         :param key: A vector field as a list of vectors.
         :param value: A tuple of the displacements in the x and y directions.
         """
-        self.keys.append(KDTree(MVMapping.remove_zeroes(key), balanced_tree=True))
+        vectors = MVMapping.remove_zeroes(key)
+        if len(vectors) == 0:
+            return
+        self.keys.append(KDTree(vectors, balanced_tree=True))
         self.values.append(value)
 
-    def __getitem__(self, item: List[Tuple[int, int, int, int]]) -> Tuple[int, int, int]:
+    def __getitem__(self, item: List[Tuple[int, int, int, int]]) -> Any:
         """
         Get the displacements in the x and y directions from a vector field.
 
@@ -32,12 +35,14 @@ class MVMapping:
         :return: A tuple of the displacements in the x and y directions.
         """
         as_array = MVMapping.remove_zeroes(item)
+        if len(as_array) == 0:
+            return 0
         best_index = 0
         distances = self.keys[best_index].query(as_array)[0]
-        min_distance = min((sum(distances) / len(distances)), 5)
+        min_distance = sum(distances) / len(distances)
         for i in range(1, len(self.keys)):
             distances = self.keys[i].query(as_array)[0]
-            distance = min((sum(distances) / len(distances)), 5)
+            distance = sum(distances) / len(distances)
             if distance < min_distance:
                 min_distance = distance
                 best_index = i
@@ -159,7 +164,7 @@ class MVMapping:
         for x1, y1, x2, y2 in vectors:
             if x1 != x2 or y1 != y2:
                 new_vector_list.append((x1, y1, x2, y2))
-        return np.array(vectors)
+        return np.array(new_vector_list)
 
     @staticmethod
     def calculate_camera_x_rotation(vector: Tuple[int, int, int, int], resolution: Tuple[int, int], x_fov: int) -> float:
