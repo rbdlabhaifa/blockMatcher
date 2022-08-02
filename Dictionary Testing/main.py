@@ -25,23 +25,35 @@ def try_ego_rotation_dicts():
         # BMFrame(f2).show()
         print('dictionary found: ', mv_dict[BlockMatching.get_motion_vectors(f2, f1)])
 
-
+import cv2
+from os import listdir
+from os.path import isfile, join
 if __name__ == '__main__':
-    try_ego_rotation_dicts()
-    mv_dict = MVMapping('trained dicts/square')
 
-    vid = BMVideo([f'rot/Frame{i}.jpeg' for i in range(90)])
-    for i in range(vid.get_frame_count() - 1):
-        f1, f2 = vid[i], vid[i + 1]
-        mvs = BlockMatching.get_motion_vectors(f2.base_image, f1.base_image)
-        translation = mv_dict[mvs]
-        mvs = MVMapping.remove_zeroes(mvs)
-        f1.draw_motion_vector(mvs, (0, 255, 0), 1)
-        f1.show()
-        mv = mvs[0]
-        for m in range(len(mvs)):
-            if abs(mv[2] - mv[0]) < abs(mvs[m][2] - mvs[m][0]):
-                mv = mvs[m]
-        print(mv)
-        angle = MVMapping.calculate_camera_x_rotation(mv, f1.base_image.shape[:2][::-1], 45)
-        print(angle)
+
+    images = [cv2.imread(f'projection/{f}') for f in listdir('projection') if isfile(join('projection', f))]
+    print(images)
+    d = MVMapping()
+    for i in range(1, len(images)):
+            mvs = BlockMatching.get_motion_vectors(images[i], images[0])
+            d[mvs] = (0, 0, i * 0.5 )
+    d.save_to('trained dicts/gradient')
+
+    # try_ego_rotation_dicts()
+    # mv_dict = MVMapping('trained dicts/square')
+    #
+    # vid = BMVideo([f'rot/Frame{i}.jpeg' for i in range(90)])
+    # for i in range(vid.get_frame_count() - 1):
+    #     f1, f2 = vid[i], vid[i + 1]
+    #     mvs = BlockMatching.get_motion_vectors(f2.base_image, f1.base_image)
+    #     translation = mv_dict[mvs]
+    #     mvs = MVMapping.remove_zeroes(mvs)
+    #     f1.draw_motion_vector(mvs, (0, 255, 0), 1)
+    #     f1.show()
+    #     mv = mvs[0]
+    #     for m in range(len(mvs)):
+    #         if abs(mv[2] - mv[0]) < abs(mvs[m][2] - mvs[m][0]):
+    #             mv = mvs[m]
+    #     print(mv)
+    #     angle = MVMapping.calculate_camera_x_rotation(mv, f1.base_image.shape[:2][::-1], 45)
+    #     print(angle)

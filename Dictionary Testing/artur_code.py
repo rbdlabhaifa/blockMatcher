@@ -134,7 +134,7 @@ if __name__ == '__main__':
     size = (480, 480)
     fov_x = 60
     fov_y = 40
-    end_angle = 360
+    end_angle = 10
     step_size = 1
     eye_location = np.array([0., 0., 0.])
     hom_matrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]])
@@ -188,7 +188,8 @@ if __name__ == '__main__':
         '''
         # Gaussian Blur
         image = cv2.GaussianBlur(image, (3, 3), 0)
-        img_array.append(image)
-        cv2.imshow('',image)
-        cv2.waitKey()
-        # cv2.imwrite("projection/image" + str(alpha) + ".png", image)
+
+        # cv2.imshow('',image)
+        # cv2.waitKey()
+        print(f'writing image {alpha}')
+        cv2.imwrite("projection/image" + str(alpha) + ".png", image)
