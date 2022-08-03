@@ -4,6 +4,23 @@ from python_block_matching import *
 from mv_dictionary import MVMapping
 
 
+def calculate_rotation(mv):
+    fov_x = 60
+    res_x = 480
+    vector_length = abs(mv[2] - mv[0])
+    conv_value = (np.tan(fov_x / 2) / (res_x / 2))
+    vector_length *= conv_value
+    mv = list(mv)
+    mv[0] -= res_x/2
+    mv[2] -= res_x/2
+    a = np.sqrt((mv[0] * conv_value) ** 2 + 1)
+    b = np.sqrt((mv[2] * conv_value) ** 2 + 1)
+    c = vector_length
+    print("Lengths: " ,a,b,c)
+    print("coords", mv[0]*(conv_value), mv[2]*(conv_value))
+    return np.rad2deg(np.arccos((-(c ** 2) + a ** 2 + b ** 2) / (2 * a * b)))
+
+
 def try_ego_rotation_dicts():
     im_shape = [360, 360]
     square_size = 32
@@ -25,22 +42,25 @@ def try_ego_rotation_dicts():
         # BMFrame(f2).show()
         print('dictionary found: ', mv_dict[BlockMatching.get_motion_vectors(f2, f1)])
 
+
 import cv2
 from os import listdir
 from os.path import isfile, join
+
 if __name__ == '__main__':
 
     # mvd = MVMapping()
     image = cv2.imread('projection/image0.0.png')
     for i in range(0, 100, 5):
-        im = cv2.imread(f'projection/image{i/10}.png')
-        mvs = BlockMatching.get_motion_vectors(image, im)
+        im = cv2.imread(f'projection/image{i / 10}.png')
+        mvs = BlockMatching.get_motion_vectors(image, im,
+                                               current_frame_mb=[(im.shape[0] // 2 - 8, im.shape[1] // 2 - 8, 16, 16)])
         f = BMFrame(im)
-        f.draw_motion_vector(mvs, (200, 255, 10), 1)
-        cv2.imwrite(f'image{i / 10}.png', f.drawn_image)
+        f.draw_motion_vector(mvs, (0, 0, 255), 1)
+        print(mvs, 0, 0, i / 10, calculate_rotation(mvs[0]))
+        f.show()
     #     mvd[mvs] = (0, 0, i / 10)
     # mvd.save_to('trained dicts/gradient')
-
 
     # vid = BMVideo('created.mp4')
     # mvd = MVMapping('trained dicts/gradient')
