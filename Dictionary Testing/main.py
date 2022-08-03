@@ -1,5 +1,5 @@
 import numpy as np
-from syntetic import generate_pictures_2_angles
+# from syntetic import generate_pictures_2_angles
 from python_block_matching import *
 from mv_dictionary import MVMapping
 
@@ -30,14 +30,25 @@ from os import listdir
 from os.path import isfile, join
 if __name__ == '__main__':
 
+    # mvd = MVMapping()
+    image = cv2.imread('projection/image0.0.png')
+    for i in range(0, 100, 5):
+        im = cv2.imread(f'projection/image{i/10}.png')
+        mvs = BlockMatching.get_motion_vectors(image, im)
+        f = BMFrame(im)
+        f.draw_motion_vector(mvs, (200, 255, 10), 1)
+        cv2.imwrite(f'image{i / 10}.png', f.drawn_image)
+    #     mvd[mvs] = (0, 0, i / 10)
+    # mvd.save_to('trained dicts/gradient')
 
-    images = [cv2.imread(f'projection/{f}') for f in listdir('projection') if isfile(join('projection', f))]
-    print(images)
-    d = MVMapping()
-    for i in range(1, len(images)):
-            mvs = BlockMatching.get_motion_vectors(images[i], images[0])
-            d[mvs] = (0, 0, i * 0.5 )
-    d.save_to('trained dicts/gradient')
+
+    # vid = BMVideo('created.mp4')
+    # mvd = MVMapping('trained dicts/gradient')
+    # for i in range(vid.get_frame_count() - 1):
+    #     frame1, frame2 = vid[i], vid[i + 1]
+    #     mvs = BlockMatching.get_motion_vectors(frame1.base_image, frame2.base_image)
+    #     frame1.draw_motion_vector(mvs, (200, 200, 100), 1)
+    #     cv2.imwrite(f'frame{i}.png', frame1.base_image)
 
     # try_ego_rotation_dicts()
     # mv_dict = MVMapping('trained dicts/square')
