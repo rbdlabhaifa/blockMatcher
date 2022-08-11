@@ -8,13 +8,17 @@ folder_path = ''
 save_file = ''
 
 
-# read jpg and csv files
-all_files = os.listdir(folder_path)
-jpg_files = list(filter(lambda x: x.endswith('.jpg'), all_files))
-csv_files = list(filter(lambda x: x.endswith('.csv'), all_files))
+# read frame and rotation files
+jpg_files = []
+csv_files = []
+for file in os.listdir(folder_path):
+    if file.endswith('.jpg'):
+        jpg_files.append(file)
+    elif file.endswith('.csv'):
+        csv_files.append(file)
 
 
-# sort lists by frame index
+# sort lists
 jpg_files = sorted(jpg_files, key=lambda x: int(x.replace('frame', '')[:-4]))
 csv_files = sorted(csv_files, key=lambda x: int(x.replace('rot_rigid_drone', '')[:-4]))
 
@@ -32,9 +36,11 @@ rotations = []
 for i in range(1, len(csv_files)):
     pass
 
+print(rotations)
+
 
 # add to a dictionary and save to a file.
-mv_dictionary = MVMapping()
-for vectors, rotation in zip(motion_vectors, rotations):
-    mv_dictionary[vectors] = rotation
-mv_dictionary.save_to(save_file)
+# mv_dictionary = MVMapping()
+# for vectors, rotation in zip(motion_vectors, rotations):
+#     mv_dictionary[vectors] = rotation
+# mv_dictionary.save_to(save_file)

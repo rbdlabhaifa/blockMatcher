@@ -81,7 +81,7 @@ private:
 };
 
 // Main application
-int main( int argc, char* argv[] )
+int main( int argc, char** argv[] )
 {
     printf("== NaturalPoint Tracking Tools API Marker Sample =======---\n");
     printf("== (C) NaturalPoint, Inc.\n\n");
@@ -93,8 +93,8 @@ int main( int argc, char* argv[] )
     TT_Update();
 
     // Load a project file from the executable directory.
-    printf( "Loading Project: project.ttp\n\n" );
-    CheckResult( TT_LoadProject("C:\\Users\\fares\\Documents\\OptiTrack\\Motive\\Samples\\markers\\x64\\Debug\\project.ttp") );
+    // printf( "Loading Project: project.ttp\n\n" );
+    // CheckResult( TT_LoadProject("C:\\Users\\fares\\Documents\\OptiTrack\\Motive\\Samples\\markers\\x64\\Debug\\project.ttp") );
 
     // List all detected cameras.
     printf( "Cameras:\n" );
@@ -115,27 +115,27 @@ int main( int argc, char* argv[] )
     // URL where the Tello sends its video stream to.
     const char* const TELLO_STREAM_URL{"udp://0.0.0.0:11111"};
 
-    Tello tello{};
-    if (!tello.Bind())
-    {
-        return 0;
-    }
+    // Tello tello{};
+    // if (!tello.Bind())
+    // {
+    //     return 0;
+    // }
 
-    tello.SendCommand("streamon");
-    while (!(tello.ReceiveResponse()))
-        ;
+    // tello.SendCommand("streamon");
+    // while (!(tello.ReceiveResponse()))
+    //     ;
 
-    VideoCapture capture{TELLO_STREAM_URL, CAP_FFMPEG};
+    // VideoCapture capture{TELLO_STREAM_URL, CAP_FFMPEG};
 
-    // Take-off first
-    tello.SendCommand("takeoff");
-    while (!(tello.ReceiveResponse()))
-        ;
+    // // Take-off first
+    // tello.SendCommand("takeoff");
+    // while (!(tello.ReceiveResponse()))
+    //     ;
 
-    bool busy{false};
+    // bool busy{false};
 
 
-    int frameCounter = 0;
+    // int frameCounter = 0;
 
     VideoCapture cap(0);
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 960);
@@ -153,7 +153,7 @@ int main( int argc, char* argv[] )
     char buff[DTTMSZ];
 
 
-    std::ofstream timestamp_file("C:\\Users\\fares\\Documents\\OptiTrack\\Motive\\Samples\\markers\\x64\\Debug\\data\\timestamp_log.txt", std::ios::app);
+    std::ofstream timestamp_file("timestamp_log.txt", std::ios::app);
 
     // Poll API data until the user hits a keyboard key.
     while( !_kbhit() )
@@ -203,22 +203,22 @@ int main( int argc, char* argv[] )
                     busy = false;
                 }
                 
-                if (!busy)
-                {
-                    tello.SendCommand("land");
-                    std::cout << "Command: " << command << std::endl;
-                    busy = true;
-                }
+                // if (!busy)
+                // {
+                //     tello.SendCommand("land");
+                //     std::cout << "Command: " << command << std::endl;
+                //     busy = true;
+                // }
 
-                imwrite("C:\\Users\\fares\\Documents\\OptiTrack\\Motive\\Samples\\markers\\x64\\Debug\\frames\\frame" + std::to_string(frameCounter) + ".jpg", frame);
+                imwrite("frame" + std::to_string(frameCounter) + ".jpg", frame);
                 printf( "Frame #%d: (Markers: %d)\n", frameCounter, TT_FrameMarkerCount() );
 
                 timestamp_file << getDtTm(buff) << "\n";
 
                 for( int i = 0; i < TT_RigidBodyCount(); i++ )
                 {
-                    std::ofstream pos_rigid_file("C:\\Users\\fares\\Documents\\OptiTrack\\Motive\\Samples\\markers\\x64\\Debug\\data\\pos_rigid_drone" + std::to_string(i) + ".csv", std::ios::app);
-                    std::ofstream rot_rigid_file("C:\\Users\\fares\\Documents\\OptiTrack\\Motive\\Samples\\markers\\x64\\Debug\\data\\rot_rigid_drone" + std::to_string(i) + ".csv", std::ios::app);
+                    std::ofstream pos_rigid_file("pos_rigid_drone" + std::to_string(i) + ".csv", std::ios::app);
+                    std::ofstream rot_rigid_file("rot_rigid_drone" + std::to_string(i) + ".csv", std::ios::app);
                     
                     TT_RigidBodyLocation( i, &x,&y,&z, &qx,&qy,&qz,&qw, &yaw,&pitch,&roll );
 
@@ -258,7 +258,7 @@ int main( int argc, char* argv[] )
                             // Get the world-space coordinates of each rigid body marker.
                             TT_RigidBodyPointCloudMarker( i, j, tracked, mx, my, mz );
 
-                            std::ofstream marker_pos_log("C:\\Users\\fares\\Documents\\OptiTrack\\Motive\\Samples\\markers\\x64\\Debug\\data\\marker" + std::to_string(i) + std::to_string(j) + "_pos.csv", std::ios::app);
+                            std::ofstream marker_pos_log("marker" + std::to_string(i) + std::to_string(j) + "_pos.csv", std::ios::app);
                             marker_pos_log << mx << "," << my << "," << mz << "\n";
                             marker_pos_log.close();
 
