@@ -115,27 +115,27 @@ int main( int argc, char* argv[] )
     // URL where the Tello sends its video stream to.
     const char* const TELLO_STREAM_URL{"udp://0.0.0.0:11111"};
 
-    Tello tello{};
-    if (!tello.Bind())
-    {
-        return 0;
-    }
+    // Tello tello{};
+    // if (!tello.Bind())
+    // {
+    //     return 0;
+    // }
 
-    tello.SendCommand("streamon");
-    while (!(tello.ReceiveResponse()))
-        ;
+    // tello.SendCommand("streamon");
+    // while (!(tello.ReceiveResponse()))
+    //     ;
 
-    VideoCapture capture{TELLO_STREAM_URL, CAP_FFMPEG};
+    // VideoCapture capture{TELLO_STREAM_URL, CAP_FFMPEG};
 
-    // Take-off first
-    tello.SendCommand("takeoff");
-    while (!(tello.ReceiveResponse()))
-        ;
+    // // Take-off first
+    // tello.SendCommand("takeoff");
+    // while (!(tello.ReceiveResponse()))
+    //     ;
 
-    bool busy{false};
+    // bool busy{false};
 
 
-    int frameCounter = 0;
+    // int frameCounter = 0;
 
     VideoCapture cap(0);
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 960);
@@ -203,12 +203,12 @@ int main( int argc, char* argv[] )
                     busy = false;
                 }
                 
-                if (!busy)
-                {
-                    tello.SendCommand("land");
-                    std::cout << "Command: " << command << std::endl;
-                    busy = true;
-                }
+                // if (!busy)
+                // {
+                //     tello.SendCommand("land");
+                //     std::cout << "Command: " << command << std::endl;
+                //     busy = true;
+                // }
 
                 imwrite("C:\\Users\\fares\\Documents\\OptiTrack\\Motive\\Samples\\markers\\x64\\Debug\\frames\\frame" + std::to_string(frameCounter) + ".jpg", frame);
                 printf( "Frame #%d: (Markers: %d)\n", frameCounter, TT_FrameMarkerCount() );
