@@ -39,13 +39,6 @@ def try_ego_rotation_dicts():
 
 
 if __name__ == '__main__':
-    res = (480, 480)
-    fov = np.deg2rad(60)
-    focal_length = (res[0] / 2) / np.tan(fov / 2)
-    rot = np.deg2rad(60)
-    vector_length = np.tan(rot) * focal_length
-    print(vector_length)
-    print(focal_length)
     # image = cv2.imread('projection/image0.0.png')
     # for i in range(0, 100, 5):
     #     im = cv2.imread(f'projection/image{i / 10}.png')
