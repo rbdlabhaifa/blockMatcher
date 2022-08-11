@@ -39,14 +39,21 @@ def try_ego_rotation_dicts():
 
 
 if __name__ == '__main__':
-    image = cv2.imread('projection/image0.0.png')
-    for i in range(0, 100, 5):
-        im = cv2.imread(f'projection/image{i / 10}.png')
-        mvs = BlockMatching.get_motion_vectors(image, im)
-        mvs = list(filter(lambda p: p[3] - p[1] == 0, mvs))
-        f = BMFrame(im)
-        f.draw_motion_vector(mvs, (0, 0, 255), 1)
-        rot = np.max([calculate_rotation(mv) for mv in mvs])
-        print(rot, i / 10)
-
-        f.show()
+    res = (480, 480)
+    fov = np.deg2rad(60)
+    focal_length = (res[0] / 2) / np.tan(fov / 2)
+    rot = np.deg2rad(60)
+    vector_length = np.tan(rot) * focal_length
+    print(vector_length)
+    print(focal_length)
+    # image = cv2.imread('projection/image0.0.png')
+    # for i in range(0, 100, 5):
+    #     im = cv2.imread(f'projection/image{i / 10}.png')
+    #     mvs = BlockMatching.get_motion_vectors(image, im)
+    #     mvs = list(filter(lambda p: p[3] - p[1] == 0, mvs))
+    #     f = BMFrame(im)
+    #     f.draw_motion_vector(mvs, (0, 0, 255), 1)
+    #     rot = np.max([calculate_rotation(mv) for mv in mvs])
+    #     print(rot, i / 10)
+    #
+    #     f.show()
