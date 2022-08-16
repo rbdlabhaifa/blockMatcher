@@ -67,16 +67,18 @@ class MVMapping:
                 best_distances = distances
         return best_distances
 
-    def load_from(self, save_file: str) -> None:
+    def load_from(self, save_file: str, append: bool = False) -> None:
         """
         Load the keys and values of a MVMapping object from a file.
 
         :param save_file: The path to the save file.
+        :param append: Load from a file without resetting.
         """
-        if len(self.keys) != 0:
-            self.keys = []
-        if len(self.values) != 0:
-            self.values = []
+        if not append:
+            if len(self.keys) != 0:
+                self.keys = []
+            if len(self.values) != 0:
+                self.values = []
         with open(save_file, 'rb') as f:
             while True:
                 try:

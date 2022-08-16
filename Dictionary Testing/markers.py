@@ -4,8 +4,8 @@ from python_block_matching import *
 from mv_dictionary import MVMapping
 
 
-folder_path = '/home/rani/Desktop/markers.cpp files/clockwise - neutral background'
-save_to = 'trained dicts/markers'
+folder_path = '/home/rani/Desktop/markers.cpp files/clockwise - detailed background'
+save_to = '/home/rani/PycharmProjects/blockMatcher/Dictionary Testing/trained dicts/detailed counter clockwise'
 read_from = None
 
 
@@ -15,6 +15,7 @@ for file in os.listdir(folder_path):
     if file.endswith('.jpg') or file.endswith('.png'):
         jpg_files.append(file)
 jpg_files = sorted(jpg_files, key=lambda x: int(x.replace('frame', '')[:-4]))
+jpg_files = list(reversed(jpg_files))
 
 # read .csv files
 rotations = []
@@ -32,5 +33,6 @@ for i in range(1, len(jpg_files)):
 # add to a dictionary and save to a file.
 mv_dictionary = MVMapping(read_from)
 for i in range(1, len(rotations)):
-    mv_dictionary[motion_vectors[i - 1]] = abs(rotations[i] - rotations[i - 1])
+    print('adding frame ', i, ' to the dictionary.')
+    mv_dictionary[motion_vectors[i - 1]] = -abs(rotations[i] - rotations[i - 1])
 mv_dictionary.save_to(save_to)
