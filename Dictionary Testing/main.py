@@ -39,6 +39,13 @@ def try_ego_rotation_dicts():
 
 
 if __name__ == '__main__':
+    m = MVMapping()
+    m.load_from('/home/rani/PycharmProjects/blockMatcher/Dictionary Testing/trained dicts/detailed counter clockwise')
+    m.load_from('/home/rani/PycharmProjects/blockMatcher/Dictionary Testing/trained dicts/detailed clockwise')
+    m.load_from('/home/rani/PycharmProjects/blockMatcher/Dictionary Testing/trained dicts/neutral clockwise')
+    m.load_from('/home/rani/PycharmProjects/blockMatcher/Dictionary Testing/trained dicts/neutral counter clockwise')
+    m.save_to('/home/rani/PycharmProjects/blockMatcher/Dictionary Testing/trained dicts/markers - full')
+
     # image = cv2.imread('projection/image0.0.png')
     # for i in range(0, 100, 5):
     #     im = cv2.imread(f'projection/image{i / 10}.png')
