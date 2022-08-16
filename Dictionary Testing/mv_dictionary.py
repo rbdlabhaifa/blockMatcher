@@ -91,7 +91,7 @@ class MVMapping:
 
         :param save_file: The path to the save file.
         """
-        with open(save_file, 'wb') as f:
+        with open(save_file, 'wb+') as f:
             for i in range(len(self.keys)):
                 pickle.dump(self.keys[i], f)
                 pickle.dump(self.values[i], f)
