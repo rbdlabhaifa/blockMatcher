@@ -14,7 +14,7 @@ class MVMapping:
         if save_file is not None:
             self.load_from(save_file)
 
-    def __setitem__(self, key: List[Tuple[int, int, int, int]], value: Tuple[int, int, int]) -> None:
+    def __setitem__(self, key: List[Tuple[int, int, int, int]], value: Tuple[int, int, int]):
         """
         Add a key-value pair to the map.
 
