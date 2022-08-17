@@ -45,9 +45,10 @@ class points_cloud:
         zBuffer = np.zeros((size[1], size[0]), np.uint8)
         rotation_mat = np.array([[np.cos(rad), -np.sin(rad), 0], [np.sin(rad), np.cos(rad), 0], [0, 0, 1]])
 
+
         theta_x = np.deg2rad(90)
-        theta_y = np.deg2rad(0)
-        theta_z = np.deg2rad(90)
+        theta_y = np.deg2rad(50)
+        theta_z = np.deg2rad(180)
         x_rot = np.array([[1, 0, 0], [0, np.cos(theta_x), -np.sin(theta_x)], [0, np.sin(theta_x), np.cos(theta_x)]])
         y_rot = np.array([[np.cos(theta_y), 0, np.sin(theta_y)], [0, 1, 0], [-np.sin(theta_y), 0, np.cos(theta_y)]])
         z_rot = np.array([[np.cos(theta_z), -np.sin(theta_z), 0], [np.sin(theta_z), np.cos(theta_z), 0], [0, 0, 1]])
@@ -81,9 +82,15 @@ class points_cloud:
         xs = xs.astype(int)
         ys = ys.astype(int)
 
+        l1, l2 = 10, 10
+        w, h = 1000, 100
+        square = {i * 360 + j for j in range(l2, l2 + w) for i in range(l1, l1 + h)}
         for idx, i in enumerate(xs):
             if 0 <= i < len(image[:, ]) and 0 <= ys[idx] < len(image[0]):
                 inv_norm_color = abs(point_color[idx] * 255).astype(int)
+                if idx in square:
+                    inv_norm_color = (0, 0, 0)
+                    print('yay')
                 if tZ[idx] > zBuffer[i, ys[idx]]:
                     image[i, ys[idx]] = inv_norm_color
                     cy, cx = i, ys[idx]
@@ -109,8 +116,8 @@ class points_cloud:
 def create_sphere():
     sphere_array = []
     longitude = 360
-    deg_step_1 = 0.25
-    deg_step_2 = 0.25
+    deg_step_1 = 1
+    deg_step_2 = 1
     latitude = 360
     i, j = 0, 0
     while i < latitude:
@@ -173,6 +180,7 @@ if __name__ == '__main__':
         point_color = points_cloud_obj.pcd.points
     # Points projection
     for alpha in np.arange(0, end_angle, step_size):
+        print(alpha)
         if manualProjection:
             image = points_cloud_obj.manualProjection(alpha)
         else:
@@ -189,7 +197,7 @@ if __name__ == '__main__':
         # Gaussian Blur
         image = cv2.GaussianBlur(image, (3, 3), 0)
 
-        # cv2.imshow('',image)
-        # cv2.waitKey()
         print(f'writing image {alpha}')
-        cv2.imwrite("projection/image" + str(alpha) + ".png", image)
+        cv2.imshow('',image)
+        cv2.waitKey()
+        # cv2.imwrite("projection/image" + str(alpha) + ".png", image)

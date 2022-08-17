@@ -83,7 +83,12 @@ def compare_dict_with_vid(frame_folder_path: str, csv_path: str, dict: MVMapping
 
 
 if __name__ == '__main__':
-    view_motion_vectors_from_frames("/home/txp2/RPI-BMA-RE/markers.cpp files/clockwise - detailed background")
+    image = cv2.imread('../markers.cpp files/data1/frame5.jpg')
+    image = np.flipud(image)
+    image = image[0:-160, :]
+    cv2.imshow('', image)
+    cv2.waitKey()
+    # view_motion_vectors_from_frames("/home/txp2/RPI-BMA-RE/markers.cpp files/clockwise - detailed background")
 # image = cv2.imread('projection/image0.0.png')
 # for i in range(0, 100, 5):
 #     im = cv2.imread(f'projection/image{i / 10}.png')
