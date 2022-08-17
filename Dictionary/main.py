@@ -95,5 +95,5 @@ def compare_dict_with_vid(frame_folder_path: str, csv_path: str, dict: MVMapping
 if __name__ == '__main__':
     a = compare_dict_with_vid('optitrack/data2',
                               'optitrack/data2/rot_rigid_drone0.csv', MVMapping(
-        'saved dictionaries/data1 dict'))
+            'saved dictionaries/data1'))
     print(a)

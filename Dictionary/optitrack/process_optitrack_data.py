@@ -6,7 +6,7 @@ from dictionary import MVMapping
 
 
 folder_path = 'data1'
-save_to = '/home/rani/PycharmProjects/blockMatcher/Dictionary/saved dictionaries/data1 dict'
+save_to = '/home/rani/PycharmProjects/blockMatcher/Dictionary/saved dictionaries/data1'
 read_from = None
 
 
