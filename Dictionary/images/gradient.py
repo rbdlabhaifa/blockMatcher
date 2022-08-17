@@ -178,7 +178,7 @@ if __name__ == '__main__':
         point_color = np.asarray(points_cloud_obj.pcd.colors)
     else:
         point_color = points_cloud_obj.pcd.points
-    # Points projection
+    # Points gradient
     for alpha in np.arange(0, end_angle, step_size):
         print(alpha)
         if manualProjection:
@@ -200,4 +200,4 @@ if __name__ == '__main__':
         print(f'writing image {alpha}')
         cv2.imshow('',image)
         cv2.waitKey()
-        # cv2.imwrite("projection/image" + str(alpha) + ".png", image)
+        # cv2.imwrite("gradient/image" + str(alpha) + ".png", image)

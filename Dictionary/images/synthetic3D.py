@@ -107,7 +107,7 @@ def generate_pictures_2_angles(image, angle1, angle2, out_size):
 
 
 if __name__ == "__main__":
-    from mv_dictionary import MVMapping
+    from dictionary import MVMapping
     from python_block_matching import BlockMatching
 
     mv_dict = MVMapping()
@@ -123,9 +123,9 @@ if __name__ == "__main__":
             ref, cur = generate_pictures_2_angles(chess, angle, angle + step, [360,360])
             mv = BlockMatching.get_motion_vectors(cur, ref)
             mv_dict[mv] = step
-    mv_dict.save_to("trained dicts/chess_plane_ego_rot_0-8_steps.pickle")
+    mv_dict.save_to("saved dictionaries/chess_plane_ego_rot_0-8_steps.pickle")
     # Test
-    # out1, out2 = generate_pictures_2_angles("/home/txp2/RPI-BMA-RE/Dictionary Testing/amogus.png", 10, 70, [450, 450])
+    # out1, out2 = generate_pictures_2_angles("/home/txp2/RPI-BMA-RE/Dictionary/amogus.png", 10, 70, [450, 450])
     # cv2.imshow("out1", out1)
     # cv2.imshow("out2", out2)
     # cv2.waitKey()
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     #                                                                                                                 3,
     #                                                                                                                 np.uint8)
     #
-    # chess = cv2.imread("/home/txp2/RPI-BMA-RE/Dictionary Testing/amogus.png")
+    # chess = cv2.imread("/home/txp2/RPI-BMA-RE/Dictionary/amogus.png")
     # chess = cv2.resize(chess, (im_shape[0] * 4, int(im_shape[1] * 4)))
     # # chess[int(1080-square_size/2):int(1080+square_size/2),1280-square_size:1280] = 255
     # # chess[720:720+square_size,1280-square_size:1280] = 255

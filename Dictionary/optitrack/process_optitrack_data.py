@@ -2,11 +2,11 @@ import os
 import cv2
 import numpy as np
 from python_block_matching import *
-from mv_dictionary import MVMapping
+from dictionary import MVMapping
 
 
-folder_path = '../markers.cpp files/data1'
-save_to = '/home/rani/PycharmProjects/blockMatcher/Dictionary Testing/trained dicts/data1 dict'
+folder_path = 'data1'
+save_to = '/home/rani/PycharmProjects/blockMatcher/Dictionary/saved dictionaries/data1 dict'
 read_from = None
 
 
@@ -37,7 +37,7 @@ for i in range(1, len(jpg_files)):
 # add to a dictionary and save to a file.
 mv_dictionary = MVMapping(read_from)
 for i in range(1, len(rotations)):
-    rot = abs(rotations[i] - rotations[i - 1])
+    rot = round(abs(rotations[i] - rotations[i - 1]), 2)
     mv_dictionary[motion_vectors[i - 1]] = rot
     print(f'frame {i}, rotation = {rot}')
 mv_dictionary.save_to(save_to)

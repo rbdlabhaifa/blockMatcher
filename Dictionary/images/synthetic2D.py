@@ -50,7 +50,7 @@ class DataGenerator:
         frame_size = frame_size.copy()
         frame_size.append(frame_size.pop(0))
         # frame_size.append(3)
-        ref_frame = Image.open("synthetic data/wall.jpg")
+        ref_frame = Image.open("images/synthetic data/wall.jpg")
         ref_frame = ref_frame.resize(frame_size)
         cur_frame = ref_frame.copy()
         img = Image.open(img_url)
