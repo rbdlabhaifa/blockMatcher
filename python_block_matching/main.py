@@ -2,9 +2,9 @@ from typing import Tuple, Union, List, Dict
 import numpy as np
 import cv2
 
-
 from .block_matching import SEARCH_FUNCTIONS
 from .block_partitioning import PARTITIONING_FUNCTION
+from .utils import slice_macro_block
 
 
 class BMFrame:
@@ -199,3 +199,24 @@ class BlockMatching:
                 else:
                     macro_blocks_by_frame[frame_num - 1].append((x, y, block_w, block_h))
         return macro_blocks_by_frame
+
+    @staticmethod
+    def form_compensated_frame(reference_frame: np.ndarray, current_frame_macro_blocks: List[Tuple[int, int, int, int]],
+                               motion_vectors: List[Tuple[int, int, int, int]]) -> np.ndarray:
+        """
+        Forms the compensated current frame from the reference frame.
+
+        :param reference_frame: The current frame.
+        :param current_frame_macro_blocks: The macro-blocks of the current frame (should cover the whole frame).
+        :param motion_vectors: The motion vectors from the reference frame to the current frame.
+        :return: The compensated reference frame.
+        """
+        compensated_frame = np.zeros(reference_frame.shape)
+        for i in range(len(motion_vectors)):
+            sx, sy, w, h = current_frame_macro_blocks[i]
+            tx, ty, _, _ = motion_vectors[i]
+            tx, ty = max(tx - w // 2, 0), max(ty - h // 2, 0)
+            tx, ty = min(tx, reference_frame.shape[1] - w), min(ty, reference_frame.shape[0] - h)
+            compensated_frame[sy:sy + h, sx:sx + w] = reference_frame[ty:ty + h, tx:tx + w]
+        compensated_frame = compensated_frame.astype(np.uint8)
+        return compensated_frame

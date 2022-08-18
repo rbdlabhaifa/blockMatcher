@@ -84,10 +84,11 @@ def compare_dict_with_vid(frame_folder_path: str, csv_path: str, dict: MVMapping
         cur_frame = cv2.imread(f'{frame_folder_path}/{jpg_files[i]}')
         cur_frame = np.flipud(cur_frame)
         cur_frame = cur_frame[0:-160, :]
-        mvs = BlockMatching.get_motion_vectors(cur_frame, ref_frame)
-        ref_frame = BMFrame(ref_frame)
-        ref_frame.draw_motion_vector(mvs, (0, 0, 255), 1)
-        ref_frame.show()
+        mbs = BlockMatching.get_macro_blocks(cur_frame)
+        mvs = BlockMatching.get_motion_vectors(cur_frame, ref_frame, current_frame_mb=mbs)
+        cf = BlockMatching.form_compensated_frame(ref_frame, mbs, mvs)
+        cv2.imshow('', cf)
+        cv2.waitKey()
         dict_rot.append(dict[mvs])
     return np.abs(np.subtract(rotations, dict_rot)/rotations).sum() / len(dict_rot)
 
