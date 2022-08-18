@@ -2,7 +2,7 @@ import pickle
 import numpy as np
 from typing import List, Tuple, Any
 from scipy.spatial import KDTree
-from python_block_matching import BlockMatching
+from block_matching import BlockMatching
 
 
 class MVMapping:

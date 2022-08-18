@@ -108,7 +108,7 @@ def generate_pictures_2_angles(image, angle1, angle2, out_size):
 
 if __name__ == "__main__":
     from dictionary import MVMapping
-    from python_block_matching import BlockMatching
+    from block_matching import BlockMatching
 
     mv_dict = MVMapping()
     chess = np.zeros((im_shape[0] * 4, int(im_shape[1] * 4), 3), dtype=np.uint8)

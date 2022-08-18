@@ -1,7 +1,7 @@
 import os
 import cv2
 import numpy as np
-from python_block_matching import *
+from block_matching import *
 from dictionary import MVMapping
 
 

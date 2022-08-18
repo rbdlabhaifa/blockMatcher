@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from python_block_matching import *
+from block_matching import *
 from dictionary import MVMapping
 import cv2
 from Dictionary.images.synthetic3D import generate_pictures_2_angles
@@ -87,7 +87,8 @@ def compare_dict_with_vid(frame_folder_path: str, csv_path: str, dict: MVMapping
         mbs = BlockMatching.get_macro_blocks(cur_frame)
         mvs = BlockMatching.get_motion_vectors(cur_frame, ref_frame, current_frame_mb=mbs)
         cf = BlockMatching.form_compensated_frame(ref_frame, mbs, mvs)
-        cv2.imshow('', cf)
+        cv2.imshow('reconstructed', cf)
+        cv2.imshow("reference", ref_frame)
         cv2.waitKey()
         dict_rot.append(dict[mvs])
     return np.abs(np.subtract(rotations, dict_rot)/rotations).sum() / len(dict_rot)
