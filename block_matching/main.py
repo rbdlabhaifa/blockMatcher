@@ -13,10 +13,10 @@ class BMFrame:
         self.base_image = image.copy()
         self.drawn_image = image.copy()
 
-    def draw_macro_block(self, blocks: List[Tuple[int, int, int, int]], color: Tuple[int, int, int],
-                         thickness: int) -> None:
+    def draw_macro_blocks(self, blocks: List[Tuple[int, int, int, int]], color: Tuple[int, int, int],
+                          thickness: int) -> None:
         """
-        Draw a block on the frame.
+        Draw blocks on the frame.
 
         :param blocks: The macro-blocks to draw (top_left_x, top_left_y, width, height).
         :param color: The BGR color of the rectangle.
@@ -25,14 +25,14 @@ class BMFrame:
         for x, y, w, h in blocks:
             self.drawn_image = cv2.rectangle(self.drawn_image, (x, y), (x + w, y + h), color, thickness)
 
-    def draw_motion_vector(self, vectors: List[Tuple[int, int, int, int]], color: Tuple[int, int, int],
-                           thickness: int) -> None:
+    def draw_motion_vectors(self, vectors: List[Tuple[int, int, int, int]], color: Tuple[int, int, int],
+                            thickness: int) -> None:
         """
-        Draw a vector on the frame.
+        Draw a vectors on the frame.
 
-        :param vectors: The start and end of the vector (start_x, start_y, end_x, end_y).
-        :param color: The BGR color of the arrow.
-        :param thickness: The thickness of the arrow.
+        :param vectors: The start and end of the vectors (start_x, start_y, end_x, end_y).
+        :param color: The BGR color of the arrows.
+        :param thickness: The thickness of the arrows.
         """
         for x1, y1, x2, y2 in vectors:
             self.drawn_image = cv2.arrowedLine(self.drawn_image, (x1, y1), (x2, y2), color, thickness)
