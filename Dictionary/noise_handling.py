@@ -66,6 +66,11 @@ def cancel_noise(ref_frame: np.ndarray, cur_frame: np.ndarray,
         if sad_ratio < best_mv_sad_to_area_ratio:
             best_mv_sad_to_area_ratio = sad_ratio
             best_mv = mv
+        elif sad_ratio == best_mv_sad_to_area_ratio:
+            mv_length = (delta_x * delta_x + delta_y * delta_y) ** 0.5
+            best_mv_length = ((best_mv[2] - best_mv[0]) ** 2 + (best_mv[3] - best_mv[1])) ** 0.5
+            if mv_length < best_mv_length:
+                best_mv = mv
     return best_mv
 
 
@@ -75,16 +80,16 @@ if __name__ == '__main__':
         ref = cv2.imread(f'optitrack/data1/frame{frame - 1}.jpg')
         cur = cv2.imread(f'optitrack/data1/frame{frame}.jpg')
         mvs = BlockMatching.get_motion_vectors(cur, ref)
-        best_mv = cancel_noise(ref, cur, mvs)
-        print(f'best motion vector: {best_mv}')
-        best_mv = (best_mv[2] - best_mv[0], best_mv[3] - best_mv[1])
-        print(f'(dx, dy): {best_mv}')
+        best_v = cancel_noise(ref, cur, mvs)
+        print(f'best motion vector: {best_v}')
+        best_v = (best_v[2] - best_v[0], best_v[3] - best_v[1])
+        print(f'(dx, dy): {best_v}')
         print(f'rotation: {dictionary[mvs]} degrees')
         mbs = BlockMatching.get_macro_blocks(ref)
         for i in range(len(mbs)):
             x, y = mbs[i][:2]
             w, h = mbs[i][2:]
-            mbs[i] = (x + w // 2, y + h // 2, x + w // 2 + best_mv[0], y + h // 2 + best_mv[1])
+            mbs[i] = (x + w // 2, y + h // 2, x + w // 2 + best_v[0], y + h // 2 + best_v[1])
         cur = ref.copy()
         for x1, y1, x2, y2 in mvs:
             ref = cv2.arrowedLine(ref, (x1, y1), (x2, y2), (0, 255, 0), 1)
