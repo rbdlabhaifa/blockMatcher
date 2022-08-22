@@ -75,6 +75,10 @@ def cancel_noise(ref_frame: np.ndarray, cur_frame: np.ndarray,
 
 
 if __name__ == '__main__':
+    d = {(14, 0): {0.83, 1.15, 0.94, 0.89, 0.91, 1.23, 1.05, 0.96, 0.95, 1.14, 1.1}, (15, 0): {0.91, 1.05}, (9, 0): {0.89, 1.14, 0.83, 0.94, 1.05, 0.77, 1.15}, (10, 0): {0.91, 1.05, 0.94, 1.23}, (13, 0): {1.1, 0.89, 1.15}, (19, 0): {0.83, 1.23}}
+    for key, value in d.items():
+        print(key, '->', list(sorted(value)))
+    """
     dictionary = MVMapping('saved dictionaries/data1')
     for frame in range(6, 73):
         ref = cv2.imread(f'optitrack/data1/frame{frame - 1}.jpg')
@@ -99,3 +103,4 @@ if __name__ == '__main__':
         cv2.imshow('clean', cur)
         cv2.waitKey()
         cv2.destroyAllWindows()
+    """
