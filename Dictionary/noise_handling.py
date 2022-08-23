@@ -1,106 +1,63 @@
-from typing import List, Tuple
 import numpy as np
+from typing import Tuple, List
 from block_matching.cost_functions import sad
-import cv2
-from block_matching import BlockMatching
-from dictionary import MVMapping
 
 
-def cancel_noise(ref_frame: np.ndarray, cur_frame: np.ndarray,
-                 mvs: List[Tuple[int, int, int, int]]) -> Tuple[int, int, int, int]:
+def set_to_origin(motion_vectors: List[Tuple[int, int, int, int]]) -> List[Tuple[int, int]]:
     """
-    Choose a vector that best represents the motion of the camera between two consecutive frames.
+    Fixes the tail of the vectors to the origin.
 
-    :param ref_frame: The reference frame.
-    :param cur_frame: The current frame.
-    :param mvs: The motion vectors from the reference frame to the current frame.
-    :return: The motion vector that represents the motion of the camera best.
+    :param motion_vectors: A list of tuples containing the start and end points of the vectors.
+    :return: The new list of vectors.
     """
-    # The best motion vector and its SAD to area ratio.
-    best_mv_sad_to_area_ratio = float('inf')
-    best_mv = None
-    # A set of checked motion vectors.
-    checked_mvs = set()
-    for mv in mvs:
-        # Get the (dx, dy) of the vector, it will be used to shift the reference frame.
-        delta_x = mv[2] - mv[0]
-        delta_y = mv[3] - mv[1]
-        # Make sure (dx, dy) wasn't checked previously.
-        if (delta_x, delta_y) in checked_mvs:
-            continue
-        checked_mvs.add((delta_x, delta_y))
-        # Cut the rectangle that's in both the current frame and the shifted reference frame.
-        if delta_y > 0:
-            if delta_x > 0:
-                shifted_ref_frame = ref_frame[:-delta_y, :-delta_x]
-                shifted_cur_frame = cur_frame[delta_y:, delta_x:]
-            elif delta_x == 0:
-                shifted_ref_frame = ref_frame[:-delta_y]
-                shifted_cur_frame = cur_frame[delta_y:]
-            else:
-                shifted_ref_frame = ref_frame[:-delta_y, -delta_x:]
-                shifted_cur_frame = cur_frame[delta_y:, :delta_x]
-        elif delta_y == 0:
-            if delta_x > 0:
-                shifted_ref_frame = ref_frame[:, :-delta_x]
-                shifted_cur_frame = cur_frame[:, delta_x:]
-            elif delta_x == 0:
-                shifted_ref_frame = ref_frame
-                shifted_cur_frame = cur_frame
-            else:
-                shifted_ref_frame = ref_frame[:, -delta_x:]
-                shifted_cur_frame = cur_frame[:, :delta_x]
-        else:
-            if delta_x > 0:
-                shifted_ref_frame = ref_frame[-delta_y:, :-delta_x]
-                shifted_cur_frame = cur_frame[:delta_y, delta_x:]
-            elif delta_x == 0:
-                shifted_ref_frame = ref_frame[-delta_y:]
-                shifted_cur_frame = cur_frame[:delta_y]
-            else:
-                shifted_ref_frame = ref_frame[-delta_y:, -delta_x:]
-                shifted_cur_frame = cur_frame[:delta_y, :delta_x]
-        # Calculate the SAD to area ratio of the rectangle.
-        sad_ratio = sad(shifted_ref_frame, shifted_cur_frame) / (shifted_ref_frame.shape[0] *
-                                                                 shifted_ref_frame.shape[1])
-        if sad_ratio < best_mv_sad_to_area_ratio:
-            best_mv_sad_to_area_ratio = sad_ratio
-            best_mv = mv
-        elif sad_ratio == best_mv_sad_to_area_ratio:
-            mv_length = (delta_x * delta_x + delta_y * delta_y) ** 0.5
-            best_mv_length = ((best_mv[2] - best_mv[0]) ** 2 + (best_mv[3] - best_mv[1])) ** 0.5
-            if mv_length < best_mv_length:
-                best_mv = mv
-    return best_mv
+    return [(x2 - x1, y2 - y1) for x1, y1, x2, y2 in motion_vectors]
 
 
-if __name__ == '__main__':
-    d = {(14, 0): {0.83, 1.15, 0.94, 0.89, 0.91, 1.23, 1.05, 0.96, 0.95, 1.14, 1.1}, (15, 0): {0.91, 1.05}, (9, 0): {0.89, 1.14, 0.83, 0.94, 1.05, 0.77, 1.15}, (10, 0): {0.91, 1.05, 0.94, 1.23}, (13, 0): {1.1, 0.89, 1.15}, (19, 0): {0.83, 1.23}}
-    for key, value in d.items():
-        print(key, '->', list(sorted(value)))
+def evaluate_vector(vector: Tuple[int, int], reference_frame: np.ndarray, current_frame: np.ndarray) -> float:
     """
-    dictionary = MVMapping('saved dictionaries/data1')
-    for frame in range(6, 73):
-        ref = cv2.imread(f'optitrack/data1/frame{frame - 1}.jpg')
-        cur = cv2.imread(f'optitrack/data1/frame{frame}.jpg')
-        mvs = BlockMatching.get_motion_vectors(cur, ref)
-        best_v = cancel_noise(ref, cur, mvs)
-        print(f'best motion vector: {best_v}')
-        best_v = (best_v[2] - best_v[0], best_v[3] - best_v[1])
-        print(f'(dx, dy): {best_v}')
-        print(f'rotation: {dictionary[mvs]} degrees')
-        mbs = BlockMatching.get_macro_blocks(ref)
-        for i in range(len(mbs)):
-            x, y = mbs[i][:2]
-            w, h = mbs[i][2:]
-            mbs[i] = (x + w // 2, y + h // 2, x + w // 2 + best_v[0], y + h // 2 + best_v[1])
-        cur = ref.copy()
-        for x1, y1, x2, y2 in mvs:
-            ref = cv2.arrowedLine(ref, (x1, y1), (x2, y2), (0, 255, 0), 1)
-        for x1, y1, x2, y2 in mbs:
-            cur = cv2.arrowedLine(cur, (x1, y1), (x2, y2), (0, 255, 0), 1)
-        cv2.imshow('normal', ref)
-        cv2.imshow('clean', cur)
-        cv2.waitKey()
-        cv2.destroyAllWindows()
+    A metric for comparing the quality of motion vectors that is calculated by shifting the reference frame and
+    comparing it with the current frame.
+
+    :param vector: The motion vector with its tail being the origin.
+    :param reference_frame: The reference frame as a numpy array.
+    :param current_frame: The current frame as a numpy array.
+    :return: The quality of a motion vector as a float.
     """
+    dx, dy = vector
+    # Shift the reference frame and cut the rectangle that's in both the current frame and the shifted reference frame.
+    if dy > 0:
+        shifted_ref_frame = reference_frame[:-dy]
+        shifted_cur_frame = current_frame[dy:]
+    elif dy < 0:
+        shifted_ref_frame = reference_frame[-dy:]
+        shifted_cur_frame = current_frame[:dy]
+    else:
+        shifted_ref_frame = reference_frame
+        shifted_cur_frame = current_frame
+    if dx > 0:
+        shifted_ref_frame = shifted_ref_frame[:, :-dx]
+        shifted_cur_frame = shifted_cur_frame[:, dx:]
+    elif dx < 0:
+        shifted_ref_frame = shifted_ref_frame[:, -dx:]
+        shifted_cur_frame = shifted_cur_frame[:, :dx]
+    # Return the SAD to area ratio of the rectangle.
+    return sad(shifted_ref_frame, shifted_cur_frame) / (shifted_ref_frame.shape[0] * shifted_ref_frame.shape[1])
+
+
+def minimize_slope(motion_vectors: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+    """
+    Filter a list of motion vectors by slope.
+
+    :param motion_vectors: A list of motion vectors.
+    :return: A list of motion vectors that have the minimum slope.
+    """
+    min_slope = motion_vectors[0][1] / motion_vectors[0][0]
+    filtered_vectors = [motion_vectors[0]]
+    for i in range(1, len(motion_vectors)):
+        slope = motion_vectors[i][1] / motion_vectors[i][0]
+        if slope < min_slope:
+            min_slope = slope
+            filtered_vectors = [motion_vectors[i]]
+        elif slope == min_slope:
+            filtered_vectors.append(motion_vectors[i])
+    return filtered_vectors
