@@ -1,113 +1,18 @@
 from typing import Tuple, Union, List, Dict
 import numpy as np
 import cv2
+import subprocess
 
 from .block_matching import SEARCH_FUNCTIONS
 from .block_partitioning import PARTITIONING_FUNCTION
-from .utils import slice_macro_block
-
-
-class BMFrame:
-
-    def __init__(self, image: np.ndarray):
-        self.base_image = image.copy()
-        self.drawn_image = image.copy()
-
-    def draw_macro_blocks(self, blocks: List[Tuple[int, int, int, int]], color: Tuple[int, int, int],
-                          thickness: int) -> None:
-        """
-        Draw blocks on the frame.
-
-        :param blocks: The macro-blocks to draw (top_left_x, top_left_y, width, height).
-        :param color: The BGR color of the rectangle.
-        :param thickness: The thickness of the rectangle.
-        """
-        for x, y, w, h in blocks:
-            self.drawn_image = cv2.rectangle(self.drawn_image, (x, y), (x + w, y + h), color, thickness)
-
-    def draw_motion_vectors(self, vectors: List[Tuple[int, int, int, int]], color: Tuple[int, int, int],
-                            thickness: int) -> None:
-        """
-        Draw a vectors on the frame.
-
-        :param vectors: The start and end of the vectors (start_x, start_y, end_x, end_y).
-        :param color: The BGR color of the arrows.
-        :param thickness: The thickness of the arrows.
-        """
-        for x1, y1, x2, y2 in vectors:
-            self.drawn_image = cv2.arrowedLine(self.drawn_image, (x1, y1), (x2, y2), color, thickness)
-
-    def reset(self) -> None:
-        """
-        Reset all drawings on the frame.
-        """
-        self.drawn_image = self.base_image.copy()
-
-    def show(self) -> None:
-        """
-        Show the frame on a window.
-        """
-        cv2.imshow('', self.drawn_image)
-        cv2.waitKey()
-
-    def __getitem__(self, item) -> np.ndarray:
-        return self.base_image[item]
-
-    def __str__(self) -> str:
-        return str(self.base_image)
-
-
-class BMVideo:
-
-    def __init__(self, video_or_frames: Union[str, list]):
-        assert isinstance(video_or_frames, str) or isinstance(video_or_frames, list)
-        self.frames = video_or_frames
-
-    def get_frame_count(self) -> int:
-        """
-        Get the count of frames in this video.
-
-        :return: The amount of frames.
-        """
-        if isinstance(self.frames, str):
-            video = cv2.VideoCapture(self.frames)
-            frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-            if frame_count < 0:
-                frame_count = 1
-                video_copy = cv2.VideoCapture(self.frames)
-                read_successfully, frame = video_copy.read()
-                while read_successfully:
-                    read_successfully, frame = video_copy.read()
-                    frame_count += 1
-            return frame_count
-        return len(self.frames)
-
-    def __getitem__(self, item) -> Union[BMFrame, List[BMFrame]]:
-        if isinstance(item, slice):
-            frames = []
-            for i in range(item.start, item.stop, item.step):
-                frames.append(self[i])
-            return frames
-        assert isinstance(item, int)
-        if isinstance(self.frames, str):
-            video = cv2.VideoCapture(self.frames)
-            frame_count = self.get_frame_count()
-            item = (frame_count + item) if item < 0 else item
-            # assert 0 <= item < frame_count
-            _, frame = video.read()
-            for i in range(item - 1):
-                _, frame = video.read()
-            return BMFrame(frame)
-        else:
-            item = (len(self.frames) + item) if item < 0 else item
-            assert 0 <= item < len(self.frames)
-            return BMFrame(cv2.imread(self.frames[item]))
-
-    def __str__(self) -> str:
-        return str(self.frames)
 
 
 class BlockMatching:
+
+    @staticmethod
+    def extract_motion_data(*frames: np.ndarray) -> None:
+        subprocess.run('')
+
 
     @staticmethod
     def get_motion_vectors(current_frame: np.ndarray, reference_frame: np.ndarray,
@@ -135,28 +40,6 @@ class BlockMatching:
         return motion_vectors
 
     @staticmethod
-    def extract_motion_vectors(file_path: str) -> Dict[int, List[Tuple[int, int, int, int]]]:
-        """
-        Gets a file that was generated using extract_mvs.c and returns the motion vectors for each frame.
-
-        :param file_path: The path for the file.
-        :return: A dictionary where the frame's index is the key and a list containing the motion-vectors is the value.
-        """
-        motion_vectors_by_frame = {0: []}
-        with open(file_path) as file:
-            file.readline()
-            for line in file:
-                frame_num, _, _, _, x2, y2, x1, y1, _ = eval(line)
-                if frame_num != len(motion_vectors_by_frame):
-                    if frame_num - 1 > len(motion_vectors_by_frame):
-                        motion_vectors_by_frame[frame_num - 2] = []
-                    else:
-                        motion_vectors_by_frame[frame_num - 1] = [(x1, y1, x2, y2)]
-                else:
-                    motion_vectors_by_frame[frame_num - 1].append((x1, y1, x2, y2))
-        return motion_vectors_by_frame
-
-    @staticmethod
     def get_macro_blocks(frame: np.ndarray, block_width: int = 16, block_height: int = 16,
                          partition_function: str = 'FIXED',
                          cost_function: str = 'SAD') -> List[Tuple[int, int, int, int]]:
@@ -175,48 +58,3 @@ class BlockMatching:
         for x, y, w, h in partition_function(frame, block_width, block_height, cost_function):
             macro_blocks.append((x, y, w, h))
         return macro_blocks
-
-    @staticmethod
-    def extract_macro_blocks(file_path: str) -> Dict[int, List[Tuple[int, int, int, int]]]:
-        """
-        Gets a file that was generated using extract_mvs.c and returns the macro-blocks for each frame.
-
-        :param file_path: The path for the file.
-        :return: A dictionary where the frame's index is the key and a list containing the macro-blocks is the value.
-        """
-        macro_blocks_by_frame = {0: []}
-        with open(file_path) as file:
-            file.readline()
-            for line in file:
-                frame_num, _, block_w, block_h, _, _, x, y, _ = eval(line)
-                x -= block_w // 2
-                y -= block_h // 2
-                if frame_num != len(macro_blocks_by_frame):
-                    if frame_num - 1 > len(macro_blocks_by_frame):
-                        macro_blocks_by_frame[frame_num - 2] = []
-                    else:
-                        macro_blocks_by_frame[frame_num - 1] = [(x, y, block_w, block_h)]
-                else:
-                    macro_blocks_by_frame[frame_num - 1].append((x, y, block_w, block_h))
-        return macro_blocks_by_frame
-
-    @staticmethod
-    def form_compensated_frame(reference_frame: np.ndarray, current_frame_macro_blocks: List[Tuple[int, int, int, int]],
-                               motion_vectors: List[Tuple[int, int, int, int]]) -> np.ndarray:
-        """
-        Forms the compensated current frame from the reference frame.
-
-        :param reference_frame: The current frame.
-        :param current_frame_macro_blocks: The macro-blocks of the current frame (should cover the whole frame).
-        :param motion_vectors: The motion vectors from the reference frame to the current frame.
-        :return: The compensated reference frame.
-        """
-        compensated_frame = np.zeros(reference_frame.shape)
-        for i in range(len(motion_vectors)):
-            sx, sy, w, h = current_frame_macro_blocks[i]
-            tx, ty, _, _ = motion_vectors[i]
-            tx, ty = max(tx - w // 2, 0), max(ty - h // 2, 0)
-            tx, ty = min(tx, reference_frame.shape[1] - w), min(ty, reference_frame.shape[0] - h)
-            compensated_frame[sy:sy + h, sx:sx + w] = reference_frame[ty:ty + h, tx:tx + w]
-        compensated_frame = compensated_frame.astype(np.uint8)
-        return compensated_frame
