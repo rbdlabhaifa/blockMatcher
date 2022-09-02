@@ -10,9 +10,15 @@ from .block_partitioning import PARTITIONING_FUNCTION
 class BlockMatching:
 
     @staticmethod
-    def extract_motion_data(*frames: np.ndarray) -> None:
-        subprocess.run('')
+    def extract_motion_data(frames: List[np.ndarray]) -> None:
+        """
+        TODO:
+        Extracts the motion data between frames.
 
+        :param frames: The list of frames.
+        :return: A list of (x1, y1, x2, y2, w, h) where w, h are the width and height of the macro-block.
+        """
+        pass
 
     @staticmethod
     def get_motion_vectors(current_frame: np.ndarray, reference_frame: np.ndarray,

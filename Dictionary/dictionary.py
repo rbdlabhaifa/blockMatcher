@@ -76,3 +76,6 @@ class MVMapping:
             for i in range(len(self.keys)):
                 pickle.dump(self.keys[i], f)
                 pickle.dump(self.values[i], f)
+
+    def test(self, data_directory: str, output_directory: str) -> None:
+        pass
