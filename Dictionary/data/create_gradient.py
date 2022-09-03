@@ -104,7 +104,7 @@ def main_arthur_gradient():
 # OPEN3D SCRIPT FOR CREATING GRADIENT IMAGES MANUALLY.
 
 
-def custom_draw_geometry_with_key_callback(sphere):
+def custom_draw_geometry_with_key_callback(geometries):
 
     images_written = 0
 
@@ -152,7 +152,6 @@ def custom_draw_geometry_with_key_callback(sphere):
         print('rotated!')
         return True
 
-
     key_to_callback = {
         ord("X"): load_render_optionX,
         ord("Y"): load_render_optionY,
@@ -163,13 +162,14 @@ def custom_draw_geometry_with_key_callback(sphere):
         ord("."): capture_image,
     }
 
-    o3d.visualization.draw_geometries_with_key_callbacks([sphere], key_to_callback, width=480, height=480)
+    o3d.visualization.draw_geometries_with_key_callbacks(geometries, key_to_callback, width=480, height=480)
 
 
 def main_open3D_gradient():
     sphere = o3d.geometry.TriangleMesh().create_sphere(1, 100)
     print(sphere)
-    custom_draw_geometry_with_key_callback(sphere)
+    geometries_list = [sphere]
+    custom_draw_geometry_with_key_callback(geometries_list)
 
 
 # MAIN
