@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<div id="player"></div>
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+
+
+    /*
+    HOW TO USE:
+        taking a screenshot of the video with a function is difficult to do for some reason,
+        so do it manually on the browser with the console open.
+        Call function panVideo() for 0.1 deg rotation.
+    */
+
+
+    let player;
+    let panStarted = false;
+
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            videoId: 'ZS8aG415A8c',
+            width: 600,
+            height: 700,
+            events: {
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+
+    function onPlayerStateChange(event) {
+        if (event.data == 1 && !panStarted) {
+            requestAnimationFrame(panVideo);
+            panStarted = true;
+        }
+    }
+
+    function panVideo() {
+        let props = player.getSphericalProperties();
+        console.log(props)
+        player.setSphericalProperties({
+            yaw: props.yaw + 0.1,
+        });
+    }
+
+</script>
+</html>
