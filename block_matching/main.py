@@ -1,6 +1,5 @@
-from typing import Tuple, Union, List, Dict
+from typing import Tuple, List
 import numpy as np
-import cv2
 import subprocess
 
 from .block_matching import SEARCH_FUNCTIONS
@@ -10,14 +9,23 @@ from .block_partitioning import PARTITIONING_FUNCTION
 class BlockMatching:
 
     @staticmethod
-    def extract_motion_data(video: str) -> None:
+    def extract_motion_data(extract_path: str, video_path: str) -> List[List[Tuple[int, int, int, int]]]:
         """
         Extracts the motion data of a video.
 
-        :param frames: The list of frames.
-        :return: A list of (x1, y1, x2, y2, w, h) where w, h are the width and height of the macro-block.
+        :param extract_path: The path to the motionVectors program.
+        :param video_path: The path to the video.
+        :return: A list of (x1, y1, x2, y2).
         """
-        pass
+        motion_data = subprocess.run([extract_path, video_path], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        motion_data = motion_data.stdout.decode().strip().split('\n')
+        frames_vectors = []
+        for i in range(1, len(motion_data)):
+            frame_num, _, block_width, block_height, src_x, src_y, dst_x, dst_y, _ = eval(motion_data[i])
+            while frame_num - 1 != len(frames_vectors):
+                frames_vectors.append([])
+            frames_vectors[frame_num - 2].append((dst_x, dst_y, src_x, src_y))
+        return frames_vectors
 
     @staticmethod
     def get_motion_vectors(current_frame: np.ndarray, reference_frame: np.ndarray,
