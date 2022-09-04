@@ -7,6 +7,7 @@ path = '/home/rani/PycharmProjects/blockMatcher/'
 
 bm = BlockMatching.extract_motion_data(path + 'Extra Code/extract motion data/motionVectors', path + 'Dictionary/data/optitrack/2.mp4')
 d = {}
+# TODO: rerun this correctly for optitrack (use .csv files obviously)
 for frame in range(len(bm)):
     if frame % 2 == 1:
         continue
