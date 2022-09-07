@@ -1,10 +1,9 @@
 import numpy as np
 import open3d as o3d
 import cv2
-import time
 
 
-# ARTHUR'S SCRIPT FOR CREATING GRADIENT IMAGES.
+# SCRIPT FOR CREATING GRADIENT IMAGES.
 
 
 def manualProjection(point_cloud_in_numpy, rotation_mat, cam_mat, hom_mat, eye, size):
@@ -63,7 +62,7 @@ def create_sphere(longitude_step: float = 1, latitude_step: float = 1, longitude
     return pcl1
 
 
-def main_arthur_gradient():
+def main_manual_gradient():
     im_size = (480, 480)
     fov_x = 60
     fov_y = 40
@@ -131,14 +130,9 @@ def custom_draw_geometry_with_key_callback(geometries):
 
     def capture_image(vis):
         nonlocal images_written
-        vis.capture_screen_image(f'gradient/3/frame{images_written}.png')
+        vis.capture_screen_image(f'gradient/4/{images_written}.png')
         print(f'written frame {images_written}')
         images_written += 1
-        return True
-
-    def translate(vis):
-        vc = vis.get_view_control()
-        vc.camera_local_translate(0.5, 0, 0)
         return True
 
     def rotate_to_the_left(vis):
@@ -156,7 +150,6 @@ def custom_draw_geometry_with_key_callback(geometries):
         ord("X"): load_render_optionX,
         ord("Y"): load_render_optionY,
         ord("Z"): load_render_optionZ,
-        ord("T"): translate,
         ord("-"): rotate_to_the_right,
         ord("="): rotate_to_the_left,
         ord("."): capture_image,
@@ -176,5 +169,5 @@ def main_open3D_gradient():
 
 
 if __name__ == '__main__':
-     main_arthur_gradient()
-    # main_open3D_gradient()
+     # main_manual_gradient()
+    main_open3D_gradient()
