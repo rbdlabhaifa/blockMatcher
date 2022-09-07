@@ -130,9 +130,14 @@ def custom_draw_geometry_with_key_callback(geometries):
 
     def capture_image(vis):
         nonlocal images_written
-        vis.capture_screen_image(f'gradient/4/{images_written}.png')
+        vis.capture_screen_image(f'gradient/5/{images_written}.png')
         print(f'written frame {images_written}')
         images_written += 1
+        return True
+
+    def rotate_to_the_left1(vis):
+        vc = vis.get_view_control()
+        vc.camera_local_rotate(-90, 0, 0)
         return True
 
     def rotate_to_the_left(vis):
@@ -152,6 +157,7 @@ def custom_draw_geometry_with_key_callback(geometries):
         ord("Z"): load_render_optionZ,
         ord("-"): rotate_to_the_right,
         ord("="): rotate_to_the_left,
+        ord("`"): rotate_to_the_left1,
         ord("."): capture_image,
     }
 
