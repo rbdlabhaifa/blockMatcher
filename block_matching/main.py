@@ -24,7 +24,7 @@ class BlockMatching:
             frame_num, _, block_width, block_height, src_x, src_y, dst_x, dst_y, _ = eval(motion_data[i])
             while frame_num - 1 != len(frames_vectors):
                 frames_vectors.append([])
-            frames_vectors[frame_num - 2].append((dst_x, dst_y, src_x, src_y))
+            frames_vectors[frame_num - 2].append((src_x, src_y, dst_x, dst_y))
         return frames_vectors
 
     @staticmethod
