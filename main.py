@@ -139,15 +139,11 @@ if __name__ == '__main__':
     ext = '/home/rani/PycharmProjects/blockMatcher/Extra Code/extract motion data/motionVectors'
     compare_data = {}
     j = 0
-    for i in BlockMatching.extract_motion_data(ext, path + 'data/gradient/6.mp4'):
+    for i in BlockMatching.extract_motion_data(ext, path + 'data/360 video/2.mp4'):
         if j % 2 == 1:
             j += 1
             continue
         compare_data[0.1 * (1 + (j / 2))] = i
         j += 1
-        im = cv2.imread(path + 'data/gradient/6/0.png')
-        for x1, y1, x2, y2 in i:
-            im = cv2.arrowedLine(im, (x1, y1), (x2, y2), (255, 0, 0), 1)
-        cv2.imshow('', im)
-        cv2.waitKey()
-    # print(*compare_dat
+    dic = MVMapping(path + 'saved dictionaries/gradient_6')
+    dic.compare(compare_data, path + 'comparisons/gradient_6/compared with 360_video_2.csv')
