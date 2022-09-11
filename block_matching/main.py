@@ -114,6 +114,35 @@ class BlockMatching:
             shutil.rmtree(temporary_directory, ignore_errors=True)
             raise error
 
+    @staticmethod
+    def get_opencv_motion_vectors(current_frame: Union[str, np.ndarray], reference_frame: Union[str, np.ndarray],
+                                  extract_path: str = None) -> List[Tuple[int, int, int, int]]:
+        """
+        Generates motion vectors from the reference frame to the current frame using opencv.
+
+        :param current_frame: Either a path to an image of the current frame or the current frame as an array.
+        :param reference_frame: Either a path to an image of the reference frame or the reference frame an array.
+        :param extract_path: The path to the motionVectors executable, if None uses default path.
+        :return: A list that contains the motion vectors from the reference frame to the current frame.
+        """
+        temporary_file = tempfile.NamedTemporaryFile(suffix='.mp4')
+        try:
+            if isinstance(current_frame, str):
+                current_frame = cv2.imread(current_frame)
+            if isinstance(reference_frame, str):
+                reference_frame = cv2.imread(reference_frame)
+            writer = cv2.VideoWriter(temporary_file.name, cv2.VideoWriter_fourcc('H264'), 10,
+                                     (current_frame.shape[1], current_frame.shape[0]))
+            writer.write(reference_frame)
+            writer.write(current_frame)
+            writer.release()
+            motion_data = BlockMatching.extract_motion_data(temporary_file.name, extract_path)
+            temporary_file.close()
+            return motion_data[0]
+        except (OSError, Exception) as error:
+            temporary_file.close()
+            raise error
+
     # ============================================= View Motion Data ================================================ #
 
     @staticmethod

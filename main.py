@@ -137,7 +137,7 @@ if __name__ == '__main__':
     path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/'
     rim = cv2.imread(path + 'data/optitrack/1/0.jpg')
     cim = cv2.imread(path + 'data/optitrack/1/9.jpg')
-    mvs = BlockMatching.get_ffmpeg_motion_vectors(rim, cim)
+    mvs = BlockMatching.get_opencv_motion_vectors(rim, cim)
     print(mvs)
     im = BlockMatching.draw_motion_vectors(rim, mvs)
     cv2.imshow('', im)
