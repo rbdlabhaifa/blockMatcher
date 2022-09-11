@@ -14,7 +14,7 @@ class BlockMatching:
 
     # ============================================= Extract Motion Data ============================================= #
 
-    MOTION_VECTORS_EXECUTABLE_PATH = os.path.abspath(os.getcwd()) + r'\Extra Code\extract motion data\motionVectors'
+    MOTION_VECTORS_EXECUTABLE_PATH = os.path.abspath(os.getcwd()) + '/Extra Code/extract motion data/motionVectors'
 
     @staticmethod
     def extract_motion_data(video_path: str, extract_path: str = None) -> List[List[Tuple[int, int, int, int]]]:
@@ -96,29 +96,29 @@ class BlockMatching:
         :return: A list that contains the motion vectors from the reference frame to the current frame.
         """
         temporary_directory = tempfile.mkdtemp()
-        if isinstance(current_frame, str):
-            shutil.copyfile(current_frame, temporary_directory + '/0.png')
-        else:
-            cv2.imwrite(temporary_directory + '/0.png', current_frame)
-        if isinstance(reference_frame, str):
-            shutil.copyfile(reference_frame, temporary_directory + '/1.png')
-        else:
-            cv2.imwrite(temporary_directory + '/1.png', current_frame)
         try:
+            if isinstance(current_frame, str):
+                shutil.copyfile(current_frame, temporary_directory + '/0.png')
+            else:
+                cv2.imwrite(temporary_directory + '/0.png', current_frame)
+            if isinstance(reference_frame, str):
+                shutil.copyfile(reference_frame, temporary_directory + '/1.png')
+            else:
+                cv2.imwrite(temporary_directory + '/1.png', current_frame)
             subprocess.run(['ffmpeg', '-i', f'%d.png', '-c:v', 'h264', '-preset',
                             'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
             motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
+            shutil.rmtree(temporary_directory, ignore_errors=True)
+            return motion_data[0]
         except (OSError, Exception) as error:
             shutil.rmtree(temporary_directory, ignore_errors=True)
             raise error
-        shutil.rmtree(temporary_directory, ignore_errors=True)
-        return motion_data[0]
 
     # ============================================= View Motion Data ================================================ #
 
     @staticmethod
     def draw_motion_vectors(frame: np.ndarray, motion_vectors: List[Tuple[int, int, int, int]],
-                            color: Tuple[int, int, int] = (0, 255, 0), thickness: int = 1,
+                            color: Tuple[int, int, int] = (255, 0, 0), thickness: int = 1,
                             save_to: str = None) -> np.ndarray:
         """
         Draws motion vectors on a frame.

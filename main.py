@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from typing import Any
-from sympy import *
+from sympy import Symbol, simplify, diff, solve, Float, sin, cos, init_printing
 import mpmath
 import pickle
 import os
@@ -38,10 +38,10 @@ def calculate_expression(cam_mat, save_to: str = None):
     alpha = Symbol('alpha')
 
     expression_a = (((Cx * sin(alpha) * (inv_Fy * before_image_y + inv_Cy) + Cx * cos(alpha) + Fx * (
-                inv_Fx * before_image_x + inv_Cx)) /
+            inv_Fx * before_image_x + inv_Cx)) /
                      (cos(alpha) + sin(alpha) * (inv_Fy * before_image_y + inv_Cy))) - after_image_x) ** 2
     expression_b = ((((-Fy) * sin(alpha) + (inv_Fy * before_image_y + inv_Cy) * (
-                Fy * cos(alpha) + Cy * sin(alpha)) + Cy * cos(alpha)) /
+            Fy * cos(alpha) + Cy * sin(alpha)) + Cy * cos(alpha)) /
                      (cos(alpha) + sin(alpha) * (inv_Fy * before_image_y + inv_Cy))) - after_image_y) ** 2
 
     values = [(Cx, cam_mat[0][2]), (Cy, cam_mat[1][2]), (Fx, cam_mat[0][0]), (Fy, cam_mat[1][1]),
@@ -85,12 +85,12 @@ def calculate_expression(cam_mat, save_to: str = None):
 
     if save_to is not None:
         with open(save_to, 'w') as f:
-            pickle.dump(ret, f)
+            pickle.dump([s11, s12, s13, s14, s21, s22], f)
 
     return ret
 
 
-def calculate_angle(expressions:  Any, vector: tuple):
+def calculate_angle(expressions: Any, vector: tuple):
     after_image_p = vector[2], vector[3]
     before_image_p = vector[0], vector[1]
     init_printing(use_unicode=True, wrap_line=False, no_global=False)
@@ -102,12 +102,11 @@ def calculate_angle(expressions:  Any, vector: tuple):
     values = [(after_image_x, after_image_p[0]),
               (after_image_y, after_image_p[1]), (before_image_x, before_image_p[0]),
               (before_image_y, before_image_p[1])]
-    for idx,i in enumerate(expressions):
+    for idx, i in enumerate(expressions):
         temp = i.subs(values)
         temp_sol = simplify(temp)
         if type(i) is not Float or i < 0.:
             ret.append(temp_sol)
-    print(ret)
     return ret
 
 
@@ -136,14 +135,11 @@ def motion_vectors():
 
 if __name__ == '__main__':
     path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/'
-    ext = '/home/rani/PycharmProjects/blockMatcher/Extra Code/extract motion data/motionVectors'
-    compare_data = {}
-    j = 0
-    for i in BlockMatching.extract_motion_data(ext, path + 'data/360 video/2.mp4'):
-        if j % 2 == 1:
-            j += 1
-            continue
-        compare_data[0.1 * (1 + (j / 2))] = i
-        j += 1
-    dic = MVMapping(path + 'saved dictionaries/gradient_6')
-    dic.compare(compare_data, path + 'comparisons/gradient_6/compared with 360_video_2.csv')
+    rim = cv2.imread(path + 'data/optitrack/1/0.jpg')
+    cim = cv2.imread(path + 'data/optitrack/1/9.jpg')
+    mvs = BlockMatching.get_ffmpeg_motion_vectors(rim, cim)
+    print(mvs)
+    im = BlockMatching.draw_motion_vectors(rim, mvs)
+    cv2.imshow('', im)
+    cv2.imshow('1', cim)
+    cv2.waitKey()
