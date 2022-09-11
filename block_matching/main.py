@@ -114,3 +114,14 @@ class BlockMatching:
             raise error
         shutil.rmtree(temporary_directory, ignore_errors=True)
         return motion_data[0]
+
+    # =========================================== Viewing Motion Data =========================================== #
+
+    # TODO:
+    @staticmethod
+    def draw_motion_vectors():
+        pass
+
+    @staticmethod
+    def draw_macro_blocks():
+        pass
