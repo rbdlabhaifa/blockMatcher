@@ -98,6 +98,6 @@
          /opt
          /mingw
          )
- add_executable(motionVectors test.cpp)
+ add_executable(motionVectors motionVectors.cpp)
  target_include_directories(motionVectors PRIVATE ${AVCODEC_INCLUDE_DIR} ${AVUTIL_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR})
  target_link_libraries(motionVectors ${AVCODEC_LIBRARY} ${AVUTIL_LIBRARY} ${AVFORMAT_LIBRARY})
