@@ -1,6 +1,11 @@
-from typing import Tuple, List
+from typing import Tuple, List, Union
 import numpy as np
 import subprocess
+import os
+import tempfile
+import cv2
+import shutil
+
 
 from .block_matching import SEARCH_FUNCTIONS
 from .block_partitioning import PARTITIONING_FUNCTION
@@ -8,15 +13,21 @@ from .block_partitioning import PARTITIONING_FUNCTION
 
 class BlockMatching:
 
+    # =========================================== Extracting Motion Data ============================================ #
+
+    MOTION_VECTORS_EXECUTABLE_PATH = os.path.abspath(os.getcwd()) + r'\Extra Code\extract motion data\motionVectors'
+
     @staticmethod
-    def extract_motion_data(extract_path: str, video_path: str) -> List[List[Tuple[int, int, int, int]]]:
+    def extract_motion_data(video_path: str, extract_path: str = None) -> List[List[Tuple[int, int, int, int]]]:
         """
         Extracts the motion data of a video.
 
-        :param extract_path: The path to the motionVectors program.
         :param video_path: The path to the video.
-        :return: A list of (x1, y1, x2, y2).
+        :param extract_path: The path to the motionVectors executable, if None uses default path.
+        :return: A list that contains lists of motion vectors between every two consecutive frames.
         """
+        if extract_path is None:
+            extract_path = BlockMatching.MOTION_VECTORS_EXECUTABLE_PATH
         motion_data = subprocess.run([extract_path, video_path], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         motion_data = motion_data.stdout.decode().strip().split('\n')
         frames_vectors = []
@@ -26,6 +37,8 @@ class BlockMatching:
                 frames_vectors.append([])
             frames_vectors[frame_num - 2].append((src_x, src_y, dst_x, dst_y))
         return frames_vectors
+
+    # =========================================== Calculating Motion Data =========================================== #
 
     @staticmethod
     def get_motion_vectors(current_frame: np.ndarray, reference_frame: np.ndarray,
@@ -71,3 +84,33 @@ class BlockMatching:
         for x, y, w, h in partition_function(frame, block_width, block_height, cost_function):
             macro_blocks.append((x, y, w, h))
         return macro_blocks
+
+    @staticmethod
+    def get_ffmpeg_motion_vectors(current_frame: Union[str, np.ndarray], reference_frame: Union[str, np.ndarray],
+                                  extract_path: str = None) -> List[Tuple[int, int, int, int]]:
+        """
+        Generates motion vectors from the reference frame to the current frame using ffmpeg.
+
+        :param current_frame: Either a path to an image of the current frame or the current frame as an array.
+        :param reference_frame: Either a path to an image of the reference frame or the reference frame an array.
+        :param extract_path: The path to the motionVectors executable, if None uses default path.
+        :return: A list that contains the motion vectors from the reference frame to the current frame.
+        """
+        temporary_directory = tempfile.mkdtemp()
+        if isinstance(current_frame, str):
+            shutil.copyfile(current_frame, temporary_directory + '/0.png')
+        else:
+            cv2.imwrite(temporary_directory + '/0.png', current_frame)
+        if isinstance(reference_frame, str):
+            shutil.copyfile(reference_frame, temporary_directory + '/1.png')
+        else:
+            cv2.imwrite(temporary_directory + '/1.png', current_frame)
+        try:
+            subprocess.run(['ffmpeg', '-i', f'%d.png', '-c:v', 'h264', '-preset',
+                            'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
+            motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
+        except (OSError, Exception) as error:
+            shutil.rmtree(temporary_directory, ignore_errors=True)
+            raise error
+        shutil.rmtree(temporary_directory, ignore_errors=True)
+        return motion_data[0]
