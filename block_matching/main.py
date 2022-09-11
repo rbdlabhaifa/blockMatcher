@@ -6,14 +6,13 @@ import tempfile
 import cv2
 import shutil
 
-
 from .block_matching import SEARCH_FUNCTIONS
 from .block_partitioning import PARTITIONING_FUNCTION
 
 
 class BlockMatching:
 
-    # =========================================== Extracting Motion Data ============================================ #
+    # ============================================= Extract Motion Data ============================================= #
 
     MOTION_VECTORS_EXECUTABLE_PATH = os.path.abspath(os.getcwd()) + r'\Extra Code\extract motion data\motionVectors'
 
@@ -38,7 +37,7 @@ class BlockMatching:
             frames_vectors[frame_num - 2].append((src_x, src_y, dst_x, dst_y))
         return frames_vectors
 
-    # =========================================== Calculating Motion Data =========================================== #
+    # ============================================= Calculate Motion Data =========================================== #
 
     @staticmethod
     def get_motion_vectors(current_frame: np.ndarray, reference_frame: np.ndarray,
@@ -115,13 +114,25 @@ class BlockMatching:
         shutil.rmtree(temporary_directory, ignore_errors=True)
         return motion_data[0]
 
-    # =========================================== Viewing Motion Data =========================================== #
-
-    # TODO:
-    @staticmethod
-    def draw_motion_vectors():
-        pass
+    # ============================================= View Motion Data ================================================ #
 
     @staticmethod
-    def draw_macro_blocks():
-        pass
+    def draw_motion_vectors(frame: np.ndarray, motion_vectors: List[Tuple[int, int, int, int]],
+                            color: Tuple[int, int, int] = (0, 255, 0), thickness: int = 1,
+                            save_to: str = None) -> np.ndarray:
+        """
+        Draws motion vectors on a frame.
+
+        :param frame: The frame as a numpy array.
+        :param motion_vectors: A list of motion vectors.
+        :param color: The color to draw the motion vectors with.
+        :param thickness: The thickness of the vectors.
+        :param save_to: The path to save the drawn frame to, if None doesn't save.
+        :return: The drawn frame.
+        """
+        frame = frame.copy()
+        for x1, y1, x2, y2 in motion_vectors:
+            frame = cv2.arrowedLine(frame, (x1, y1), (x2, y2), color, thickness)
+        if save_to is not None:
+            cv2.imwrite(save_to, frame)
+        return frame
