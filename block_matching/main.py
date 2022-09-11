@@ -131,7 +131,7 @@ class BlockMatching:
                 current_frame = cv2.imread(current_frame)
             if isinstance(reference_frame, str):
                 reference_frame = cv2.imread(reference_frame)
-            writer = cv2.VideoWriter(temporary_file.name, cv2.VideoWriter_fourcc('H264'), 10,
+            writer = cv2.VideoWriter(temporary_file.name, cv2.VideoWriter_fourcc(*'mp4v'), 10,
                                      (current_frame.shape[1], current_frame.shape[0]))
             writer.write(reference_frame)
             writer.write(current_frame)
