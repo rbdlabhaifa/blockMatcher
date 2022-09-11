@@ -77,29 +77,48 @@ class MVMapping:
                 pickle.dump(self.keys[i], f)
                 pickle.dump(self.values[i], f)
 
-    def compare(self, data_to_compare: Dict[float, List[Tuple[int, int, int, int]]], output_file: str):
+    def compare(self, data_to_compare: Dict[float, List[Tuple[int, int, int, int]]], output_file: str = None):
         """
-        Compares this object with another set of data.
+        Compares this MVMapping object with a dictionary that contains rotation and vectors as items.
 
-        :param data_to_compare: A dictionary with rotation as keys and vectors as values.
+        :param data_to_compare: A dictionary with rotation as keys and motion vectors as values.
         :param output_file: The file to save the results of the comparison to.
         """
-        output = 'real rot, expected dict rot, actual dict rot, error from real rot, error from expected rot\n'
-        total_expected_rot_error = 0
-        total_real_rot_error = 0
-        for real_rotation, motion_vectors in data_to_compare.items():
+        # The output of the function. Will be saved to output_file or be printed if output_file is None.
+        output = 'real rot, expected dict rot, actual dict rot, diff from real rot, diff from expected rot\n'
+        # Keep the max difference.
+        max_dict_to_real_diff = 0
+        max_dict_to_expected_diff = 0
+        # Keep the sum of difference.
+        sum_dict_to_real_diff = 0
+        sum_dict_to_expected_diff = 0
+        for real_rot, motion_vectors in data_to_compare.items():
+            # The rotation output from this MVMapping object.
             dict_rot = round(self[motion_vectors], 3)
-            real_rotation = round(real_rotation, 3)
-            expected_dict_rot = round(min(self.values, key=lambda x: abs(x - real_rotation)), 3)
-            error_from_real = round(100 * (abs(dict_rot - real_rotation) / real_rotation), 3)
-            error_from_expected = round(100 * (abs(dict_rot - expected_dict_rot) / expected_dict_rot), 3)
-            output += f'{real_rotation}, {expected_dict_rot}, {dict_rot}, {error_from_real}%, {error_from_expected}%\n'
-            total_real_rot_error += error_from_real
-            total_expected_rot_error += error_from_expected
-        total_real_rot_error = round(total_real_rot_error / len(data_to_compare), 3)
-        total_expected_rot_error = round(total_expected_rot_error / len(data_to_compare), 3)
-        output += f'Average error from real rotations: {total_real_rot_error}%\n'
-        output += f'Average error from expected rotations: {total_expected_rot_error}%\n'
-        file = open(output_file, 'w')
-        file.write(output)
-        file.close()
+            # The real rotation rounded to 3 decimal digits.
+            real_rot = round(real_rot, 3)
+            # The rotation that this object is expected to return.
+            expected_dict_rot = round(min(self.values, key=lambda x: abs(x - real_rot)), 3)
+            # The differences of the dict rotation from the real rotation.
+            diff_from_real = abs(dict_rot - real_rot)
+            # The differences of the dict rotation from the expected dict rotation.
+            diff_from_expected = abs(dict_rot - expected_dict_rot)
+            # Add a row to the output string.
+            output += f'{real_rot}, {expected_dict_rot}, {dict_rot}, {diff_from_real}, {diff_from_expected}\n'
+            # Add the differences to the sum.
+            sum_dict_to_real_diff += diff_from_real
+            sum_dict_to_expected_diff += diff_from_expected
+            # Check for maximum difference.
+            max_dict_to_real_diff = max(max_dict_to_real_diff, diff_from_real)
+            max_dict_to_expected_diff = max(max_dict_to_expected_diff, diff_from_expected)
+        # The average differences and max differences.
+        output += f'Max difference from expected rotation: {max_dict_to_expected_diff}'
+        output += f'Max difference from real rotation: {max_dict_to_real_diff}\n'
+        output += f'Average diff from expected rotations: {round(sum_dict_to_expected_diff / len(data_to_compare), 3)}'
+        output += f'Average diff from real rotations: {round(sum_dict_to_real_diff / len(data_to_compare), 3)}'
+        if output_file is None:
+            print(output)
+        else:
+            file = open(output_file, 'w')
+            file.write(output)
+            file.close()
