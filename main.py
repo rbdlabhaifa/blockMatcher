@@ -140,14 +140,18 @@ def get_gradient_3d(width, height, start_list, stop_list, is_horizontal_list):
 
 
 if __name__ == '__main__':
-    path = 'Dictionary/data/gradient/3/'
-    im1, im2 = cv2.imread(path + '0.png'), cv2.imread(path + '1.png')
-    mvs = BlockMatching.get_ffmpeg_motion_vectors(im2, im1)
-    d = BlockMatching.draw_motion_vectors(im1, mvs)
-    cv2.imshow('', d)
-    cv2.waitKey()
+    import io
+    path = 'Dictionary/data/gradient/7/'
+    frames = [(path + i) for i in list(sorted(os.listdir(path[:-1]), key=lambda x: int(x.replace('.png', ''))))]
+    mvs = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
+    base = cv2.imread(frames[0])
+    for i in mvs:
+        basec = base.copy()
+        basec = BlockMatching.draw_motion_vectors(basec, i)
+        cv2.imshow('', basec)
+        cv2.waitKey()
 
-
+    # cv2.waitKey()
 
     # from PIL import Image
     #

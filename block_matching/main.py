@@ -101,17 +101,48 @@ class BlockMatching:
                 shutil.copyfile(current_frame, temporary_directory + '/0.png')
             else:
                 cv2.imwrite(temporary_directory + '/0.png', current_frame)
-                cv2.imwrite(temporary_directory + '/1.png', current_frame)
-
             if isinstance(reference_frame, str):
                 shutil.copyfile(reference_frame, temporary_directory + '/1.png')
             else:
-                cv2.imwrite(temporary_directory + '/2.png', current_frame)
+                cv2.imwrite(temporary_directory + '/1.png', current_frame)
             subprocess.run(['ffmpeg', '-i', f'%d.png', '-c:v', 'h264', '-preset',
                             'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
             motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
             shutil.rmtree(temporary_directory, ignore_errors=True)
             return motion_data[1]
+        except (OSError, Exception) as error:
+            shutil.rmtree(temporary_directory, ignore_errors=True)
+            raise error
+
+    @staticmethod
+    def get_ffmpeg_motion_vectors_with_cache(frames: List[Union[str, np.ndarray]],
+                                             extract_path: str = None) -> List[List[Tuple[int, int, int, int]]]:
+        """
+        Generates motion vectors from the first frame to the rest of the frame with ffmpeg.
+
+        :param frames: A list of frames. Either the paths to the frames or the frames as arrays.
+        :param extract_path: The path to the motionVectors executable, if None uses default path.
+        :return: A list that contains lists of motion vectors.
+        """
+        temporary_directory = tempfile.mkdtemp()
+        try:
+            base_frame = frames[0]
+            if isinstance(base_frame, str):
+                base_frame = cv2.imread(base_frame)
+            frame_index = 0
+            for frame in frames[1:]:
+                cv2.imwrite(temporary_directory + f'{frame_index}.png')
+                frame_index += 1
+                if isinstance(frame, str):
+                    shutil.copyfile(frame, temporary_directory + f'/{frame_index}.png')
+                else:
+                    cv2.imwrite(temporary_directory + f'/{frame_index}.png', frame)
+                frame_index += 1
+            subprocess.run(['ffmpeg', '-i', f'%d.png', '-c:v', 'h264', '-preset',
+                            'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
+            motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
+            shutil.rmtree(temporary_directory, ignore_errors=True)
+            return motion_data
         except (OSError, Exception) as error:
             shutil.rmtree(temporary_directory, ignore_errors=True)
             raise error

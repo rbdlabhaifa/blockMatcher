@@ -203,15 +203,11 @@ def custom_draw_geometry_with_key_callback(geometries):
 def main_open3D_gradient():
     sphere = create_sphere(read_from='pcd0.50.5.pcd')
     colors = []
-    for _ in range(len(np.asarray(sphere.points)) // 50):
+    for _ in range(len(np.asarray(sphere.points)) // 1800):
         rgb = np.transpose([randint(0, 255) / 255, randint(0, 255) / 255, randint(0, 255) / 255])
         colors += [
-           rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
-           rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
-           rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
-           rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
-           rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
-        ]
+           rgb
+        ] * 1800
     sphere.colors = o3d.utility.Vector3dVector(colors)
     geometries_list = [sphere]
     custom_draw_geometry_with_key_callback(geometries_list)
