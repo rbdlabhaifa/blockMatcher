@@ -141,7 +141,7 @@ def get_gradient_3d(width, height, start_list, stop_list, is_horizontal_list):
 
 if __name__ == '__main__':
     import io
-    path = 'Dictionary/data/gradient/7/'
+    path = 'Dictionary/data/gradient/9/'
     frames = [(path + i) for i in list(sorted(os.listdir(path[:-1]), key=lambda x: int(x.replace('.png', ''))))]
     mvs = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
     base = cv2.imread(frames[0])
