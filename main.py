@@ -129,6 +129,7 @@ def get_gradient_2d(start, stop, width, height, is_horizontal):
     else:
         return np.tile(np.linspace(start, stop, height), (width, 1)).T
 
+
 def get_gradient_3d(width, height, start_list, stop_list, is_horizontal_list):
     result = np.zeros((height, width, len(start_list)), dtype=float)
 
@@ -138,18 +139,32 @@ def get_gradient_3d(width, height, start_list, stop_list, is_horizontal_list):
     return result
 
 
+def shuffle_function(width: int):
+    from itertools import combinations
+    from random import choice
+    what = np.array([i for i in range(width)])
+    np.random.shuffle(what)
+    def shuffle(arr):
+        nonlocal what
+        for i in range(arr.shape[0]):
+            for j in range(len(what)):
+                x = what[j]
+                # arr[j, i], arr[x, i] = arr[x, i], arr[j, i]
+                arr[i, j], arr[i, x] = arr[i, x], arr[i, j]
+
+    return shuffle
+
 
 if __name__ == '__main__':
     import io
-    path = 'Dictionary/data/gradient/9/'
-    frames = [(path + i) for i in list(sorted(os.listdir(path[:-1]), key=lambda x: int(x.replace('.png', ''))))]
-    mvs = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
-    base = cv2.imread(frames[0])
-    for i in mvs:
-        basec = base.copy()
-        basec = BlockMatching.draw_motion_vectors(basec, i)
-        cv2.imshow('', basec)
-        cv2.waitKey()
+
+    path = 'Dictionary/data/gradient/'
+    shuffle = shuffle_function(cv2.imread(path + '8/0.png').shape[0])
+    for frame in list(sorted(os.listdir(path + '8'), key=lambda x: int(x.replace('.png', '')))):
+        print(frame)
+        framearr = cv2.imread(path + '8/' + frame)
+        shuffle(framearr)
+        cv2.imwrite(path + '8/' + frame, framearr)
 
     # cv2.waitKey()
 
@@ -191,7 +206,7 @@ if __name__ == '__main__':
     # cv2.waitKey()
     #
 
-    # path = 'Dictionary/data/gradient/8'
+    # path = 'Dictionary/data/gradient/2'
     # import os
     # ans = set()
     # for i in os.listdir(path):
