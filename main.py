@@ -158,19 +158,24 @@ def shuffle_function(width: int):
 if __name__ == '__main__':
 
     import io
-
-    path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/data/gradient/8'
+    mapping = MVMapping()
+    path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/data/gradient/7'
     frames = [path + '/' + i for i in list(sorted(os.listdir(path), key=lambda x: int(x.replace('.png', ''))))]
     mvs = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
     f1 = cv2.imread(frames[0])
     j = 0
     for i in mvs:
+        if j % 2 == 1:
+            j += 1
+            continue
         print(j)
-        j += 1
+        mapping[i] = 0.1 * (1 + (j / 2))
         f2 = f1.copy()
         f2 = BlockMatching.draw_motion_vectors(f2, i)
         cv2.imshow('', f2)
         cv2.waitKey()
+        j += 1
+    mapping.save_to('/home/rani/PycharmProjects/blockMatcher/Dictionary/saved dictionaries/gradient_7')
 
     # path = 'Dictionary/data/gradient/'
     # shuffle = shuffle_function(cv2.imread(path + '8/0.png').shape[0])
