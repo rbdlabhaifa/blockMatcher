@@ -1,3 +1,4 @@
+from random import randint
 import numpy as np
 import open3d as o3d
 import cv2
@@ -44,22 +45,44 @@ def manualProjection(point_cloud_in_numpy, rotation_mat, cam_mat, hom_mat, eye, 
     return image
 
 
-def create_sphere(longitude_step: float = 1, latitude_step: float = 1, longitude: int = 360, latitude: int = 360):
+def create_sphere(longitude_step: float = 1, latitude_step: float = 1, longitude: int = 360, latitude: int = 360,
+                  save_to: str = None, read_from: str = None, map_image: str = None):
+    if read_from is not None:
+        return o3d.io.read_point_cloud(read_from)
     sphere_array = []
-    i, j = 0, 0
-    while i < latitude:
-        j = 0
-        while j < longitude:
+    for i in np.arange(0, latitude, latitude_step):
+        for j in np.arange(0, latitude, latitude_step):
             rad_i, rad_j = np.deg2rad(i), np.deg2rad(j)
             cos_i = np.cos(rad_i)
             sphere_array.append([cos_i * np.sin(rad_j),
                                  cos_i * np.cos(rad_j),
                                  np.sin(rad_i)])
-            j += longitude_step
-        i += latitude_step
-    pcl1 = o3d.geometry.PointCloud()
-    pcl1.points = o3d.utility.Vector3dVector(sphere_array)
-    return pcl1
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(sphere_array)
+    if map_image is not None:
+        colors = []
+        for _ in range(len(sphere_array) // 50):
+            rgb = np.transpose([randint(0, 255) / 255, randint(0, 255) / 255, randint(0, 255) / 255])
+            colors += [rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
+                       rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
+                       rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
+                       rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
+                       rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb]
+        # image = cv2.imread(map_image) / 255
+        # center = image.shape[1] // 2, image.shape[0] // 2
+        # for lat in np.arange(0, latitude, latitude_step):
+        #     length = 0
+        #     while length < center[0]:
+        #         final_x = center[0] + (length * np.cos(np.deg2rad(lat)))
+        #         final_y = center[1] - (length * np.sin(np.deg2rad(lat)))
+        #         length += 1
+        #         colors.append(
+        #             np.transpose(image[int(final_y), int(final_x)])
+        #         )
+        pcd.colors = o3d.utility.Vector3dVector(colors)
+    if save_to is not None:
+        o3d.io.write_point_cloud(save_to, pcd)
+    return pcd
 
 
 def main_manual_gradient():
@@ -106,6 +129,8 @@ def main_manual_gradient():
 def custom_draw_geometry_with_key_callback(geometries):
 
     images_written = 0
+    point_size = 1.
+    total_rot = 0
 
     def load_render_optionX(vis):
         op = vis.get_render_option()
@@ -130,43 +155,64 @@ def custom_draw_geometry_with_key_callback(geometries):
 
     def capture_image(vis):
         nonlocal images_written
-        vis.capture_screen_image(f'gradient/5/{images_written}.png')
+        vis.capture_screen_image(f'gradient/8/{images_written}.png')
         print(f'written frame {images_written}')
         images_written += 1
         return True
 
-    def rotate_to_the_left1(vis):
-        vc = vis.get_view_control()
-        vc.camera_local_rotate(-90, 0, 0)
+    def reset_point_size(vis):
+        nonlocal point_size
+        op = vis.get_render_option()
+        point_size, op.point_size = op.point_size, point_size
         return True
 
     def rotate_to_the_left(vis):
+        nonlocal total_rot
         vc = vis.get_view_control()
         vc.camera_local_rotate(-0.1, 0, 0)
+        total_rot -= 0.1
+        print('rotated left, total rot is', total_rot)
         return True
 
     def rotate_to_the_right(vis):
+        nonlocal total_rot
         vc = vis.get_view_control()
         vc.camera_local_rotate(0.1, 0, 0)
-        print('rotated!')
+        total_rot += 0.1
+        print('rotated right, total rot is', total_rot)
         return True
 
     key_to_callback = {
-        ord("X"): load_render_optionX,
-        ord("Y"): load_render_optionY,
-        ord("Z"): load_render_optionZ,
-        ord("-"): rotate_to_the_right,
-        ord("="): rotate_to_the_left,
-        ord("`"): rotate_to_the_left1,
-        ord("."): capture_image,
+        ord("Q"): load_render_optionX,
+        ord("W"): load_render_optionY,
+        ord("R"): load_render_optionZ,
+        ord("D"): rotate_to_the_right,
+        ord("A"): rotate_to_the_left,
+        ord("S"): capture_image,
+        ord("`"): reset_point_size,
     }
+
+    print('press QWR for different gradients.')
+    print('press RD to rotate right and left respectively.')
+    print('press S to capture an image.')
+    print('press ` to change point size.')
 
     o3d.visualization.draw_geometries_with_key_callbacks(geometries, key_to_callback, width=480, height=480)
 
 
 def main_open3D_gradient():
-    sphere = o3d.geometry.TriangleMesh().create_sphere(1, 100)
-    print(sphere)
+    sphere = create_sphere(read_from='pcd0.50.5.pcd')
+    colors = []
+    for _ in range(len(np.asarray(sphere.points)) // 50):
+        rgb = np.transpose([randint(0, 255) / 255, randint(0, 255) / 255, randint(0, 255) / 255])
+        colors += [
+           rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
+           rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
+           rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
+           rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
+           rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb, rgb,
+        ]
+    sphere.colors = o3d.utility.Vector3dVector(colors)
     geometries_list = [sphere]
     custom_draw_geometry_with_key_callback(geometries_list)
 
@@ -175,5 +221,5 @@ def main_open3D_gradient():
 
 
 if __name__ == '__main__':
-     # main_manual_gradient()
+    # main_manual_gradient()
     main_open3D_gradient()

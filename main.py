@@ -1,3 +1,6 @@
+# ===================================================== IMPORTS ====================================================== #
+
+
 import cv2
 import numpy as np
 from typing import Any
@@ -10,7 +13,7 @@ from block_matching import BlockMatching
 from Dictionary.dictionary import MVMapping
 
 
-# ====================================================== UTILS ====================================================== #
+# ===================================================== FORMULA ====================================================== #
 
 
 def load_expression(expression_path: str):
@@ -110,36 +113,88 @@ def calculate_angle(expressions: Any, vector: tuple):
     return ret
 
 
-def create_rotation_video(image_folder: str, temporary_folder: str):
-    files = list(sorted(os.listdir(image_folder), key=lambda x: int(x.replace('.png', '').replace('.jpg', ''))))
-    base_frame = cv2.imread(f'{image_folder}/{files[0]}')
-    frame_number = 0
-    for i in range(1, len(files)):
-        cv2.imwrite(f'{temporary_folder}/{frame_number}.png', base_frame)
-        frame_number += 1
-        cv2.imwrite(f'{temporary_folder}/{frame_number}.png', cv2.imread(f'{image_folder}/{i}.png'))
-        frame_number += 1
-    subprocess.run(['ffmpeg', '-i', f'\"{temporary_folder}/%d.png\"',
-                    '-c:v', 'h264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p', f'{image_folder}/out.mp4'])
-
-
-# ====================================================== TESTS ====================================================== #
+# ===================================================== TESTS ======================================================== #
 
 
 def motion_vectors():
     pass
 
 
-# ====================================================== MAIN ======================================================= #
+# ===================================================== MAIN ========================================================= #
+
+
+def get_gradient_2d(start, stop, width, height, is_horizontal):
+    if is_horizontal:
+        return np.tile(np.linspace(start, stop, width), (height, 1))
+    else:
+        return np.tile(np.linspace(start, stop, height), (width, 1)).T
+
+def get_gradient_3d(width, height, start_list, stop_list, is_horizontal_list):
+    result = np.zeros((height, width, len(start_list)), dtype=float)
+
+    for i, (start, stop, is_horizontal) in enumerate(zip(start_list, stop_list, is_horizontal_list)):
+        result[:, :, i] = get_gradient_2d(start, stop, width, height, is_horizontal)
+
+    return result
+
 
 
 if __name__ == '__main__':
-    path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/'
-    rim = cv2.imread(path + 'data/optitrack/1/0.jpg')
-    cim = cv2.imread(path + 'data/optitrack/1/9.jpg')
-    mvs = BlockMatching.get_opencv_motion_vectors(rim, cim)
-    print(mvs)
-    im = BlockMatching.draw_motion_vectors(rim, mvs)
-    cv2.imshow('', im)
-    cv2.imshow('1', cim)
+    path = 'Dictionary/data/gradient/3/'
+    im1, im2 = cv2.imread(path + '0.png'), cv2.imread(path + '1.png')
+    mvs = BlockMatching.get_ffmpeg_motion_vectors(im2, im1)
+    d = BlockMatching.draw_motion_vectors(im1, mvs)
+    cv2.imshow('', d)
     cv2.waitKey()
+
+
+
+    # from PIL import Image
+    #
+    # array = get_gradient_3d(3600, 3600, (90, 220, 255), (255, 0, 0), (False, True, False))
+    # array = np.asarray(Image.fromarray(np.uint8(array)))
+    # array = cv2.cvtColor(array, cv2.COLOR_RGB2BGR)
+    # cv2.imwrite('im1.png', array)
+    # cv2.imshow('', array)
+    # cv2.waitKey()
+
+    # image = cv2.imread('im1.png')
+    # latitude, longitude = 360, 180
+    # lat_step, lon_step = 1, 1
+    # center = image.shape[1] // 2, image.shape[0] // 2
+    # for lat in np.arange(0, latitude, lat_step):
+    #     im = []
+    #
+    #     length = 0
+    #     while length < center[0]:
+    #         final_x = center[0] + (length * np.cos(np.deg2rad(lat)))
+    #         final_y = center[1] - (length * np.sin(np.deg2rad(lat)))
+    #         im.append(image[int(final_y), int(final_x)])
+    #         length += 1
+    #
+    #     im = [im]
+    #     cv2.namedWindow('1')
+    #     cv2.moveWindow('1', 0, 900)
+    #     cv2.imshow('1', np.array(im * 100))
+    #     cv2.waitKey()
+    #     cv2.destroyAllWindows()
+    #
+
+    # im1 = cv2.imread('Dictionary/data/gradient/3/0.png')
+    # im2 = np.rot90(im1)
+    # im3 = (im1 + im2) // 3
+    # cv2.imshow('', im3)
+    # cv2.waitKey()
+    #
+
+    # path = 'Dictionary/data/gradient/8'
+    # import os
+    # ans = set()
+    # for i in os.listdir(path):
+    #     print(i)
+    #     for j in os.listdir(path):
+    #         if i == j:
+    #             continue
+    #         im1, im2 = cv2.imread(path + '/' + i), cv2.imread(path + '/' + j)
+    #         ans.add((im1 == im2).all())
+    # print(ans)

@@ -101,15 +101,17 @@ class BlockMatching:
                 shutil.copyfile(current_frame, temporary_directory + '/0.png')
             else:
                 cv2.imwrite(temporary_directory + '/0.png', current_frame)
+                cv2.imwrite(temporary_directory + '/1.png', current_frame)
+
             if isinstance(reference_frame, str):
                 shutil.copyfile(reference_frame, temporary_directory + '/1.png')
             else:
-                cv2.imwrite(temporary_directory + '/1.png', current_frame)
+                cv2.imwrite(temporary_directory + '/2.png', current_frame)
             subprocess.run(['ffmpeg', '-i', f'%d.png', '-c:v', 'h264', '-preset',
                             'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
             motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
             shutil.rmtree(temporary_directory, ignore_errors=True)
-            return motion_data[0]
+            return motion_data[1]
         except (OSError, Exception) as error:
             shutil.rmtree(temporary_directory, ignore_errors=True)
             raise error
