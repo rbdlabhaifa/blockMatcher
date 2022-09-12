@@ -100,9 +100,9 @@ class MVMapping:
             # The rotation that this object is expected to return.
             expected_dict_rot = round(min(self.values, key=lambda x: abs(x - real_rot)), 3)
             # The differences of the dict rotation from the real rotation.
-            diff_from_real = abs(dict_rot - real_rot)
+            diff_from_real = round(abs(dict_rot - real_rot), 3)
             # The differences of the dict rotation from the expected dict rotation.
-            diff_from_expected = abs(dict_rot - expected_dict_rot)
+            diff_from_expected = round(abs(dict_rot - expected_dict_rot), 3)
             # Add a row to the output string.
             output += f'{real_rot}, {expected_dict_rot}, {dict_rot}, {diff_from_real}, {diff_from_expected}\n'
             # Add the differences to the sum.
@@ -112,10 +112,10 @@ class MVMapping:
             max_dict_to_real_diff = max(max_dict_to_real_diff, diff_from_real)
             max_dict_to_expected_diff = max(max_dict_to_expected_diff, diff_from_expected)
         # The average differences and max differences.
-        output += f'Max difference from expected rotation: {max_dict_to_expected_diff}'
+        output += f'Max difference from expected rotation: {max_dict_to_expected_diff}\n'
         output += f'Max difference from real rotation: {max_dict_to_real_diff}\n'
-        output += f'Average diff from expected rotations: {round(sum_dict_to_expected_diff / len(data_to_compare), 3)}'
-        output += f'Average diff from real rotations: {round(sum_dict_to_real_diff / len(data_to_compare), 3)}'
+        output += f'Average diff from expected rotations: {round(sum_dict_to_expected_diff / len(data_to_compare), 3)}\n'
+        output += f'Average diff from real rotations: {round(sum_dict_to_real_diff / len(data_to_compare), 3)}\n'
         if output_file is None:
             print(output)
         else:

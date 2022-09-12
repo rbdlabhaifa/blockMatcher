@@ -130,7 +130,7 @@ class BlockMatching:
             if isinstance(base_frame, str):
                 base_frame = cv2.imread(base_frame)
             frame_index = 0
-            for frame in frames:
+            for frame in frames[1:]:
                 cv2.imwrite(temporary_directory + f'/{frame_index}.png', base_frame)
                 frame_index += 1
                 if isinstance(frame, str):

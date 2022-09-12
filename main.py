@@ -155,27 +155,54 @@ def shuffle_function(width: int):
     return shuffle
 
 
+def create_dict(path_to_data, path_to_save, rots=tuple([i / 10 for i in range(1, 51, 1)]), debug = False):
+    mapping = MVMapping()
+    files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
+    frames = [path_to_data + '/' + files[i] for i in range(len(files))]
+    for i, mvs in enumerate(BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)):
+        if i % 2 == 1:
+            continue
+        rot = rots[i // 2]
+        mapping[mvs] = rot
+        if debug:
+            print(f'i={i}, rot={rot}')
+            base_frame = cv2.imread(frames[0])
+            base_frame = BlockMatching.draw_motion_vectors(base_frame, mvs)
+            cv2.imshow('debug', base_frame)
+            cv2.waitKey()
+    mapping.save_to(path_to_save)
+    return mapping
+
+def create_compare_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1)]), debug = False):
+    compare_data = {}
+    files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
+    frames = [path_to_data + '/' + files[i] for i in range(len(files))]
+    for i, mvs in enumerate(BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)):
+        if i % 2 == 1:
+            continue
+        rot = rots[i // 2]
+        compare_data[rot] = mvs
+        if debug:
+            print(f'i={i}, rot={rot}')
+            base_frame = cv2.imread(frames[0])
+            base_frame = BlockMatching.draw_motion_vectors(base_frame, mvs)
+            cv2.imshow('debug', base_frame)
+            cv2.waitKey()
+    return compare_data
+
 if __name__ == '__main__':
 
     import io
-    mapping = MVMapping()
-    path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/data/gradient/7'
-    frames = [path + '/' + i for i in list(sorted(os.listdir(path), key=lambda x: int(x.replace('.png', ''))))]
-    mvs = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
-    f1 = cv2.imread(frames[0])
-    j = 0
-    for i in mvs:
-        if j % 2 == 1:
-            j += 1
-            continue
-        print(j)
-        mapping[i] = 0.1 * (1 + (j / 2))
-        f2 = f1.copy()
-        f2 = BlockMatching.draw_motion_vectors(f2, i)
-        cv2.imshow('', f2)
-        cv2.waitKey()
-        j += 1
-    mapping.save_to('/home/rani/PycharmProjects/blockMatcher/Dictionary/saved dictionaries/gradient_7')
+    path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/'
+    g1 = create_compare_data(path + 'data/gradient/7')
+    g2 = create_compare_data(path + 'data/synthetic/1')
+    g3 = create_compare_data(path + 'data/synthetic/2')
+    ds = ['gradient_7', 'synthetic_1', 'synthetic_2']
+    for dic in ds:
+        dictionary = MVMapping(path + 'saved dictionaries/' + dic)
+        dictionary.compare(g1, dic + ' compared with gradient_7')
+        dictionary.compare(g2, dic + ' compared with synthetic_1')
+        dictionary.compare(g3, dic + ' compared with synthetic_2')
 
     # path = 'Dictionary/data/gradient/'
     # shuffle = shuffle_function(cv2.imread(path + '8/0.png').shape[0])
