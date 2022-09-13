@@ -8,7 +8,6 @@ from sympy import Symbol, simplify, diff, solve, Float, sin, cos, init_printing
 import mpmath
 import pickle
 import os
-import subprocess
 from block_matching import BlockMatching
 from Dictionary.dictionary import MVMapping
 
@@ -113,14 +112,7 @@ def calculate_angle(expressions: Any, vector: tuple):
     return ret
 
 
-# ===================================================== TESTS ======================================================== #
-
-
-def motion_vectors():
-    pass
-
-
-# ===================================================== MAIN ========================================================= #
+# ===================================================== DICTIONARY =================================================== #
 
 
 def get_gradient_2d(start, stop, width, height, is_horizontal):
@@ -137,22 +129,6 @@ def get_gradient_3d(width, height, start_list, stop_list, is_horizontal_list):
         result[:, :, i] = get_gradient_2d(start, stop, width, height, is_horizontal)
 
     return result
-
-
-def shuffle_function(width: int):
-    from itertools import combinations
-    from random import choice
-    what = np.array([i for i in range(width)])
-    np.random.shuffle(what)
-    def shuffle(arr):
-        nonlocal what
-        for i in range(arr.shape[0]):
-            for j in range(len(what)):
-                x = what[j]
-                # arr[j, i], arr[x, i] = arr[x, i], arr[j, i]
-                arr[i, j], arr[i, x] = arr[i, x], arr[i, j]
-
-    return shuffle
 
 
 def create_dict(path_to_data, path_to_save, rots=tuple([i / 10 for i in range(1, 51, 1)]), debug = False):
@@ -173,6 +149,7 @@ def create_dict(path_to_data, path_to_save, rots=tuple([i / 10 for i in range(1,
     mapping.save_to(path_to_save)
     return mapping
 
+
 def create_compare_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1)]), debug = False):
     compare_data = {}
     files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
@@ -190,76 +167,26 @@ def create_compare_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1
             cv2.waitKey()
     return compare_data
 
+
+def view_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1)])):
+    files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
+    frames = [path_to_data + '/' + files[i] for i in range(len(files))]
+    print('press ` to capture an image.')
+    for i, mvs in enumerate(BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)):
+        if i % 2 == 1:
+            continue
+        rot = rots[i // 2]
+        print(f'i={i}, rot={rot}')
+        base_frame = cv2.imread(frames[0])
+        base_frame = BlockMatching.draw_motion_vectors(base_frame, mvs, color=(0,0, 0))
+        cv2.imshow('debug', base_frame)
+        key = cv2.waitKey()
+        if key == ord('`'):
+            cv2.imwrite(f'{rot}.png', base_frame)
+
+
+# ===================================================== MAIN ========================================================= #
+
+
 if __name__ == '__main__':
-
-    import io
-    path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/'
-    g1 = create_compare_data(path + 'data/gradient/7')
-    g2 = create_compare_data(path + 'data/synthetic/1')
-    g3 = create_compare_data(path + 'data/synthetic/2')
-    ds = ['gradient_7', 'synthetic_1', 'synthetic_2']
-    for dic in ds:
-        dictionary = MVMapping(path + 'saved dictionaries/' + dic)
-        dictionary.compare(g1, dic + ' compared with gradient_7')
-        dictionary.compare(g2, dic + ' compared with synthetic_1')
-        dictionary.compare(g3, dic + ' compared with synthetic_2')
-
-    # path = 'Dictionary/data/gradient/'
-    # shuffle = shuffle_function(cv2.imread(path + '8/0.png').shape[0])
-    # for frame in list(sorted(os.listdir(path + '8'), key=lambda x: int(x.replace('.png', '')))):
-    #     print(frame)
-    #     framearr = cv2.imread(path + '8/' + frame)
-    #     shuffle(framearr)
-    #     cv2.imwrite(path + '8/' + frame, framearr)
-
-    # cv2.waitKey()
-
-    # from PIL import Image
-    #
-    # array = get_gradient_3d(3600, 3600, (90, 220, 255), (255, 0, 0), (False, True, False))
-    # array = np.asarray(Image.fromarray(np.uint8(array)))
-    # array = cv2.cvtColor(array, cv2.COLOR_RGB2BGR)
-    # cv2.imwrite('im1.png', array)
-    # cv2.imshow('', array)
-    # cv2.waitKey()
-
-    # image = cv2.imread('im1.png')
-    # latitude, longitude = 360, 180
-    # lat_step, lon_step = 1, 1
-    # center = image.shape[1] // 2, image.shape[0] // 2
-    # for lat in np.arange(0, latitude, lat_step):
-    #     im = []
-    #
-    #     length = 0
-    #     while length < center[0]:
-    #         final_x = center[0] + (length * np.cos(np.deg2rad(lat)))
-    #         final_y = center[1] - (length * np.sin(np.deg2rad(lat)))
-    #         im.append(image[int(final_y), int(final_x)])
-    #         length += 1
-    #
-    #     im = [im]
-    #     cv2.namedWindow('1')
-    #     cv2.moveWindow('1', 0, 900)
-    #     cv2.imshow('1', np.array(im * 100))
-    #     cv2.waitKey()
-    #     cv2.destroyAllWindows()
-    #
-
-    # im1 = cv2.imread('Dictionary/data/gradient/3/0.png')
-    # im2 = np.rot90(im1)
-    # im3 = (im1 + im2) // 3
-    # cv2.imshow('', im3)
-    # cv2.waitKey()
-    #
-
-    # path = 'Dictionary/data/gradient/2'
-    # import os
-    # ans = set()
-    # for i in os.listdir(path):
-    #     print(i)
-    #     for j in os.listdir(path):
-    #         if i == j:
-    #             continue
-    #         im1, im2 = cv2.imread(path + '/' + i), cv2.imread(path + '/' + j)
-    #         ans.add((im1 == im2).all())
-    # print(ans)
+    pass
