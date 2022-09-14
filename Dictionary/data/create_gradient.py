@@ -130,7 +130,7 @@ def custom_draw_geometry_with_key_callback(geometries):
 
     images_written = 0
     total_rot = 0
-    folder = 2
+    folder = 3
 
     def load_render_optionX(vis):
         op = vis.get_render_option()
@@ -203,6 +203,24 @@ def custom_draw_geometry_with_key_callback(geometries):
         nonlocal total_rot
         total_rot += 0.1
         vc = vis.get_view_control()
+        vc.camera_local_rotate(0.1, 0.)
+        extrinsic = vc.convert_to_pinhole_camera_parameters().extrinsic
+        print(extrinsic)
+        sin, cos = np.sin(np.deg2rad(total_rot)), np.cos(np.deg2rad(total_rot))
+        extrinsic = np.array([
+            [cos, 0, sin, 0],
+            [0, 1, 0, 0],
+            [-sin, 0, cos, 0],
+            [0, 0, 0, 1]
+        ])
+        print(extrinsic)
+        print('rotated = ', total_rot)
+        return True
+
+    def rotate_to_the_right1(vis):
+        nonlocal total_rot
+        total_rot += 0.1
+        vc = vis.get_view_control()
         cam = vc.convert_to_pinhole_camera_parameters()
         width, height = cam.intrinsic.width, cam.intrinsic.height
         fx, fy = cam.intrinsic.get_focal_length()
@@ -244,13 +262,13 @@ def custom_draw_geometry_with_key_callback(geometries):
 
 def main_open3D_gradient():
     sphere = create_sphere(read_from='sphere(180x180-0.025x0.025).pcd')
-    colors = []
-    for _ in range(len(np.asarray(sphere.points)) // 100):
-        rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)]) / 255
-        colors += [
-           rgb
-        ] * 100
-    sphere.colors = o3d.utility.Vector3dVector(colors)
+    # colors = []
+    # for _ in range(len(np.asarray(sphere.points)) // 100):
+    #     rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)]) / 255
+    #     colors += [
+    #        rgb
+    #     ] * 100
+    # sphere.colors = o3d.utility.Vector3dVector(colors)
     geometries_list = [sphere]
     custom_draw_geometry_with_key_callback(geometries_list)
 
@@ -320,29 +338,42 @@ def main_openCV():
         [0, fy, cy],
         [0, 0, 1]
     ], np.float64)
-    for alpha in range(0, 51, 1):
+    aspect_ratio = w / h
+    for alpha in range(21, 51, 1):
         rad = np.deg2rad(alpha / 10)
         sin, cos = np.sin(rad), np.cos(rad)
         rotation_matrix = np.array([
-            [cos, -sin, 0],
-            [sin, cos, 0],
-            [0, 0, 1]
+            [1, 0, 0],
+            [0, cos, -sin],
+            [0, sin, cos]
         ])
-        image_points, _ = cv2.projectPoints(points, rotation_matrix, camera_position, camera_matrix, 0)
+        print('projecting...')
+        image_points, _ = cv2.projectPoints(points, rotation_matrix, camera_position, camera_matrix,
+                                            distCoeffs=0, aspectRatio=aspect_ratio)
+        print('done.')
         image = np.zeros((h, w, 3), np.uint8)
         z_buffer = np.zeros((h, w))
+        deleted = 0
         for i, p in enumerate(image_points):
             x, y = p[0]
             x, y = int(round(x)), int(round(y))
-            z = points[i, 2]
-            if 0 <= x < w and 0 <= y < h and z > z_buffer[y, x]:
+            z = points[i - deleted, 2]
+            if y >= h:
+                deleted += 1
+                points = np.delete(points, i, 0)
+                colors = np.delete(colors, i, 0)
+                continue
+            if 0 <= x < w and 0 <= y and z > z_buffer[y, x]:
                 z_buffer[y, x] = z
-                image[y, x] = colors[i]
+                image[y, x] = colors[i - deleted]
+        print('deleted:', deleted)
         print(f'Writing image {alpha}...')
-        cv2.imwrite(f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/3/{alpha}.png', image)
+        cv2.imwrite(f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/4/{alpha}.png', image)
+        print('done.')
 
 
 if __name__ == '__main__':
     # main_manual_gradient()
     main_open3D_gradient()
     # main_openCV()
+
