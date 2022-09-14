@@ -321,7 +321,7 @@ def main_openCV():
         [0, 0, 1]
     ], np.float64)
     aspect_ratio = w / h
-    for alpha in range(21, 51, 1):
+    for alpha in range(0, 16, 1):
         rad = np.deg2rad(alpha / 10)
         sin, cos = np.sin(rad), np.cos(rad)
         rotation_matrix = np.array([
@@ -340,22 +340,17 @@ def main_openCV():
             x, y = p[0]
             x, y = int(round(x)), int(round(y))
             z = points[i - deleted, 2]
-            if y >= h:
-                deleted += 1
-                points = np.delete(points, i, 0)
-                colors = np.delete(colors, i, 0)
-                continue
-            if 0 <= x < w and 0 <= y and z > z_buffer[y, x]:
+            if 0 <= x < w and 0 <= y < h and z > z_buffer[y, x]:
                 z_buffer[y, x] = z
                 image[y, x] = colors[i - deleted]
         print('deleted:', deleted)
         print(f'Writing image {alpha}...')
-        cv2.imwrite(f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/4/{alpha}.png', image)
+        cv2.imwrite(f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/7/{alpha}.png', image)
         print('done.')
 
 
 if __name__ == '__main__':
     # main_manual_gradient()
-    main_open3D_gradient()
-    # main_openCV()
+    # main_open3D_gradient()
+     main_openCV()
 
