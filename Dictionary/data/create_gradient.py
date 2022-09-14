@@ -130,7 +130,7 @@ def custom_draw_geometry_with_key_callback(geometries):
 
     images_written = 0
     total_rot = 0
-    folder = 3
+    folder = 4
 
     def load_render_optionX(vis):
         op = vis.get_render_option()
@@ -203,24 +203,6 @@ def custom_draw_geometry_with_key_callback(geometries):
         nonlocal total_rot
         total_rot += 0.1
         vc = vis.get_view_control()
-        vc.camera_local_rotate(0.1, 0.)
-        extrinsic = vc.convert_to_pinhole_camera_parameters().extrinsic
-        print(extrinsic)
-        sin, cos = np.sin(np.deg2rad(total_rot)), np.cos(np.deg2rad(total_rot))
-        extrinsic = np.array([
-            [cos, 0, sin, 0],
-            [0, 1, 0, 0],
-            [-sin, 0, cos, 0],
-            [0, 0, 0, 1]
-        ])
-        print(extrinsic)
-        print('rotated = ', total_rot)
-        return True
-
-    def rotate_to_the_right1(vis):
-        nonlocal total_rot
-        total_rot += 0.1
-        vc = vis.get_view_control()
         cam = vc.convert_to_pinhole_camera_parameters()
         width, height = cam.intrinsic.width, cam.intrinsic.height
         fx, fy = cam.intrinsic.get_focal_length()
@@ -262,13 +244,13 @@ def custom_draw_geometry_with_key_callback(geometries):
 
 def main_open3D_gradient():
     sphere = create_sphere(read_from='sphere(180x180-0.025x0.025).pcd')
-    # colors = []
-    # for _ in range(len(np.asarray(sphere.points)) // 100):
-    #     rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)]) / 255
-    #     colors += [
-    #        rgb
-    #     ] * 100
-    # sphere.colors = o3d.utility.Vector3dVector(colors)
+    colors = []
+    for _ in range(len(np.asarray(sphere.points)) // 100):
+        rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)]) / 255
+        colors += [
+           rgb
+        ] * 100
+    sphere.colors = o3d.utility.Vector3dVector(colors)
     geometries_list = [sphere]
     custom_draw_geometry_with_key_callback(geometries_list)
 
