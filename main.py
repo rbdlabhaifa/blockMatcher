@@ -189,4 +189,4 @@ def view_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1)])):
 
 
 if __name__ == '__main__':
-    pass
+    view_data('C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/3')

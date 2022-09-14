@@ -129,8 +129,8 @@ def main_manual_gradient():
 def custom_draw_geometry_with_key_callback(geometries):
 
     images_written = 0
-    point_size = 1.
     total_rot = 0
+    folder = 2
 
     def load_render_optionX(vis):
         op = vis.get_render_option()
@@ -155,30 +155,73 @@ def custom_draw_geometry_with_key_callback(geometries):
 
     def capture_image(vis):
         nonlocal images_written
-        vis.capture_screen_image(f'gradient/8/{images_written}.png')
+        nonlocal folder
+        vis.capture_screen_image(f'synthetic/{folder}/{images_written}.png')
         print(f'written frame {images_written}')
         images_written += 1
         return True
 
-    def reset_point_size(vis):
-        nonlocal point_size
-        op = vis.get_render_option()
-        point_size, op.point_size = op.point_size, point_size
-        return True
-
-    def rotate_to_the_left(vis):
+    def reset(vis):
         nonlocal total_rot
+        nonlocal images_written
+        nonlocal folder
+        folder += 1
+        total_rot = 0
+        images_written = 0
+        op = vis.get_render_option()
+        op.point_size = 1.
         vc = vis.get_view_control()
-        vc.camera_local_rotate(-0.1, 0, 0)
-        total_rot -= 0.1
-        print('rotated left, total rot is', total_rot)
+        print('fov=', vc.get_field_of_view())
+        cam = vc.convert_to_pinhole_camera_parameters()
+        intrinsic = cam.intrinsic
+        print('width=', intrinsic.width)
+        print('height=', intrinsic.height)
+        fx, fy = intrinsic.get_focal_length()
+        cx, cy = intrinsic.get_principal_point()
+        print('focal length=', (fx, fy))
+        print('principal point=', (cx, cy))
+        new_cam = o3d.camera.PinholeCameraParameters()
+        new_cam.intrinsic = o3d.camera.PinholeCameraIntrinsic(intrinsic.width, intrinsic.height, fx, fy, cx, cy)
+        print('intrinsic=', intrinsic.intrinsic_matrix)
+        new_cam.extrinsic = np.array(
+            [
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1]
+            ]
+        )
+        print('extrinsic=', new_cam.extrinsic)
+        if vc.convert_from_pinhole_camera_parameters(new_cam, True):
+            print('worked!')
+        else:
+            print('failed!')
+            exit(1)
         return True
 
     def rotate_to_the_right(vis):
         nonlocal total_rot
-        vc = vis.get_view_control()
-        vc.camera_local_rotate(0.1, 0, 0)
         total_rot += 0.1
+        vc = vis.get_view_control()
+        cam = vc.convert_to_pinhole_camera_parameters()
+        width, height = cam.intrinsic.width, cam.intrinsic.height
+        fx, fy = cam.intrinsic.get_focal_length()
+        cx, cy = cam.intrinsic.get_principal_point()
+        new_cam = o3d.camera.PinholeCameraParameters()
+        new_cam.intrinsic = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
+        sin = np.sin(np.deg2rad(total_rot))
+        cos = np.cos(np.deg2rad(total_rot))
+        new_cam.extrinsic = np.array([
+            [cos, 0, sin, 0],
+            [0, 1, 0, 0],
+            [-sin, 0, cos, 0],
+            [0, 0, 0, 1]
+        ])
+        if vc.convert_from_pinhole_camera_parameters(new_cam, True):
+            print('worked!')
+        else:
+            print('failed!')
+            exit(1)
         print('rotated right, total rot is', total_rot)
         return True
 
@@ -187,27 +230,26 @@ def custom_draw_geometry_with_key_callback(geometries):
         ord("W"): load_render_optionY,
         ord("R"): load_render_optionZ,
         ord("D"): rotate_to_the_right,
-        ord("A"): rotate_to_the_left,
         ord("S"): capture_image,
-        ord("`"): reset_point_size,
+        ord("`"): reset,
     }
 
     print('press QWR for different gradients.')
-    print('press RD to rotate right and left respectively.')
+    print('press D to rotate right and left respectively.')
     print('press S to capture an image.')
     print('press ` to change point size.')
 
-    o3d.visualization.draw_geometries_with_key_callbacks(geometries, key_to_callback, width=480, height=480)
+    o3d.visualization.draw_geometries_with_key_callbacks(geometries, key_to_callback, width=1000, height=1000)
 
 
 def main_open3D_gradient():
-    sphere = create_sphere(read_from='pcd0.50.5.pcd')
+    sphere = create_sphere(read_from='sphere(180x180-0.025x0.025).pcd')
     colors = []
-    for _ in range(len(np.asarray(sphere.points)) // 1800):
-        rgb = np.transpose([randint(0, 255) / 255, randint(0, 255) / 255, randint(0, 255) / 255])
+    for _ in range(len(np.asarray(sphere.points)) // 100):
+        rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)]) / 255
         colors += [
            rgb
-        ] * 1800
+        ] * 100
     sphere.colors = o3d.utility.Vector3dVector(colors)
     geometries_list = [sphere]
     custom_draw_geometry_with_key_callback(geometries_list)
@@ -216,6 +258,91 @@ def main_open3D_gradient():
 # MAIN
 
 
+def main_open3D():
+
+    renderer = o3d.visualization
+
+
+
+
+
+    # Create the sphere
+    sphere = create_sphere(read_from='sphere(180x180-0.025x0.025).pcd')
+    points = np.asarray(sphere.points)
+    colors = []
+    for _ in range(len(points) // 100):
+        rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)])
+        colors += [
+           rgb
+        ] * 100
+    colors = np.array(colors, dtype=np.uint8)
+    # Create projection parameters
+    camera_position = np.array([0, 0, 0], np.float32)
+    fov_x, fov_y = 60, 60
+    w, h = 1000, 1000
+    cx, cy = w / 2, h / 2
+    fx, fy = w / (2 * np.tan(np.deg2rad(fov_x))), h / (2 * np.tan(np.deg2rad(fov_y)))
+    camera_matrix = np.array([
+        [fx, 0, cx],
+        [0, fy, cy],
+        [0, 0, 1]
+    ], np.float64)
+    for alpha in range(0, 51, 1):
+        rad = np.deg2rad(alpha / 10)
+        sin, cos = np.sin(rad), np.cos(rad)
+        rotation_matrix = np.array([
+            [cos, -sin, 0],
+            [sin, cos, 0],
+            [0, 0, 1]
+        ])
+
+
+
+def main_openCV():
+    # Create the sphere
+    sphere = create_sphere(read_from='sphere(180x180-0.025x0.025).pcd')
+    points = np.asarray(sphere.points)
+    colors = []
+    for _ in range(len(points) // 100):
+        rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)])
+        colors += [
+           rgb
+        ] * 100
+    colors = np.array(colors, dtype=np.uint8)
+    # Create projection parameters
+    camera_position = np.array([0, 0, 0], np.float32)
+    fov_x, fov_y = 60, 60
+    w, h = 1000, 1000
+    cx, cy = w / 2, h / 2
+    fx, fy = w / (2 * np.tan(np.deg2rad(fov_x))), h / (2 * np.tan(np.deg2rad(fov_y)))
+    camera_matrix = np.array([
+        [fx, 0, cx],
+        [0, fy, cy],
+        [0, 0, 1]
+    ], np.float64)
+    for alpha in range(0, 51, 1):
+        rad = np.deg2rad(alpha / 10)
+        sin, cos = np.sin(rad), np.cos(rad)
+        rotation_matrix = np.array([
+            [cos, -sin, 0],
+            [sin, cos, 0],
+            [0, 0, 1]
+        ])
+        image_points, _ = cv2.projectPoints(points, rotation_matrix, camera_position, camera_matrix, 0)
+        image = np.zeros((h, w, 3), np.uint8)
+        z_buffer = np.zeros((h, w))
+        for i, p in enumerate(image_points):
+            x, y = p[0]
+            x, y = int(round(x)), int(round(y))
+            z = points[i, 2]
+            if 0 <= x < w and 0 <= y < h and z > z_buffer[y, x]:
+                z_buffer[y, x] = z
+                image[y, x] = colors[i]
+        print(f'Writing image {alpha}...')
+        cv2.imwrite(f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/3/{alpha}.png', image)
+
+
 if __name__ == '__main__':
     # main_manual_gradient()
     main_open3D_gradient()
+    # main_openCV()
