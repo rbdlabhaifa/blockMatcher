@@ -107,7 +107,7 @@ def calculate_angle(expressions: Any, vector: tuple):
     for idx, i in enumerate(expressions):
         temp = i.subs(values)
         temp_sol = simplify(temp)
-        if type(i) is not Float or i < 0.:
+        if type(i) is Float or temp_sol >= 0.:
             ret.append(temp_sol)
     return ret
 
@@ -131,7 +131,7 @@ def get_gradient_3d(width, height, start_list, stop_list, is_horizontal_list):
     return result
 
 
-def create_dict(path_to_data, path_to_save, rots=tuple([i / 10 for i in range(1, 51, 1)]), debug = False):
+def create_dict(path_to_data, path_to_save, rots=tuple([i / 10 for i in range(1, 16, 1)]), debug = False):
     mapping = MVMapping()
     files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
     frames = [path_to_data + '/' + files[i] for i in range(len(files))]
@@ -150,7 +150,7 @@ def create_dict(path_to_data, path_to_save, rots=tuple([i / 10 for i in range(1,
     return mapping
 
 
-def create_compare_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1)]), debug = False):
+def create_compare_data(path_to_data, rots=tuple([i / 10 for i in range(1, 16, 1)]), debug = False):
     compare_data = {}
     files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
     frames = [path_to_data + '/' + files[i] for i in range(len(files))]
@@ -168,7 +168,7 @@ def create_compare_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1
     return compare_data
 
 
-def view_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1)])):
+def view_data(path_to_data, rots=tuple([i / 10 for i in range(1, 16, 1)])):
     files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
     frames = [path_to_data + '/' + files[i] for i in range(len(files))]
     print('press ` to capture an image.')
@@ -189,4 +189,15 @@ def view_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1)])):
 
 
 if __name__ == '__main__':
-    view_data('C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/3')
+    path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/data/synthetic/'
+    # for i in os.listdir(path + '6'):
+    #     k = cv2.imread(path + '6/' + i)
+    #     cv2.imwrite(path + '6/' + i, np.rot90(k))
+    data = {i: create_compare_data(path + str(i)) for i in range(3, 8)}
+    dicts = {i: create_dict(path + str(i), f'synthetic_{i}.dict') for i in range(3, 8)}
+    print(data)
+    print(dicts)
+    for i, mvmapping in dicts.items():
+        for j, d in data.items():
+            mvmapping.compare(d, f'synthetic_{i}/compared with synthetic_{j}.csv')
+
