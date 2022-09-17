@@ -95,7 +95,6 @@ def calculate_expression(cam_mat, save_to: str = None):
 def calculate_angle(expressions: Any, vector: tuple):
     after_image_p = vector[2], vector[3]
     before_image_p = vector[0], vector[1]
-    init_printing(use_unicode=True, wrap_line=False, no_global=False)
     ret = []
     after_image_x = Symbol('after_x')
     before_image_x = Symbol('before_x')
