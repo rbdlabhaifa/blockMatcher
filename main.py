@@ -1,3 +1,6 @@
+# ===================================================== IMPORTS ====================================================== #
+
+
 import cv2
 import numpy as np
 from typing import Any
@@ -7,6 +10,9 @@ import pickle
 import os
 from block_matching import BlockMatching
 from Dictionary.dictionary import MVMapping
+
+
+# ===================================================== FORMULA ====================================================== #
 
 
 def load_expression(expression_path: str):
@@ -101,9 +107,12 @@ def calculate_angle(expressions: Any, vector: tuple):
     for idx, i in enumerate(expressions):
         temp = i.subs(values)
         temp_sol = simplify(temp)
-        if type(i) is not Float or i < 0.:
+        if type(i) is Float or temp_sol >= 0.:
             ret.append(temp_sol)
     return ret
+
+
+# ===================================================== DICTIONARY =================================================== #
 
 
 def get_gradient_2d(start, stop, width, height, is_horizontal):
@@ -122,7 +131,7 @@ def get_gradient_3d(width, height, start_list, stop_list, is_horizontal_list):
     return result
 
 
-def create_dict(path_to_data, path_to_save, rots=tuple([i / 10 for i in range(1, 51, 1)]), debug = False):
+def create_dict(path_to_data, path_to_save, rots=tuple([i / 10 for i in range(1, 16, 1)]), debug = False):
     mapping = MVMapping()
     files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
     frames = [path_to_data + '/' + files[i] for i in range(len(files))]
@@ -141,7 +150,7 @@ def create_dict(path_to_data, path_to_save, rots=tuple([i / 10 for i in range(1,
     return mapping
 
 
-def create_compare_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1)]), debug = False):
+def create_compare_data(path_to_data, rots=tuple([i / 10 for i in range(1, 16, 1)]), debug = False):
     compare_data = {}
     files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
     frames = [path_to_data + '/' + files[i] for i in range(len(files))]
@@ -159,14 +168,14 @@ def create_compare_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1
     return compare_data
 
 
-def view_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1)])):
+def view_data(path_to_data, rots=0.1):
     files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
     frames = [path_to_data + '/' + files[i] for i in range(len(files))]
     print('press ` to capture an image.')
     for i, mvs in enumerate(BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)):
         if i % 2 == 1:
             continue
-        rot = rots[i // 2]
+        rot = rots * (1 + (i // 2))
         print(f'i={i}, rot={rot}')
         base_frame = cv2.imread(frames[0])
         base_frame = BlockMatching.draw_motion_vectors(base_frame, mvs, color=(0,0, 0))
@@ -176,11 +185,10 @@ def view_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1)])):
             cv2.imwrite(f'{rot}.png', base_frame)
 
 
-if __name__ == '__main__':
-    # view_data('C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/3')
-    alldata = {}
-    for i in range(1, 5, 1):
-        path = f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/{i}'
-        dictionary = MVMapping()
-        dictionary.create_from(path, 0.05)
+# ===================================================== MAIN ========================================================= #
 
+
+if __name__ == '__main__':
+    path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/data/synthetic/'
+    for i in range(1, 5, 1):
+        view_data(path + str(i), 0.05)

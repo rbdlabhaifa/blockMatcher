@@ -140,7 +140,7 @@ class MVMapping:
             files = sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '').replace('.jpg', '')))
             frames = BlockMatching.get_ffmpeg_motion_vectors_with_cache([f'{path_to_data}/{i}' for i in files])
         data = {}
-        for i, mvs in frames:
+        for i, mvs in enumerate(frames):
             if i % 2 == 1:
                 continue
             angle = angle_step * (1 + (i // 2))
