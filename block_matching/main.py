@@ -34,7 +34,7 @@ class BlockMatching:
             frame_num, _, block_width, block_height, src_x, src_y, dst_x, dst_y, _ = eval(motion_data[i])
             while frame_num - 1 != len(frames_vectors):
                 frames_vectors.append([])
-            frames_vectors[frame_num - 2].append((src_x, src_y, dst_x, dst_y, block_width, block_height))
+            frames_vectors[frame_num - 2].append((src_x, src_y, dst_x, dst_y))
         return frames_vectors
 
     # ============================================= Calculate Motion Data =========================================== #
@@ -115,12 +115,14 @@ class BlockMatching:
             raise error
 
     @staticmethod
-    def get_ffmpeg_motion_vectors_with_cache(frames: List[Union[str, np.ndarray]],
+    def get_ffmpeg_motion_vectors_with_cache(frames: List[Union[str, np.ndarray]], save_to: str = 'out.mp4',
                                              extract_path: str = None) -> List[List[Tuple[int, int, int, int]]]:
         """
-        Generates motion vectors from the first frame to the rest of the frame with ffmpeg.
+        TODO:
+        Generates motion vectors from the first frame to the rest of the frames with ffmpeg.
 
         :param frames: A list of frames. Either the paths to the frames or the frames as arrays.
+        :param save_to: The path to save the video to. If None deletes the video.
         :param extract_path: The path to the motionVectors executable, if None uses default path.
         :return: A list that contains lists of motion vectors.
         """
@@ -139,7 +141,7 @@ class BlockMatching:
                     cv2.imwrite(temporary_directory + f'/{frame_index}.png', frame)
                 frame_index += 1
             subprocess.run(['ffmpeg', '-i', f'%d.png', '-c:v', 'h264', '-preset',
-                            'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
+                            'ultrafast', '-pix_fmt', 'yuv420p', save_to], cwd=temporary_directory)
             motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
             shutil.rmtree(temporary_directory, ignore_errors=True)
             return motion_data

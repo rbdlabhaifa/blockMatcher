@@ -168,14 +168,14 @@ def create_compare_data(path_to_data, rots=tuple([i / 10 for i in range(1, 16, 1
     return compare_data
 
 
-def view_data(path_to_data, rots=tuple([i / 10 for i in range(1, 16, 1)])):
+def view_data(path_to_data, rots=0.1):
     files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
     frames = [path_to_data + '/' + files[i] for i in range(len(files))]
     print('press ` to capture an image.')
     for i, mvs in enumerate(BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)):
         if i % 2 == 1:
             continue
-        rot = rots[i // 2]
+        rot = rots * (1 + (i // 2))
         print(f'i={i}, rot={rot}')
         base_frame = cv2.imread(frames[0])
         base_frame = BlockMatching.draw_motion_vectors(base_frame, mvs, color=(0,0, 0))
@@ -190,14 +190,5 @@ def view_data(path_to_data, rots=tuple([i / 10 for i in range(1, 16, 1)])):
 
 if __name__ == '__main__':
     path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/data/synthetic/'
-    # for i in os.listdir(path + '6'):
-    #     k = cv2.imread(path + '6/' + i)
-    #     cv2.imwrite(path + '6/' + i, np.rot90(k))
-    data = {i: create_compare_data(path + str(i)) for i in range(3, 8)}
-    dicts = {i: create_dict(path + str(i), f'synthetic_{i}.dict') for i in range(3, 8)}
-    print(data)
-    print(dicts)
-    for i, mvmapping in dicts.items():
-        for j, d in data.items():
-            mvmapping.compare(d, f'synthetic_{i}/compared with synthetic_{j}.csv')
-
+    for i in range(1, 5, 1):
+        view_data(path + str(i), 0.05)

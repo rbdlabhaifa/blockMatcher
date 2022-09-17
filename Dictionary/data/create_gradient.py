@@ -302,13 +302,28 @@ def main_openCV():
     # Create the sphere
     sphere = create_sphere(read_from='sphere(180x180-0.025x0.025).pcd')
     points = np.asarray(sphere.points)
-    colors = []
+    colors100 = [[], []]
+    colors1000 = [[], []]
     for _ in range(len(points) // 100):
         rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)])
-        colors += [
+        colors100[0] += [
            rgb
         ] * 100
-    colors = np.array(colors, dtype=np.uint8)
+        rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)])
+        colors100[1] += [
+           rgb
+        ] * 100
+    for _ in range(len(points) // 200):
+        rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)])
+        colors1000[0] += [
+           rgb
+        ] * 200
+        rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)])
+        colors1000[1] += [
+           rgb
+        ] * 200
+    colors100 = np.array(colors100, dtype=np.uint8)
+    colors1000 = np.array(colors1000, dtype=np.uint8)
     # Create projection parameters
     camera_position = np.array([0, 0, 0], np.float32)
     fov_x, fov_y = 60, 60
@@ -321,8 +336,10 @@ def main_openCV():
         [0, 0, 1]
     ], np.float64)
     aspect_ratio = w / h
-    for alpha in range(0, 16, 1):
-        rad = np.deg2rad(alpha / 10)
+    j = 0
+    for alpha in np.arange(0, 1.5 + 0.01, 0.05):
+        print('alpha=', alpha)
+        rad = np.deg2rad(alpha)
         sin, cos = np.sin(rad), np.cos(rad)
         rotation_matrix = np.array([
             [1, 0, 0],
@@ -333,19 +350,38 @@ def main_openCV():
         image_points, _ = cv2.projectPoints(points, rotation_matrix, camera_position, camera_matrix,
                                             distCoeffs=0, aspectRatio=aspect_ratio)
         print('done.')
-        image = np.zeros((h, w, 3), np.uint8)
-        z_buffer = np.zeros((h, w))
-        deleted = 0
+        image1 = np.zeros((h, w, 3), np.uint8)
+        image2 = np.zeros((h, w, 3), np.uint8)
+        image3 = np.zeros((h, w, 3), np.uint8)
+        image4 = np.zeros((h, w, 3), np.uint8)
+        z_buffer1 = np.zeros((h, w))
+        z_buffer2 = np.zeros((h, w))
+        z_buffer3 = np.zeros((h, w))
+        z_buffer4 = np.zeros((h, w))
         for i, p in enumerate(image_points):
             x, y = p[0]
             x, y = int(round(x)), int(round(y))
-            z = points[i - deleted, 2]
-            if 0 <= x < w and 0 <= y < h and z > z_buffer[y, x]:
-                z_buffer[y, x] = z
-                image[y, x] = colors[i - deleted]
-        print('deleted:', deleted)
-        print(f'Writing image {alpha}...')
-        cv2.imwrite(f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/7/{alpha}.png', image)
+            z = points[i, 2]
+            if 0 <= x < w and 0 <= y < h:
+                if z > z_buffer1[y, x]:
+                    z_buffer1[y, x] = z
+                    image1[y, x] = colors100[0, i]
+                if z > z_buffer2[y, x]:
+                    z_buffer2[y, x] = z
+                    image2[y, x] = colors100[1, i]
+                if z > z_buffer3[y, x]:
+                    z_buffer3[y, x] = z
+                    image3[y, x] = colors1000[0, i]
+                if z > z_buffer4[y, x]:
+                    z_buffer4[y, x] = z
+                    image4[y, x] = colors1000[1, i]
+        print(f'Writing images {alpha}...')
+        alpha = j
+        cv2.imwrite(f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/1/{alpha}.png', image1)
+        cv2.imwrite(f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/2/{alpha}.png', image2)
+        cv2.imwrite(f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/3/{alpha}.png', image3)
+        cv2.imwrite(f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/4/{alpha}.png', image4)
+        j += 1
         print('done.')
 
 
@@ -353,4 +389,3 @@ if __name__ == '__main__':
     # main_manual_gradient()
     # main_open3D_gradient()
      main_openCV()
-
