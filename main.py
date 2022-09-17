@@ -1,6 +1,3 @@
-# ===================================================== IMPORTS ====================================================== #
-
-
 import cv2
 import numpy as np
 from typing import Any
@@ -10,9 +7,6 @@ import pickle
 import os
 from block_matching import BlockMatching
 from Dictionary.dictionary import MVMapping
-
-
-# ===================================================== FORMULA ====================================================== #
 
 
 def load_expression(expression_path: str):
@@ -112,9 +106,6 @@ def calculate_angle(expressions: Any, vector: tuple):
     return ret
 
 
-# ===================================================== DICTIONARY =================================================== #
-
-
 def get_gradient_2d(start, stop, width, height, is_horizontal):
     if is_horizontal:
         return np.tile(np.linspace(start, stop, width), (height, 1))
@@ -185,8 +176,11 @@ def view_data(path_to_data, rots=tuple([i / 10 for i in range(1, 51, 1)])):
             cv2.imwrite(f'{rot}.png', base_frame)
 
 
-# ===================================================== MAIN ========================================================= #
-
-
 if __name__ == '__main__':
-    view_data('C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/3')
+    # view_data('C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/3')
+    alldata = {}
+    for i in range(1, 5, 1):
+        path = f'C:/Users/BenGo/PycharmProjects/blockMatcher/Dictionary/data/synthetic/{i}'
+        dictionary = MVMapping()
+        dictionary.create_from(path, 0.05)
+

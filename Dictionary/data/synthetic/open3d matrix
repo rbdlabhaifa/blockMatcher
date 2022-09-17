@@ -1,4 +1,0 @@
-fov = fov_x = fov_y = 60 deg
-w, h = set by user
-cx, cy = (w / 2) - 0.5, (h / 2) - 0.5
-f = fx = fy = h / (2 * tan(fov))

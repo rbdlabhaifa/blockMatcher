@@ -1,7 +1,10 @@
+import os
 import pickle
+import cv2
 import numpy as np
 from typing import List, Tuple, Any, Dict
 from scipy.spatial import KDTree
+from block_matching import BlockMatching
 
 
 class MVMapping:
@@ -46,7 +49,7 @@ class MVMapping:
                 best_index = i
         return self.values[best_index]
 
-    def load_from(self, save_file: str, append: bool = False) -> None:
+    def load_from(self, save_file: str, append: bool = False):
         """
         Load the keys and values of a MVMapping object from a file.
 
@@ -66,7 +69,7 @@ class MVMapping:
                 except EOFError:
                     break
 
-    def save_to(self, save_file: str) -> None:
+    def save_to(self, save_file: str):
         """
         Save the keys and values of a MVMapping object to a file.
 
@@ -122,3 +125,55 @@ class MVMapping:
             file = open(output_file, 'w')
             file.write(output)
             file.close()
+
+    def create_from(self, path_to_data: str, angle_step: float = 0.1) -> Dict[float, List[Tuple[int, int, int, int]]]:
+        """
+        Adds data to this MVMapping object.
+
+        :param path_to_data: The path to a directory that contains images or the path to a video created with ffmpeg.
+        :param angle_step: The step in angle between the images in the data.
+        :return: A dictionary that has angles as keys and lists of vectors as keys.
+        """
+        if path_to_data.endswith('.mp4') or path_to_data.endswith('.h264'):
+            frames = BlockMatching.extract_motion_data(path_to_data)
+        else:
+            files = sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '').replace('.jpg', '')))
+            frames = BlockMatching.get_ffmpeg_motion_vectors_with_cache([f'{path_to_data}/{i}' for i in files])
+        data = {}
+        for i, mvs in frames:
+            if i % 2 == 1:
+                continue
+            angle = angle_step * (1 + (i // 2))
+            self[mvs] = angle
+            data[angle] = mvs
+        return data
+
+    @staticmethod
+    def create_compare_data(path_to_data: str, angle_step: float = 0.1,
+                            debug: bool = False) -> Dict[float, List[Tuple[int, int, int, int]]]:
+        """
+        Creates data to compare with MVMapping objects.
+
+        :param path_to_data: The path to a directory that contains images or the path to a video created with ffmpeg.
+        :param angle_step: The step in angle between the images in the data.
+        :param debug: If True, vectors will be shown on the screen and the angle will be printed.
+        :return: A dictionary that has angles as keys and lists of vectors as keys.
+        """
+        if path_to_data.endswith('.mp4') or path_to_data.endswith('.h264'):
+            frames = BlockMatching.extract_motion_data(path_to_data)
+        else:
+            files = sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '').replace('.jpg', '')))
+            frames = BlockMatching.get_ffmpeg_motion_vectors_with_cache([f'{path_to_data}/{i}' for i in files])
+        data = {}
+        for i, mvs in frames:
+            if i % 2 == 1:
+                continue
+            angle = angle_step * (1 + (i // 2))
+            data[angle] = mvs
+            if debug:
+                print(f'i={i}, angle={angle}')
+                base_frame = cv2.imread(frames[0])
+                base_frame = BlockMatching.draw_motion_vectors(base_frame, mvs)
+                cv2.imshow('debug', base_frame)
+                cv2.waitKey()
+        return data
