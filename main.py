@@ -4,7 +4,7 @@
 import cv2
 import numpy as np
 from typing import Any
-from sympy import Symbol, simplify, diff, solve, Float, sin, cos, init_printing
+from sympy import Symbol, simplify, diff, solve, Float, sin, cos, init_printing, AccumBounds
 import mpmath
 import pickle
 import os
@@ -16,7 +16,7 @@ from Dictionary.dictionary import MVMapping
 
 
 def load_expression(expression_path: str):
-    with open(expression_path) as f:
+    with open(expression_path, 'rb') as f:
         expression = pickle.load(f)
     return expression
 
@@ -86,7 +86,7 @@ def calculate_expression(cam_mat, save_to: str = None):
     ret = np.array([s11, s12, s13, s14, s21, s22])
 
     if save_to is not None:
-        with open(save_to, 'w') as f:
+        with open(save_to, 'wb') as f:
             pickle.dump([s11, s12, s13, s14, s21, s22], f)
 
     return ret
@@ -106,9 +106,19 @@ def calculate_angle(expressions: Any, vector: tuple):
     for idx, i in enumerate(expressions):
         temp = i.subs(values)
         temp_sol = simplify(temp)
-        if type(i) is Float or temp_sol >= 0.:
+        if isinstance(temp_sol, Float) and not isinstance(temp_sol, AccumBounds) and -2 <= temp_sol <= 2:
             ret.append(temp_sol)
     return ret
+
+
+
+def calculate_angle2(fx, fy, cx, cy, vectors):
+    ifx = 1 / fx
+    ify = 1 / fy
+    icx = -cx / fx
+    icy = -cy / fy
+
+
 
 
 # ===================================================== DICTIONARY =================================================== #
@@ -168,12 +178,13 @@ def create_compare_data(path_to_data, rots=tuple([i / 10 for i in range(1, 16, 1
 
 
 def view_data(path_to_data, rots=0.1):
-    files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', ''))))
+    files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.jpg', '').replace('.png', ''))))
     frames = [path_to_data + '/' + files[i] for i in range(len(files))]
     print('press ` to capture an image.')
     for i, mvs in enumerate(BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)):
         if i % 2 == 1:
             continue
+        pos, neg = {}, {}
         rot = rots * (1 + (i // 2))
         print(f'i={i}, rot={rot}')
         base_frame = cv2.imread(frames[0])
@@ -184,10 +195,50 @@ def view_data(path_to_data, rots=0.1):
             cv2.imwrite(f'{rot}.png', base_frame)
 
 
+def check_formula(exp, path_to_data, debug=False, special_rot=None):
+    files = list(sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.jpg', '').replace('.png', ''))))
+    frames = [path_to_data + '/' + files[i] for i in range(len(files))]
+    for i, mvs in enumerate(BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)):
+        if i % 2 == 1:
+            continue
+        rot = 0.05 * (1 + (i // 2)) if special_rot is None else special_rot[i // 2]
+        print('angle is', rot)
+        pos, neg = {}, {}
+        for v in mvs:
+            for j in calculate_angle(exp, v):
+                j = round(float(str(j)), 2)
+                if j < 0:
+                    neg[j] = neg.get(j, 0) + 1
+                elif j > 0:
+                    pos[j] = pos.get(j, 0) + 1
+        print('pos:', list(sorted(pos.items(), key=lambda x: x[1]))[::-1])
+        print('neg:', list(sorted(neg.items(), key=lambda x: x[1]))[::-1])
+        if debug:
+            print(f'i={i}, rot={rot}')
+            base_frame = cv2.imread(frames[0], 1)
+            base_frame = BlockMatching.draw_motion_vectors(base_frame, mvs)
+            cv2.imshow('debug', base_frame)
+            cv2.waitKey()
+
+
 # ===================================================== MAIN ========================================================= #
 
 
 if __name__ == '__main__':
-    path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/data/synthetic/'
-    for i in range(1, 5, 1):
-        view_data(path + str(i), 0.05)
+    path = '/home/rani/PycharmProjects/blockMatcher/Dictionary/data/synthetic/1'
+    check_formula(load_expression('opencv_exp'), path)
+    # f = np.sqrt(640*640 + 320*320) / (2 * np.tan(np.deg2rad(78)))
+    # # exp = calculate_expression(np.array([
+    # #     [f, 0, 320],
+    # #     [0, f, 160],
+    # #     [0, 0, 1]
+    # # ]), 'optitrack_exp')
+    # exp = load_expression('optitrack_exp')
+    # rots = []
+    # with open(path + '.csv') as f:
+    #     rots1 = []
+    #     for i in f:
+    #         rots1.append(float(i))
+    #     for i in range(1, len(rots1)):
+    #         rots.append(abs(rots1[i] - rots1[i - 1]))
+    # check_formula(exp, path, True, rots)

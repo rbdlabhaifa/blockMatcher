@@ -141,8 +141,9 @@ class BlockMatching:
                     cv2.imwrite(temporary_directory + f'/{frame_index}.png', frame)
                 frame_index += 1
             subprocess.run(['ffmpeg', '-i', f'%d.png', '-c:v', 'h264', '-preset',
-                            'ultrafast', '-pix_fmt', 'yuv420p', save_to], cwd=temporary_directory)
+                            'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
             motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
+            shutil.copyfile(temporary_directory + f'/out.mp4', save_to)
             shutil.rmtree(temporary_directory, ignore_errors=True)
             return motion_data
         except (OSError, Exception) as error:
