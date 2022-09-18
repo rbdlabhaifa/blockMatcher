@@ -60,15 +60,25 @@ def main():
     sphere = create_sphere(read_from='sphere(180x180-0.025x0.025).pcd')
     points = np.asarray(sphere.points)
     colors = []
-    for _ in range(len(points) // 1000):
+    for _ in range(len(points) // 100):
         rgb = np.transpose([randint(0, 255), randint(0, 255), randint(0, 255)])
         colors += [
                             rgb
-                        ] * 1000
-    cv2.imshow('',project(
-        points, colors, camera_matrix, np.identity(3), camera_position, 1000, 1000, True
-    ))
-    cv2.waitKey()
+                        ] * 100
+    colors = np.asarray(colors)
+    j = 0
+    for alpha in np.arange(0, 1.51, 0.05):
+        rad = np.deg2rad(alpha)
+        sin, cos = np.sin(rad), np.cos(rad)
+        rotation_matrix = np.array([
+            [1, 0, 0],
+            [0, cos, -sin],
+            [0, sin, cos]
+        ])
+        cv2.imwrite(f'synthetic/6/{j}.png',project(
+            points, colors, camera_matrix, rotation_matrix, camera_position, 1000, 1000
+        ))
+        j += 1
 
 
 
