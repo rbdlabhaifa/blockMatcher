@@ -118,7 +118,6 @@ class BlockMatching:
     def get_ffmpeg_motion_vectors_with_cache(frames: List[Union[str, np.ndarray]], save_to: str = 'out.mp4',
                                              extract_path: str = None) -> List[List[Tuple[int, int, int, int]]]:
         """
-        TODO:
         Generates motion vectors from the first frame to the rest of the frames with ffmpeg.
 
         :param frames: A list of frames. Either the paths to the frames or the frames as arrays.
