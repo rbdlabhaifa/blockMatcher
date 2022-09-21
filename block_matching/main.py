@@ -116,13 +116,15 @@ class BlockMatching:
 
     @staticmethod
     def get_ffmpeg_motion_vectors_with_cache(frames: List[Union[str, np.ndarray]], save_to: str = 'out.mp4',
-                                             extract_path: str = None) -> List[List[Tuple[int, int, int, int]]]:
+                                             extract_path: str = None,
+                                             image_format: str = 'png') -> List[List[Tuple[int, int, int, int]]]:
         """
         Generates motion vectors from the first frame to the rest of the frames with ffmpeg.
 
         :param frames: A list of frames. Either the paths to the frames or the frames as arrays.
         :param save_to: The path to save the video to. If None deletes the video.
         :param extract_path: The path to the motionVectors executable, if None uses default path.
+        :param image_format: The format of the images (png, jpg...).
         :return: A list that contains lists of motion vectors.
         """
         temporary_directory = tempfile.mkdtemp()
@@ -132,14 +134,14 @@ class BlockMatching:
                 base_frame = cv2.imread(base_frame)
             frame_index = 0
             for frame in frames[1:]:
-                cv2.imwrite(temporary_directory + f'/{frame_index}.png', base_frame)
+                cv2.imwrite(temporary_directory + f'/{frame_index}.{image_format}', base_frame)
                 frame_index += 1
                 if isinstance(frame, str):
-                    shutil.copyfile(frame, temporary_directory + f'/{frame_index}.png')
+                    shutil.copyfile(frame, temporary_directory + f'/{frame_index}.{image_format}')
                 else:
-                    cv2.imwrite(temporary_directory + f'/{frame_index}.png', frame)
+                    cv2.imwrite(temporary_directory + f'/{frame_index}.{image_format}', frame)
                 frame_index += 1
-            subprocess.run(['ffmpeg', '-i', f'%d.png', '-c:v', 'h264', '-preset',
+            subprocess.run(['ffmpeg', '-i', f'%d.{image_format}', '-c:v', 'h264', '-preset',
                             'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
             motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
             shutil.copyfile(temporary_directory + f'/out.mp4', save_to)
