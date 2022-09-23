@@ -228,23 +228,25 @@ def check_formula_on_optitrack_data(path_to_data: str, expression, debug: bool =
 
 
 if __name__ == '__main__':
-    PATH_TO_DATA = os.getcwd() + '/Dictionary/data/optitrack'
-    # fov_x, fov_y = np.deg2rad(60), np.deg2rad(60)
-    # width, height = 1000, 1000
-    # cx, cy = width / 2, height / 2
-    # fx, fy = width / (2 * np.tan(fov_x)), height / (2 * np.tan(fov_y))
+    PATH_TO_DATA = os.getcwd() + '/Dictionary/data/synthetic'
+    fov_x, fov_y = np.deg2rad(60), np.deg2rad(60)
+    width, height = 1000, 1000
+    cx, cy = width / 2, height / 2
+    fx, fy = width / (2 * np.tan(fov_x)), height / (2 * np.tan(fov_y))
     # expression = calculate_expression(np.array([
     #     [466.98762407, 0, 320.89256506],
     #     [0, 467.64693224, 192.73899091],
     #     [0, 0, 1]
     # ]), 'y', 'optitrack_expression')
-    expression = load_expression('optitrack_expression')
-    check_formula_on_optitrack_data(PATH_TO_DATA + '/1', expression, False)
-    # mat = np.array([
-    #     [fx, 0, cx],
-    #     [0, fy, cy],
-    #     [0, 0, 1]
-    # ])
+    # expression = load_expression('optitrack_expression')
+    # check_formula_on_optitrack_data(PATH_TO_DATA + '/1', expression, False)
+    mat = np.array([
+        [fx, 0, cx],
+        [0, fy, cy],
+        [0, 0, 1]
+    ])
+    exp = calculate_expression(mat, 'y')
+    check_formula_on_synthetic_data(PATH_TO_DATA, exp)
     #
     # x_y_unknown_expressions(mat)
     # calculate_expression(mat, 'y')
