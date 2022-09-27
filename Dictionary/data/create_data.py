@@ -15,7 +15,7 @@ except ImportError:
     print('Could not import djitello.')
 
 
-# ===================================================== 3D DATA ===================================================== #
+# ===================================================== PROJECTION ================================================== #
 
 
 def create_sphere(latitude: int = 360, longitude: int = 360, step: Tuple[float, float] = (1, 1),
@@ -54,7 +54,7 @@ def load_sphere(pcd_file_path: str) -> o3d.geometry.PointCloud:
     return o3d.io.read_point_cloud(pcd_file_path)
 
 
-def color_sphere(sphere: o3d.geometry.PointCloud, point_count: int = None, similar: int = 100) -> np.ndarray:
+def color_sphere(sphere: o3d.geometry.PointCloud = None, point_count: int = None, similar: int = 100) -> np.ndarray:
     """
     Colors a sphere.
 
