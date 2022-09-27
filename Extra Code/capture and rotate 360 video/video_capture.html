@@ -3,7 +3,6 @@
 <body>
 <div id="player"></div>
 <script src="https://www.youtube.com/iframe_api"></script>
-
 <script>
 
     let player;
@@ -12,21 +11,13 @@
 
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
-            videoId: 'ZS8aG415A8c',
-            width: 600,
-            height: 600,
-            events: {
-                'onStateChange': onPlayerStateChange
-            }
+            videoId: 'QKfKu2UmT-M', // 'ZS8aG415A8c',
+            width: 1000,
+            height: 1000,
         });
     }
 
-    function onPlayerStateChange(event) {
-        if (event.data == 1 && !panStarted) {
-            requestAnimationFrame(panVideo);
-            panStarted = true;
-        }
-    }
+    /*
 
     function panVideo() {
         let props = player.getSphericalProperties();
@@ -37,6 +28,8 @@
             yaw: props.yaw + 0.1,
         });
     }
+
+    */
 
 </script>
 </body>
