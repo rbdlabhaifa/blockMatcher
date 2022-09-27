@@ -48,9 +48,9 @@ def calculate_expression(camera_matrix, axis, save_to: str = None):
         ))
     elif axis == 'y':
         rotation_translation_matrix = sympy.Matrix((
-            [cos(alpha), 0, -sin(alpha), 0],
+            [cos(alpha), 0, sin(alpha), 0],
             [0, 1, 0, 0],
-            [sin(alpha), 0, cos(alpha), 0],
+            [-sin(alpha), 0, cos(alpha), 0],
             [0, 0, 0, 1]
         ))
     elif axis == 'z':
@@ -134,14 +134,14 @@ def calculate_angle(expressions: Any, vector: Tuple):
     ]
     for expression in expressions:
         solution = simplify(expression.subs(values))
-        if isinstance(solution, Float) and -5 < solution < 5:
+        if isinstance(solution, Float) and -2 < solution < 2:
             solution = round(solution, 1)
             solutions.append(solution)
     return solutions
 
 
 def check_formula_on_synthetic_data(path_to_data: str, expression, debug: bool = False):
-    frames = [f'{path_to_data}/{i}' for i in sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '')))]
+    frames = [f'{path_to_data}/{i}' for i in sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '')))][::-1]
     motion_vectors = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
     for i, vectors in enumerate(motion_vectors):
         if i % 2 == 1:
@@ -151,7 +151,6 @@ def check_formula_on_synthetic_data(path_to_data: str, expression, debug: bool =
             base_image = BlockMatching.draw_motion_vectors(base_image, vectors)
             cv2.imshow('', base_image)
             cv2.waitKey()
-            continue
         positive_solutions = {}
         negative_solutions = {}
         for vector in vectors:
@@ -168,7 +167,8 @@ def check_formula_on_synthetic_data(path_to_data: str, expression, debug: bool =
 
 
 def check_formula_on_optitrack_data(path_to_data: str, expression, debug: bool = False):
-    # frames = [path_to_data + '/' + i for i in sorted(os.listdir(path_to_data), key=lambda x: 66 - int(x.replace('.jpg', '')))]
+    # frames = [path_to_data + '/' + i for i in sorted(os.listdir(path_to_data), key=lambda x: 66
+    # - int(x.replace('.jpg', '')))]
     motion_vectors = BlockMatching.extract_motion_data(path_to_data + '.mp4')
     with open(path_to_data + '.csv', 'r') as file:
         rots = []
@@ -210,41 +210,19 @@ def check_formula_on_optitrack_data(path_to_data: str, expression, debug: bool =
         average_positive = len(positive_solutions) / average_sum
         average_negative = len(negative_solutions) / average_sum
         print('negative average solution:', average_neg)
-        print('averages:', average_pos * average_positive + average_neg * average_negative)
+        print('average neg and pos:', average_pos * average_positive - average_neg * average_negative)
         angles_by_vectors.append(negative_solutions[0][0])
-    with open('results.csv', 'w') as file:
-        text = 'real angle, calculated angle, difference\n'
-        differences = []
-        for i in range(len(angles)):
-            difference = round(abs(angles[i] - angles_by_vectors[i]), 4)
-            text += f'{round(angles[i], 4)}, {round(angles_by_vectors[i], 4)}, {difference}\n'
-            differences.append(difference)
-        text += f'Average difference: {round(sum(differences) / len(angles), 4)}\n'
-        text += f'Max difference: {round(max(differences), 4)}'
-        file.write(text)
 
 
 # ===================================================== MAIN ========================================================= #
 
 
 if __name__ == '__main__':
-    PATH_TO_DATA = os.getcwd() + '/Dictionary/data/optitrack'
-    # fov_x, fov_y = np.deg2rad(60), np.deg2rad(60)
-    # width, height = 1000, 1000
-    # cx, cy = width / 2, height / 2
-    # fx, fy = width / (2 * np.tan(fov_x)), height / (2 * np.tan(fov_y))
-    # expression = calculate_expression(np.array([
-    #     [466.98762407, 0, 320.89256506],
-    #     [0, 467.64693224, 192.73899091],
-    #     [0, 0, 1]
-    # ]), 'y', 'optitrack_expression')
-    expression = load_expression('optitrack_expression')
-    check_formula_on_optitrack_data(PATH_TO_DATA + '/1', expression, False)
-    # mat = np.array([
-    #     [fx, 0, cx],
-    #     [0, fy, cy],
-    #     [0, 0, 1]
-    # ])
-    #
-    # x_y_unknown_expressions(mat)
-    # calculate_expression(mat, 'y')
+    f = 1000 / (2 * np.tan(np.deg2rad(60)))
+    exp = calculate_expression(np.array([
+        [f, 0, 500],
+        [0, f, 500],
+        [0, 0, 1]
+    ]), 'y')
+    # exp = load_expression('syn1')
+    check_formula_on_synthetic_data(os.getcwd() + '/Dictionary/data/synthetic/7', exp)

@@ -115,7 +115,7 @@ class BlockMatching:
             raise error
 
     @staticmethod
-    def get_ffmpeg_motion_vectors_with_cache(frames: List[Union[str, np.ndarray]], save_to: str = 'out.mp4',
+    def get_ffmpeg_motion_vectors_with_cache(frames: List[Union[str, np.ndarray]], save_to: str = None,
                                              extract_path: str = None,
                                              image_format: str = 'png') -> List[List[Tuple[int, int, int, int]]]:
         """
@@ -144,7 +144,8 @@ class BlockMatching:
             subprocess.run(['ffmpeg', '-i', f'%d.{image_format}', '-c:v', 'h264', '-preset',
                             'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
             motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
-            shutil.copyfile(temporary_directory + f'/out.mp4', save_to)
+            if save_to is not None:
+                shutil.copyfile(temporary_directory + f'/out.mp4', save_to)
             shutil.rmtree(temporary_directory, ignore_errors=True)
             return motion_data
         except (OSError, Exception) as error:
