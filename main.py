@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from typing import Any
 import sympy
-from sympy import Symbol, simplify, diff, solve, Float, sin, cos, init_printing, pprint
+from sympy import Symbol, simplify, diff, solve, Float, sin, cos, init_printing, pprint, lambdify
 import mpmath
 import pickle
 import os
@@ -141,8 +141,15 @@ def calculate_angle(expressions: Any, vector: Tuple):
 
 
 def check_formula_on_synthetic_data(path_to_data: str, expression, debug: bool = False):
-    frames = [f'{path_to_data}/{i}' for i in sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '')))][::-1]
+    frames = [f'{path_to_data}/{i}' for i in sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '')))]
     motion_vectors = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
+    x2 = Symbol('after_x')
+    x1 = Symbol('before_x')
+    y2 = Symbol('after_y')
+    y1 = Symbol('before_y')
+    funcs = []
+    for i in expression:
+        funcs.append(lambdify((x1, y1, x2, y2), i, 'numpy'))
     for i, vectors in enumerate(motion_vectors):
         if i % 2 == 1:
             continue
@@ -153,8 +160,13 @@ def check_formula_on_synthetic_data(path_to_data: str, expression, debug: bool =
             cv2.waitKey()
         positive_solutions = {}
         negative_solutions = {}
-        for vector in vectors:
-            for solution in calculate_angle(expression, vector):
+        for x1, y1, x2, y2 in vectors:
+            # for solution in calculate_angle(expression, (x1, y1, x2, y2)):
+            for func in funcs:
+                solution = func(x1, y1, x2, y2)
+                if solution < -2 or solution > 2:
+                    continue
+                solution = round(solution, 1)
                 if solution > 0:
                     positive_solutions[solution] = positive_solutions.get(solution, 0) + 1
                 elif solution < 0:
@@ -214,15 +226,38 @@ def check_formula_on_optitrack_data(path_to_data: str, expression, debug: bool =
         angles_by_vectors.append(negative_solutions[0][0])
 
 
+def view_vectors(path_to_data):
+    frames = [f'{path_to_data}/{i}' for i in sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '')))]
+    motion_vectors = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
+    for i, vectors in enumerate(motion_vectors):
+        if i % 2 == 1:
+             continue
+        base_image = cv2.imread(path_to_data + '/0.png')
+        base_image = BlockMatching.draw_motion_vectors(base_image, vectors)
+        cv2.imshow('', base_image)
+        cv2.waitKey()
+
 # ===================================================== MAIN ========================================================= #
 
 
 if __name__ == '__main__':
-    f = 1000 / (2 * np.tan(np.deg2rad(60)))
-    exp = calculate_expression(np.array([
-        [f, 0, 500],
-        [0, f, 500],
+
+    """
+    i=0, rot=0.1
+    positive solutions (solution, occurrences): [(0.1, 1339), (0.2, 378), (0.6, 315), (0.3, 252), (0.4, 189), (0.5, 126)]
+    negative solutions (solution, occurrences): [(-1.9, 63), (-0.4, 3), (-0.3, 2), (-0.5, 1)]
+    """
+    fov_x = 50
+    fov_y = 100
+    width, height = 1000, 1000
+    fx = width / (2 * np.tan(np.deg2rad(fov_x)))
+    fy = height / (2 * np.tan(np.deg2rad(fov_y)))
+    cx, cy = width / 2, height / 2
+    mat = np.array([
+        [fx, 0, cx],
+        [0, fy, cy],
         [0, 0, 1]
-    ]), 'y')
-    # exp = load_expression('syn1')
-    check_formula_on_synthetic_data(os.getcwd() + '/Dictionary/data/synthetic/7', exp)
+    ], dtype=float)
+    # exp = calculate_expression(mat, 'y', 'exp(axis=y fovx=50 fovy=100 cx=cy=500)')
+    exp = load_expression('exp(axis=y fovx=50 fovy=100 cx=cy=500)')
+    check_formula_on_synthetic_data(os.getcwd() + '/Dictionary/data/360 video/1', exp, False)

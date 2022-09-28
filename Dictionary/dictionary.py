@@ -12,6 +12,7 @@ class MVMapping:
     def __init__(self, save_file: str = None):
         self.keys = []
         self.values = []
+        self.motion_vectors = []
         if save_file is not None:
             self.load_from(save_file)
 
@@ -25,6 +26,7 @@ class MVMapping:
         vectors = np.array([v for v in key if v[0] != v[2] or v[1] != v[3]])
         if len(vectors) == 0:
             return
+        self.motion_vectors.append([*key])
         self.keys.append(KDTree(vectors, balanced_tree=True))
         self.values.append(value)
 
@@ -57,15 +59,15 @@ class MVMapping:
         :param append: Load from a file without resetting.
         """
         if not append:
-            if len(self.keys) != 0:
-                self.keys = []
-            if len(self.values) != 0:
-                self.values = []
+            self.keys = []
+            self.values = []
+            self.motion_vectors = []
         with open(save_file, 'rb') as f:
             while True:
                 try:
                     self.keys.append(pickle.load(f))
                     self.values.append(pickle.load(f))
+                    self.motion_vectors.append(pickle.load(f))
                 except EOFError:
                     break
 
@@ -79,6 +81,7 @@ class MVMapping:
             for i in range(len(self.keys)):
                 pickle.dump(self.keys[i], f)
                 pickle.dump(self.values[i], f)
+                pickle.dump(self.motion_vectors[i], f)
 
     def compare(self, data_to_compare: Dict[float, List[Tuple[int, int, int, int]]], output_file: str = None):
         """
