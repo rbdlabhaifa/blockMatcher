@@ -241,14 +241,8 @@ def view_vectors(path_to_data):
 
 
 if __name__ == '__main__':
-
-    """
-    i=0, rot=0.1
-    positive solutions (solution, occurrences): [(0.1, 1339), (0.2, 378), (0.6, 315), (0.3, 252), (0.4, 189), (0.5, 126)]
-    negative solutions (solution, occurrences): [(-1.9, 63), (-0.4, 3), (-0.3, 2), (-0.5, 1)]
-    """
-    fov_x = 50
-    fov_y = 100
+    fov_x = 60
+    fov_y = 60
     width, height = 1000, 1000
     fx = width / (2 * np.tan(np.deg2rad(fov_x)))
     fy = height / (2 * np.tan(np.deg2rad(fov_y)))
@@ -258,6 +252,6 @@ if __name__ == '__main__':
         [0, fy, cy],
         [0, 0, 1]
     ], dtype=float)
-    # exp = calculate_expression(mat, 'y', 'exp(axis=y fovx=50 fovy=100 cx=cy=500)')
-    exp = load_expression('exp(axis=y fovx=50 fovy=100 cx=cy=500)')
-    check_formula_on_synthetic_data(os.getcwd() + '/Dictionary/data/360 video/1', exp, False)
+    exp = calculate_expression(mat, 'z', 'exp(axis=z fovx=fovy=60 cx=cy=500)')
+    # exp = load_expression('exp(axis=y fovx=fovy=60 cx=cy=500)')
+    check_formula_on_synthetic_data(os.getcwd() + '/Dictionary/data/synthetic/8', exp,   True)
