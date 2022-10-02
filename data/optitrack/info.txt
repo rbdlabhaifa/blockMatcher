@@ -1,0 +1,7 @@
+step in degrees between images: 0.1 degrees.
+camera matrix:
+[
+    [1000 / (2 * tan(100)), 0, 500],
+    [0, 1000 / (2 * tan(100)), 500],
+    [0, 0, 1]
+]
