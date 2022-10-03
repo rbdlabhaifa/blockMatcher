@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 from block_matching import BlockMatching
-from formula import *
+#from formula import *
 
 
 def view_vectors(path_to_data, suffix='.png'):
@@ -31,6 +31,8 @@ def view_vectors(path_to_data, suffix='.png'):
 
 
 if __name__ == '__main__':
+    frames = ['/data/optitrack/3/' + str(i) + '.png' for i in range(8)]
+    BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames,'/data/optitrack/3.h264',on_raspi=True)
     fov_x = 60
     fov_y = 60
     width, height = 1000, 1000
