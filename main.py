@@ -1,13 +1,13 @@
 # ===================================================== IMPORTS ====================================================== #
 
 
-from formula import Formula
+# from formula import Formula
 import cv2
 import numpy as np
 from typing import Any, Dict
-import sympy
-from sympy import Symbol, simplify, diff, solve, Float, sin, cos, init_printing, pprint, lambdify
-import mpmath
+# import sympy
+# from sympy import Symbol, simplify, diff, solve, Float, sin, cos, init_printing, pprint, lambdify
+# import mpmath
 import pickle
 import os
 from typing import Tuple
@@ -279,12 +279,13 @@ if __name__ == '__main__':
         [0, fy, cy],
         [0, 0, 1]
     ])
-    p = '/home/rani/PycharmProjects/blockMatcher/data/360/rotation - x'
-    results = check_formula_on_synthetic_data(p, mat, 'x')
-
-    # solutions = {-1.8: 33, -1.9: 31, 0.4: 28, 0.3: 35, -0.0: 2264, -0.2: 3658, -0.1: 500, -0.3: 1224, -0.4: 175, -0.5: 50, -0.6: 9, -1.3: 2, -1.2: 1, -0.7: 5, -0.9: 1, -0.8: 1, -1.0: 1, 0.5: 35, 0.8: 29, -1.4: 1, -1.1: 1, 0.9: 1, 1.5: 1, -2.0: 1}
-    for angle in results:
-        Formula.graph_solutions(angle, title='VR Video - x rotation by 0.2 degrees', save_to='graph.png')
+    p = '/home/ben/PycharmProjects/blockMatcher/data/synthetic/rotation - z'
+    BlockMatching.get_ffmpeg_motion_vectors_with_cache([p + '/' + i for i in sorted(os.listdir(p), key=lambda x: int(x.replace('.png', '')))], p + ' on RP4.h264', on_raspi=True)
+    # results = check_formula_on_synthetic_data(p, mat, 'x')
+    #
+    # # solutions = {-1.8: 33, -1.9: 31, 0.4: 28, 0.3: 35, -0.0: 2264, -0.2: 3658, -0.1: 500, -0.3: 1224, -0.4: 175, -0.5: 50, -0.6: 9, -1.3: 2, -1.2: 1, -0.7: 5, -0.9: 1, -0.8: 1, -1.0: 1, 0.5: 35, 0.8: 29, -1.4: 1, -1.1: 1, 0.9: 1, 1.5: 1, -2.0: 1}
+    # for angle in results:
+    #     Formula.graph_solutions(angle, title='VR Video - x rotation by 0.2 degrees', save_to='graph.png')
 
 
     # j =0

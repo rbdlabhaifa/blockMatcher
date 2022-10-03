@@ -116,7 +116,7 @@ class BlockMatching:
 
     @staticmethod
     def get_ffmpeg_motion_vectors_with_cache(frames: List[Union[str, np.ndarray]], save_to: str = None,
-                                             extract_path: str = None,
+                                             extract_path: str = None, on_raspi: bool = False,
                                              image_format: str = 'png') -> List[List[Tuple[int, int, int, int]]]:
         """
         Generates motion vectors from the first frame to the rest of the frames with ffmpeg.
@@ -141,11 +141,18 @@ class BlockMatching:
                 else:
                     cv2.imwrite(temporary_directory + f'/{frame_index}.{image_format}', frame)
                 frame_index += 1
-            subprocess.run(['ffmpeg', '-i', f'%d.{image_format}', '-c:v', 'h264', '-preset',
-                            'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
-            motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
-            if save_to is not None:
-                shutil.copyfile(temporary_directory + f'/out.mp4', save_to)
+            if on_raspi:
+                subprocess.run(['ffmpeg', '-i', f'%d.{image_format}', '-input_format', 'yuv420p', '-pix_fmt', 'yuv420p',
+                                '-c:v', 'h264_v4l2m2m', 'out.h264'], cwd=temporary_directory)
+                if save_to is not None:
+                    shutil.copyfile(temporary_directory + f'/out.h264', save_to)
+                motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.h264', extract_path)
+            else:
+                subprocess.run(['ffmpeg', '-i', f'%d.{image_format}', '-c:v', 'h264', '-preset',
+                                'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
+                if save_to is not None:
+                    shutil.copyfile(temporary_directory + f'/out.mp4', save_to)
+                motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
             shutil.rmtree(temporary_directory, ignore_errors=True)
             return motion_data
         except (OSError, Exception) as error:
