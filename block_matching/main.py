@@ -119,13 +119,13 @@ class BlockMatching:
                 frame_index += 1
             if on_raspi:
                 subprocess.run(['ffmpeg', '-i', f'%d.{image_format}', '-input_format', 'yuv420p', '-pix_fmt', 'yuv420p',
-                                '-c:v', 'h264_v4l2m2m', 'out.h264'], cwd=temporary_directory)
+                                '-b:v', '320M', '-c:v', 'h264_v4l2m2m', 'out.h264'], cwd=temporary_directory)
                 if save_to is not None:
                     shutil.copyfile(temporary_directory + f'/out.h264', save_to)
                 motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.h264', extract_path)
             else:
-                subprocess.run(['ffmpeg', '-i', f'%d.{image_format}', '-c:v', 'h264', '-preset',
-                                'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
+                subprocess.run(['ffmpeg', '-i', f'%d.{image_format}', '-input_format', 'yuv420p', '-c:v', 'h264',
+                                '-preset', 'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
                 if save_to is not None:
                     shutil.copyfile(temporary_directory + f'/out.mp4', save_to)
                 motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
