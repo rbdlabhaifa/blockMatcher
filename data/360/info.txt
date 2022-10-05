@@ -1,4 +1,5 @@
 step in degrees between images: 0.1 degrees.
+NOTE: make sure to take into account the fact that VR videos have 2:1 aspect ratio!
 camera matrix:
 [
     [1000 / (2 * tan(100)), 0, 500],

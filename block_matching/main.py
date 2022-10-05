@@ -5,7 +5,6 @@ import os
 import tempfile
 import cv2
 import shutil
-from pathlib import Path
 
 from .block_matching import SEARCH_FUNCTIONS
 from .block_partitioning import PARTITIONING_FUNCTION
@@ -15,7 +14,7 @@ class BlockMatching:
 
     # ============================================= Extract Motion Data ============================================= #
 
-    MOTION_VECTORS_EXECUTABLE_PATH = Path(os.getcwd()).parent.absolute()
+    MOTION_VECTORS_EXECUTABLE_PATH = os.getcwd() + r'\extra\extract motion data\motionVectors'
 
     @staticmethod
     def extract_motion_data(video_path: str, extract_path: str = None) -> List[List[Tuple[int, int, int, int]]]:

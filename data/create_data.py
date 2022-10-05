@@ -5,14 +5,8 @@ from typing import Tuple, List
 from random import randint
 import numpy as np
 import cv2
-try:
-    import open3d as o3d
-except ImportError:
-    print('Could not import open3D.')
-try:
-    from djitello import Tello
-except ImportError:
-    print('Could not import djitello.')
+import threading
+import open3d as o3d
 
 
 # ===================================================== PROJECTION ================================================== #
@@ -30,8 +24,8 @@ def create_sphere(latitude: int = 360, longitude: int = 360, step: Tuple[float, 
     :return: The sphere.
     """
     sphere_array = []
-    for i in np.arange(0, latitude, step[0]):
-        for j in np.arange(0, longitude, step[1]):
+    for i in np.arange(0, latitude + step[0], step[0]):
+        for j in np.arange(0, longitude + step[1], step[1]):
             rad_i, rad_j = np.deg2rad(i), np.deg2rad(j)
             cos_i = np.cos(rad_i)
             sphere_array.append([cos_i * np.sin(rad_j),
@@ -104,11 +98,10 @@ def project(points: np.ndarray, colors: np.ndarray, camera_matrix: np.ndarray, r
     return image
 
 
-def project_manually(geometries: List[o3d.geometry.Geometry]):
+def project_manually(geometries: List[o3d.geometry.Geometry], image_folder: str, window_width: int, window_height: int):
 
     images_written = 0
-    total_rot = 0
-    folder = 4
+    total_angle = 0
 
     def load_render_optionX(vis):
         op = vis.get_render_option()
@@ -133,18 +126,15 @@ def project_manually(geometries: List[o3d.geometry.Geometry]):
 
     def capture_image(vis):
         nonlocal images_written
-        nonlocal folder
-        vis.capture_screen_image(f'synthetic/{folder}/{images_written}.png')
+        vis.capture_screen_image(f'{image_folder}/{images_written}.png')
         print(f'written frame {images_written}')
         images_written += 1
         return True
 
     def reset(vis):
-        nonlocal total_rot
+        nonlocal total_angle
         nonlocal images_written
-        nonlocal folder
-        folder += 1
-        total_rot = 0
+        total_angle = 0
         images_written = 0
         op = vis.get_render_option()
         op.point_size = 1.
@@ -174,8 +164,8 @@ def project_manually(geometries: List[o3d.geometry.Geometry]):
         return True
 
     def rotate_to_the_right(vis):
-        nonlocal total_rot
-        total_rot += 0.1
+        nonlocal total_angle
+        total_angle += 0.1
         vc = vis.get_view_control()
         cam = vc.convert_to_pinhole_camera_parameters()
         width, height = cam.intrinsic.width, cam.intrinsic.height
@@ -183,8 +173,8 @@ def project_manually(geometries: List[o3d.geometry.Geometry]):
         cx, cy = cam.intrinsic.get_principal_point()
         new_cam = o3d.camera.PinholeCameraParameters()
         new_cam.intrinsic = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
-        sin = np.sin(np.deg2rad(total_rot))
-        cos = np.cos(np.deg2rad(total_rot))
+        sin = np.sin(np.deg2rad(total_angle))
+        cos = np.cos(np.deg2rad(total_angle))
         new_cam.extrinsic = np.array([
             [cos, 0, sin, 0],
             [0, 1, 0, 0],
@@ -196,7 +186,7 @@ def project_manually(geometries: List[o3d.geometry.Geometry]):
         else:
             print('failed!')
             exit(1)
-        print('rotated right, total rot is', total_rot)
+        print('rotated right, total angle is', total_angle)
         return True
 
     key_to_callback = {
@@ -209,17 +199,23 @@ def project_manually(geometries: List[o3d.geometry.Geometry]):
     }
 
     print('press QWR for different gradients.')
-    print('press D to rotate right and left respectively.')
+    print('press D to rotate right.')
     print('press S to capture an image.')
     print('press ` to change point size.')
 
-    o3d.visualization.draw_geometries_with_key_callbacks(geometries, key_to_callback, width=1000, height=1000)
+    o3d.visualization.draw_geometries_with_key_callbacks(geometries, key_to_callback,
+                                                         width=window_width, height=window_height)
 
 
 # ===================================================== DRONE ======================================================= #
 
 
-def tello_drone(step: int = 20, image_folder: str = None):
+def tello_drone(step_pointer: List[int] = (20,), image_folder: str = None):
+    try:
+        from djitello import Tello
+    except ImportError as error:
+        print(error)
+        exit(1)
     print('You can now control the drone freely with your keyboard.')
     print('Keys: w, a, s, d, e, q, r, f.')
     print('Press esc to stop and space to capture image.')
@@ -228,10 +224,11 @@ def tello_drone(step: int = 20, image_folder: str = None):
     tello.takeoff()
     tello.streamon()
     image_number = 0
-    total_rotation = 0
+    total_angle = 0
     while True:
         cv2.imshow('', tello.get_frame_read().frame)
         key = cv2.waitKey(1) & 0xff
+        step = step_pointer[0]
         if key == 27:
             break
         elif key == ord(' '):
@@ -253,13 +250,13 @@ def tello_drone(step: int = 20, image_folder: str = None):
         elif key == ord('e'):
             tello.rotate_clockwise(step)
             print('rotated clockwise by', step)
-            total_rotation -= step
-            print('total rotation is', total_rotation)
+            total_angle -= step
+            print('total rotation is', total_angle)
         elif key == ord('q'):
             tello.rotate_counter_clockwise(step)
             print('rotated counter-clockwise by', step)
-            total_rotation += step
-            print('total rotation is', total_rotation)
+            total_angle += step
+            print('total rotation is', total_angle)
         elif key == ord('r'):
             tello.move_up(step)
             print('moved up by', step)
@@ -273,5 +270,73 @@ def tello_drone(step: int = 20, image_folder: str = None):
 # ===================================================== MAIN ======================================================== #
 
 
+def main_drone():
+    image_folder = ''
+    step = [20]
+    drone_control_thread = threading.Thread(target=lambda *args: tello_drone(step, image_folder))
+    drone_control_thread.run()
+    while True:
+        try:
+            user_input = input('enter step or break: ')
+            if user_input == 'break':
+                break
+            step[0] = int(user_input)
+        except (ValueError, Exception):
+            continue
+
+
+def main_open3D():
+    image_folder = ''
+    width, height = 1000, 1000
+    sphere = create_sphere()  # or load_sphere()
+    project_manually([sphere], image_folder, width, height)
+
+
+def main_openCV():
+    image_folder = 'synthetic/rotation - z'
+    axis = 'z'  # rotation around x, y or z axes.
+    sphere = load_sphere('sphere(180, 180, 0.025, 0.025).pcd')  # or create_sphere()
+    width, height = 1000, 1000
+    fov_x, fov_y = 60, 60
+    cx, cy = width // 2, height // 2
+    fx, fy = width / (2 * np.tan(fov_x)), height / (2 * np.tan(fov_y))
+    camera_matrix = np.array([
+        [fx, 0, cx],
+        [0, fy, cy],
+        [0, 0, 1]
+    ])
+    camera_position = np.array([0, 0, 0], dtype=float)
+    color_sphere(sphere, similar=100)
+    points, colors = np.asarray(sphere.points), np.asarray(sphere.colors)
+    start_angle, end_angle, angle_step = 0, 1.5, 0.1
+    for i, angle in enumerate(np.arange(start_angle, end_angle + angle_step, angle_step)):
+        print(i, angle)
+        rads = np.deg2rad(angle)
+        sin, cos = np.sin(rads), np.cos(rads)
+        if axis == 'x':
+            rotation_matrix = np.array([
+                [1, 0, 0],
+                [0, cos, -sin],
+                [0, sin, cos]
+            ])
+        elif axis == 'y':
+            rotation_matrix = np.array([
+                [cos, 0, sin],
+                [0, 1, 0],
+                [-sin, 0, cos]
+            ])
+        else:
+            rotation_matrix = np.array([
+                [cos, -sin, 0],
+                [sin, cos, 0],
+                [0, 0, 1]
+            ])
+        image = project(points, colors, camera_matrix, rotation_matrix, camera_position, width, height)
+        cv2.imwrite(image_folder + f'/{i}.png', image)
+
+
 if __name__ == '__main__':
+    # main_drone()
+    # main_open3D()
+    # main_openCV()
     pass

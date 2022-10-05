@@ -1,7 +1,9 @@
-diagonal fov: 78 degrees.
-calibration matrix:
+step in degrees between images: 0.1 degrees.
+step in color is 100 (in y and z)
+step in latitude and longitude is 0.25 or 0.2
+camera matrix:
 [
-    [629.94662448, 0, 316.23232917],
-    [0, 629.60772237, 257.64459816],
+    [1000 / (2 * tan(60)), 0, 500],
+    [0, 1000 / (2 * tan(60)), 500],
     [0, 0, 1]
 ]
