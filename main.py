@@ -1,9 +1,10 @@
 # ===================================================== IMPORTS ====================================================== #
 
 
+from formula import Formula
 import cv2
 import numpy as np
-from typing import Any
+from typing import Any, Dict
 import sympy
 from sympy import Symbol, simplify, diff, solve, Float, sin, cos, init_printing, pprint, lambdify
 import mpmath
@@ -140,16 +141,17 @@ def calculate_angle(expressions: Any, vector: Tuple):
     return solutions
 
 
-def check_formula_on_synthetic_data(path_to_data: str, expression, debug: bool = False):
+def check_formula_on_synthetic_data(path_to_data: str, camera_matrix, axis, debug: bool = False):
     frames = [f'{path_to_data}/{i}' for i in sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '')))]
     motion_vectors = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
-    x2 = Symbol('after_x')
-    x1 = Symbol('before_x')
-    y2 = Symbol('after_y')
-    y1 = Symbol('before_y')
-    funcs = []
-    for i in expression:
-        funcs.append(lambdify((x1, y1, x2, y2), i, 'numpy'))
+    # x2 = Symbol('after_x')
+    # x1 = Symbol('before_x')
+    # y2 = Symbol('after_y')
+    # y1 = Symbol('before_y')
+    # funcs = []
+    # for i in expression:
+    #     funcs.append(lambdify((x1, y1, x2, y2), i, 'numpy'))
+    angle = []
     for i, vectors in enumerate(motion_vectors):
         if i % 2 == 1:
             continue
@@ -158,25 +160,8 @@ def check_formula_on_synthetic_data(path_to_data: str, expression, debug: bool =
             base_image = BlockMatching.draw_motion_vectors(base_image, vectors)
             cv2.imshow('', base_image)
             cv2.waitKey()
-        positive_solutions = {}
-        negative_solutions = {}
-        for x1, y1, x2, y2 in vectors:
-            # for solution in calculate_angle(expression, (x1, y1, x2, y2)):
-            for func in funcs:
-                solution = func(x1, y1, x2, y2)
-                if solution < -2 or solution > 2:
-                    continue
-                solution = round(solution, 1)
-                if solution > 0:
-                    positive_solutions[solution] = positive_solutions.get(solution, 0) + 1
-                elif solution < 0:
-                    negative_solutions[solution] = negative_solutions.get(solution, 0) + 1
-        positive_solutions = list(sorted(positive_solutions.items(), key=lambda x: x[1]))[::-1]
-        negative_solutions = list(sorted(negative_solutions.items(), key=lambda x: x[1]))[::-1]
-        print(f'i={i}, rot={0.1 * (1 + (i // 2))}')
-        print('positive solutions (solution, occurrences):', positive_solutions[:8])
-        print('negative solutions (solution, occurrences):', negative_solutions[:8])
-
+        angle.append(Formula.calculate(vectors, camera_matrix, axis))
+    return angle
 
 def check_formula_on_optitrack_data(path_to_data: str, expression, debug: bool = False):
     # frames = [path_to_data + '/' + i for i in sorted(os.listdir(path_to_data), key=lambda x: 66
@@ -258,27 +243,74 @@ def view_vectors(path_to_data, suffix='.png'):
         base_image = cv2.imread(path_to_data + '/0' + suffix)
         base_image = BlockMatching.draw_motion_vectors(base_image, vectors)
         cv2.imshow('', base_image)
-        cv2.waitKey()
+        input('enter something')
 
+
+def to_graph(data: Dict[float, int]):
+    """
+    Creates histograms from formula results.
+    :param data: A dictionary of angles as keys and vector counts as values.
+    """
+    import matplotlib.pyplot as plt
+    x, y = [], []
+    for i, j in data.items():
+        x += [i]
+        y += [j]
+    x = list(sorted(x))
+    print(x)
+    print(y)
+    plt.bar(x, y)
+    plt.xlabel('Angle')
+    plt.ylabel('Vector Count')
+    plt.show()
 
 # ===================================================== MAIN ========================================================= #
 
 
 if __name__ == '__main__':
-    p = f'{os.getcwd()}/Dictionary/data/360 video/3'
-    view_vectors(p, '.png')
-    # fov_x = 78
-    # fov_y = 78
-    # width, height = 640, 480
-    # fx = width / (2 * np.tan(np.deg2rad(fov_x)))
-    # fy = height / (2 * np.tan(np.deg2rad(fov_y)))
-    # f = np.sqrt(640 ** 2 + 480 ** 2) / (2 * np.tan(np.deg2rad(78)))
-    # cx, cy = width / 2, height / 2
-    # mat = np.array([
-    #     [629.94662448, 0, 316.23232917],
-    #     [0, 629.60772237, 257.64459816],
-    #     [0, 0, 1]
-    # ], dtype=float)
-    # # exp = calculate_expression(mat, 'y', 'optitrack_calib')
-    # exp = load_expression('optitrack_calib')
-    # check_formula_on_optitrack_data(os.getcwd() + '/Dictionary/data/optitrack/1', exp, True)
+    fov_x = 100
+    fov_y = 100 / 2
+    width, height = 1000, 1000
+    fx = width / (2 * np.tan(np.deg2rad(fov_x)))
+    fy = height / (2 * np.tan(np.deg2rad(fov_y)))
+    cx, cy = width / 2, height / 2
+    mat = np.array([
+        [fx, 0, cx],
+        [0, fy, cy],
+        [0, 0, 1]
+    ])
+    p = '/home/rani/PycharmProjects/blockMatcher/data/360/rotation - x'
+    results = check_formula_on_synthetic_data(p, mat, 'x')
+
+    # solutions = {-1.8: 33, -1.9: 31, 0.4: 28, 0.3: 35, -0.0: 2264, -0.2: 3658, -0.1: 500, -0.3: 1224, -0.4: 175, -0.5: 50, -0.6: 9, -1.3: 2, -1.2: 1, -0.7: 5, -0.9: 1, -0.8: 1, -1.0: 1, 0.5: 35, 0.8: 29, -1.4: 1, -1.1: 1, 0.9: 1, 1.5: 1, -2.0: 1}
+    for angle in results:
+        Formula.graph_solutions(angle, title='VR Video - x rotation by 0.2 degrees', save_to='graph.png')
+
+
+    # j =0
+    # for i in (sorted(os.listdir('/home/rani/Pictures'), key=lambda x: int(x[-6:-4]))):
+    #     im = cv2.imread('/home/rani/Pictures/' + i)[120:480, 80:720]
+    #     cv2.imwrite('/home/rani/Pictures/' + str(j) + '.png', im)
+    #     j += 1
+    # expression = load_expression('600x600-360x.exp')
+    # check_formula_on_synthetic_data(, exp, True)
+    # check_formula_on_synthetic_data('/home/rani/old', expression, True)
+    # path_to_data = ('/home/rani/Documents/cut')
+    # path_to_data2 = ('/home/rani/old')
+    #
+    # suffix = '.png'
+    # frames = [f'{path_to_data}/{i}' for i in
+    #           sorted(os.listdir(path_to_data), key=lambda x: int(x.replace(suffix, '')))]
+    # motion_vectors = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
+    # for i, vectors in enumerate(motion_vectors):
+    #     if suffix == '.png':
+    #         if i % 2 == 1:
+    #             continue
+    #         print('angle=', 0.1 * ((i // 2) + 1))
+    #     base_image = cv2.imread(path_to_data + '/0' + suffix)
+    #     base_image = BlockMatching.draw_motion_vectors(base_image, vectors)
+    #     base_image1 = cv2.imread(path_to_data2 + '/0' + suffix)
+    #     base_image1 = BlockMatching.draw_motion_vectors(base_image1, vectors)
+    #     cv2.imshow('', base_image)
+    #     cv2.imshow('11', base_image1)
+    #     cv2.waitKey()

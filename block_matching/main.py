@@ -14,7 +14,7 @@ class BlockMatching:
 
     # ============================================= Extract Motion Data ============================================= #
 
-    MOTION_VECTORS_EXECUTABLE_PATH = os.getcwd() + r'\extra\extract motion data\motionVectors'
+    MOTION_VECTORS_EXECUTABLE_PATH = os.getcwd() + r'/extra/extract motion data/motionVectors'
 
     @staticmethod
     def extract_motion_data(video_path: str, extract_path: str = None) -> List[List[Tuple[int, int, int, int]]]:
