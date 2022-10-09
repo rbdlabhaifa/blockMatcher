@@ -122,8 +122,9 @@ class Formula:
     }
 
     @staticmethod
-    def calculate(vectors: List[Tuple[int, int, int, int]], camera_matrix: np.ndarray,
-                  axis: str, decimal_places: int = 1, interval: Tuple[int, int] = (-2, 2)) -> Dict[float, int]:
+    def calculate(vectors: List[Tuple[int, int, int, int]], camera_matrix: np.ndarray, axis: str,
+                  remove_zeros: bool = True, decimal_places: int = 1,
+                  interval: Tuple[int, int] = (-2, 2)) -> Dict[float, int]:
         if axis != 'x' and axis != 'y' and axis != 'z':
             raise ValueError('axis must be x, y or z.')
         fx, fy, cx, cy = camera_matrix[0, 0], camera_matrix[1, 1], camera_matrix[0, 2], camera_matrix[1, 2]
@@ -135,6 +136,8 @@ class Formula:
                 solution = func(x1, y1, x2, y2, fx, fy, cx, cy, ifx, ify, icx, icy)
                 if interval[0] < solution < interval[1]:
                     solution = round(solution, decimal_places)
+                    if solution == 0 and remove_zeros:
+                        continue
                     solutions[solution] = solutions.get(solution, 0) + 1
         return solutions
 
@@ -165,21 +168,20 @@ class Formula:
 
     @staticmethod
     def graph_solutions(solutions: Dict[float, int], title: str,
-                        save_to: str = None, show: bool = True, bars: int = 10, bar_width: float = 0.35):
+                        save_to: str = None, show: bool = True, bars_count: int = 10, bar_width: float = 0.35):
         labels = []
         angles_occurrences = []
-        for angle, occurrences in sorted(solutions.items(), reverse=True, key=lambda occ: occ[1])[:bars]:
+        for angle, occurrences in sorted(solutions.items(), reverse=True, key=lambda occ: occ[1])[:bars_count]:
             labels.append(angle)
             angles_occurrences.append(occurrences)
         x = np.arange(len(labels))
         fig, ax = plt.subplots()
-        pc_bars = ax.bar(x, angles_occurrences, bar_width, label='PC (ffmpeg h264 encoder)')
+        bars = ax.bar(x, angles_occurrences, bar_width)
         ax.set_ylabel('Number of motion vectors')
         ax.set_xlabel('Angle (degrees)')
         ax.set_title(title)
         ax.set_xticks(x, labels)
-        ax.legend()
-        ax.bar_label(pc_bars, padding=3)
+        ax.bar_label(bars, padding=3)
         fig.tight_layout()
         if save_to is not None:
             try:
