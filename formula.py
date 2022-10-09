@@ -175,6 +175,7 @@ class Formula:
         fig, ax = plt.subplots()
         pc_bars = ax.bar(x, angles_occurrences, bar_width, label='PC (ffmpeg h264 encoder)')
         ax.set_ylabel('Number of motion vectors')
+        ax.set_xlabel('Angle (degrees)')
         ax.set_title(title)
         ax.set_xticks(x, labels)
         ax.legend()

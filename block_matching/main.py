@@ -124,6 +124,7 @@ class BlockMatching:
         :param frames: A list of frames. Either the paths to the frames or the frames as arrays.
         :param save_to: The path to save the video to. If None deletes the video.
         :param extract_path: The path to the motionVectors executable, if None uses default path.
+        :param on_raspi: Set to True if the code is running on a raspberry pi to use hardware encoding.
         :param image_format: The format of the images (png, jpg...).
         :return: A list that contains lists of motion vectors.
         """

@@ -12,6 +12,7 @@ import pickle
 import os
 from typing import Tuple
 from block_matching import BlockMatching
+from formula import Formula
 
 
 # ===================================================== FORMULA ====================================================== #
@@ -142,8 +143,9 @@ def calculate_angle(expressions: Any, vector: Tuple):
 
 
 def check_formula_on_synthetic_data(path_to_data: str, camera_matrix, axis, debug: bool = False):
-    frames = [f'{path_to_data}/{i}' for i in sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '')))]
-    motion_vectors = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
+    # frames = [f'{path_to_data}/{i}' for i in sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '')))]
+    # motion_vectors = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
+    motion_vectors = BlockMatching.extract_motion_data(path_to_data)
     # x2 = Symbol('after_x')
     # x1 = Symbol('before_x')
     # y2 = Symbol('after_y')
@@ -160,8 +162,11 @@ def check_formula_on_synthetic_data(path_to_data: str, camera_matrix, axis, debu
             base_image = BlockMatching.draw_motion_vectors(base_image, vectors)
             cv2.imshow('', base_image)
             cv2.waitKey()
-        angle.append(Formula.calculate(vectors, camera_matrix, axis))
+        ans = Formula.calculate(vectors, camera_matrix, axis, interval=(-20, 20))
+        Formula.graph_solutions(ans, f'Experiment - rotation of {5 * (1 + i // 2)} degrees', on_raspi
+                                save_to=f'/home/rani/Desktop/graphs/experiment{5 * (1 + i // 2)}.png', show=debug)
     return angle
+
 
 def check_formula_on_optitrack_data(path_to_data: str, expression, debug: bool = False):
     # frames = [path_to_data + '/' + i for i in sorted(os.listdir(path_to_data), key=lambda x: 66
@@ -216,7 +221,7 @@ def check_formula_on_optitrack_data(path_to_data: str, expression, debug: bool =
         average_sum = len(negative_solutions) + len(positive_solutions)
         average_positive = len(positive_solutions) / average_sum
         average_negative = len(negative_solutions) / average_sum
-        print('negative average solution:', average_neg)
+        print('negative aver640, 480age solution:', average_neg)
         print('average neg and pos:', average_pos * average_positive - average_neg * average_negative)
         angles_by_vectors.append(negative_solutions[0][0])
 
@@ -268,9 +273,10 @@ def to_graph(data: Dict[float, int]):
 
 
 if __name__ == '__main__':
-    fov_x = 100
-    fov_y = 100 / 2
-    width, height = 1000, 1000
+    p = ''
+    fov_x = 60
+    fov_y = 60
+    width, height = 640, 480
     fx = width / (2 * np.tan(np.deg2rad(fov_x)))
     fy = height / (2 * np.tan(np.deg2rad(fov_y)))
     cx, cy = width / 2, height / 2
@@ -279,9 +285,17 @@ if __name__ == '__main__':
         [0, fy, cy],
         [0, 0, 1]
     ])
-    p = '/home/ben/PycharmProjects/blockMatcher/data/synthetic/rotation - z'
-    BlockMatching.get_ffmpeg_motion_vectors_with_cache([p + '/' + i for i in sorted(os.listdir(p), key=lambda x: int(x.replace('.png', '')))], p + ' on RP4.h264', on_raspi=True)
-    # results = check_formula_on_synthetic_data(p, mat, 'x')
+    # mat = np.array(
+    #     [
+    #         [629.94662448, 0, 316.23232917],
+    #         [0, 629.60772237, 257.64459816],
+    #         [0, 0, 1]
+    #     ]
+    # )
+    p = '/home/rani/Downloads'
+    # for i in os.listdir(p):
+    #     os.rename(p + '/' + i, p + '/' + str(int(i.replace('.png', '')) - 1) + '.png')
+    results = check_formula_on_synthetic_data(p, mat, 'x', debug=True)
     #
     # # solutions = {-1.8: 33, -1.9: 31, 0.4: 28, 0.3: 35, -0.0: 2264, -0.2: 3658, -0.1: 500, -0.3: 1224, -0.4: 175, -0.5: 50, -0.6: 9, -1.3: 2, -1.2: 1, -0.7: 5, -0.9: 1, -0.8: 1, -1.0: 1, 0.5: 35, 0.8: 29, -1.4: 1, -1.1: 1, 0.9: 1, 1.5: 1, -2.0: 1}
     # for angle in results:

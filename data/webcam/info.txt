@@ -5,5 +5,4 @@ calibration matrix:
     [0, 629.60772237, 257.64459816],
     [0, 0, 1]
 ]
-total perimeter = 92 or 93 cm
-arc length for each step = 0.5 cm
+step = 5 degrees
