@@ -23,14 +23,19 @@ def create_sphere(latitude: int = 360, longitude: int = 360, step: Tuple[float, 
     :param save_to: The file to save the sphere to (has to end with .pcd), set to None to not save.
     :return: The sphere.
     """
-    sphere_array = []
-    for i in np.arange(0, latitude + step[0], step[0]):
-        for j in np.arange(0, longitude + step[1], step[1]):
-            rad_i, rad_j = np.deg2rad(i), np.deg2rad(j)
-            cos_i = np.cos(rad_i)
-            sphere_array.append([cos_i * np.sin(rad_j),
-                                 cos_i * np.cos(rad_j),
-                                 np.sin(rad_i)])
+    latitude_radians = np.deg2rad(np.arange(0, latitude + step[0], step[0]))
+    latitude_sin = np.sin(latitude_radians)
+    latitude_cos = np.cos(latitude_radians)
+    longitude_radians = np.deg2rad(np.arange(0, longitude + step[1], step[1]))
+    longitude_sin = np.sin(longitude_radians)
+    longitude_cos = np.cos(longitude_radians)
+    sphere_array = np.zeros((latitude_radians.shape[0] * longitude_radians.shape[0], 3), dtype=float)
+    long_shape = longitude_radians.shape[0]
+    for i in range(latitude_radians.shape[0]):
+        print(i)
+        for j in range(long_shape):
+            cos_i = latitude_cos[i]
+            sphere_array[i * long_shape + j] = ([cos_i * longitude_sin[j], cos_i * longitude_cos[j], latitude_sin[i]])
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(sphere_array)
     if save_to is not None:
@@ -293,8 +298,8 @@ def main_open3D():
 
 
 def main_openCV():
-    image_folder = 'synthetic/rotation - z'
-    axis = 'z'  # rotation around x, y or z axes.
+    image_folder = 'synthetic/rotation - y'
+    axis = 'y'  # rotation around x, y or z axes.
     sphere = load_sphere('sphere(180, 180, 0.025, 0.025).pcd')  # or create_sphere()
     width, height = 1000, 1000
     fov_x, fov_y = 60, 60
@@ -306,7 +311,7 @@ def main_openCV():
         [0, 0, 1]
     ])
     camera_position = np.array([0, 0, 0], dtype=float)
-    color_sphere(sphere, similar=100)
+    color_sphere(sphere, similar=200)
     points, colors = np.asarray(sphere.points), np.asarray(sphere.colors)
     start_angle, end_angle, angle_step = 0, 1.5, 0.1
     for i, angle in enumerate(np.arange(start_angle, end_angle + angle_step, angle_step)):
@@ -338,5 +343,5 @@ def main_openCV():
 if __name__ == '__main__':
     # main_drone()
     # main_open3D()
-    # main_openCV()
+    main_openCV()
     pass
