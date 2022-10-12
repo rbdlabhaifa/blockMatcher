@@ -36,27 +36,40 @@ if __name__ == '__main__':
     width, height = 1000, 1000
     fx = width / (2 * np.tan(np.deg2rad(fov_x)))
     fy = height / (2 * np.tan(np.deg2rad(fov_y)))
-    cx, cy = width / 2, height / 2
+    cx, cy = width // 2, height // 2
     axis = 'y'
     mat = np.array([
         [fx, 0, cx],
         [0, fy, cy],
         [0, 0, 1]
     ])
-    save_to = f'/home/rani/Desktop/graphs/computer/synthetic/y'
-    p = f'/home/rani/Desktop/7'
-    for i in os.listdir('C:/Users/BenGo/Pictures/rotation - z'):
-        im = cv2.imread('C:/Users/BenGo/Pictures/rotation - z/' + i)
-        im = im[71:1071, 49:1049]
-        cv2.imwrite('C:/Users/BenGo/PycharmProjects/blockMatcher/data/360/rotation - z/' + i, im)
-    # mat = np.array(
-    #     [
-    #         [629.94662448, 0, 316.23232917],
-    #         [0, 629.60772237, 257.64459816],
-    #         [0, 0, 1]
-    #     ]
-    # )
-    # exp = calculate_expression('y', mat)
-    # Formula.run_on_data(p, mat, axis, 0.1, 'Synthetic Data', save_to, interval=(-2, 2))
-    # a= Formula.calculate([(0, 0, 1000, 0)], mat, 'y')
-    # print(a)
+    save_to = f'/home/rani/Desktop/graphs/computer/webcam/optitrack'
+    p = f'/home/rani/PycharmProjects/blockMatcher/data/optitrack/3.mp4'
+    mat = np.array(
+        [[646.74302145  , 0. ,        341.39908641],
+         [0.        , 649.06238853, 207.9928129],
+        [0., 0., 1.]]
+
+
+    )
+    degs = [
+        -2.5,
+        -1.5,
+        -1.6,
+        -1.4,
+        -2.6,
+        -1.6,
+        -2,
+        -1.85,
+        -1.2,
+    ]
+
+    for i, mvs in enumerate(BlockMatching.extract_motion_data(p)):
+
+        im = cv2.imread(f'/home/rani/PycharmProjects/blockMatcher/data/optitrack/3/{i}.png' )
+        im = BlockMatching.draw_motion_vectors(im, mvs)
+        cv2.imshow(f'{degs[i]}', im)
+        cv2.waitKey()
+        # sol = Formula.calculate(mvs, mat, 'y')
+        # deg = degs[i]
+        # Formula.graph_solutions(sol, f'Optitrack - {deg} degrees', save_to + '/' + str(i) + '.png', False)

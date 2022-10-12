@@ -216,7 +216,6 @@ class Formula:
             save_to = f'{save_path}/{i // 2}.png'
             base_image = BlockMatching.draw_motion_vectors(base_frame, vectors, color=(0, 0, 0))
             solutions = Formula.calculate(vectors, camera_matrix, axis, interval=interval, remove_zeros=remove_zeros)
-            # print(list(sorted(solutions.items(), key=lambda x: x[1], reverse=True)))
             title = f'{data_name} - {axis.upper()} rotation by {round(angle_step * (1 + i // 2), 2)} degrees'
             Formula.graph_solutions(solutions, title, save_to=save_to, show=show)
             graph = Image.open(save_to, 'r')
