@@ -6,14 +6,17 @@ from random import randint
 import numpy as np
 import cv2
 import threading
-import open3d as o3d
+try:
+    import open3d as o3d
+except ImportError:
+    print('Could not import open3D.')
 
 
 # ===================================================== PROJECTION ================================================== #
 
 
 def create_sphere(latitude: int = 360, longitude: int = 360, step: Tuple[float, float] = (1, 1),
-                  save_to: str = None) -> o3d.geometry.PointCloud:
+                  save_to: str = None) -> 'o3d.geometry.PointCloud':
     """
     Creates a PointCloud sphere.
 
@@ -43,7 +46,7 @@ def create_sphere(latitude: int = 360, longitude: int = 360, step: Tuple[float, 
     return pcd
 
 
-def load_sphere(pcd_file_path: str) -> o3d.geometry.PointCloud:
+def load_sphere(pcd_file_path: str) -> 'o3d.geometry.PointCloud':
     """
     Creates a PointCloud sphere from a pcd file.
 
@@ -53,7 +56,7 @@ def load_sphere(pcd_file_path: str) -> o3d.geometry.PointCloud:
     return o3d.io.read_point_cloud(pcd_file_path)
 
 
-def color_sphere(sphere: o3d.geometry.PointCloud = None, point_count: int = None, similar: int = 100) -> np.ndarray:
+def color_sphere(sphere: 'o3d.geometry.PointCloud' = None, point_count: int = None, similar: int = 100) -> np.ndarray:
     """
     Colors a sphere.
 
@@ -103,7 +106,8 @@ def project(points: np.ndarray, colors: np.ndarray, camera_matrix: np.ndarray, r
     return image
 
 
-def project_manually(geometries: List[o3d.geometry.Geometry], image_folder: str, window_width: int, window_height: int):
+def project_manually(geometries: List['o3d.geometry.Geometry'], image_folder: str, window_width: int,
+                     window_height: int):
 
     images_written = 0
     total_angle = 0

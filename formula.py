@@ -3,7 +3,7 @@ from sympy import Symbol, Matrix, sin, cos, diff, simplify, solve, lambdify, Exp
 import numpy as np
 import mpmath
 import pickle
-from typing import Tuple, List, Callable, Dict
+from typing import Tuple, List, Callable, Dict, Union
 import matplotlib.pyplot as plt
 from block_matching import BlockMatching
 import cv2
@@ -127,7 +127,7 @@ class Formula:
     @staticmethod
     def calculate(vectors: List[Tuple[int, int, int, int]], camera_matrix: np.ndarray, axis: str,
                   remove_zeros: bool = True, decimal_places: int = 1,
-                  interval: Tuple[int, int] = (-2, 2)) -> Dict[float, int]:
+                  interval: Tuple[int, int] = (-50, 50)) -> Dict[float, int]:
         if axis != 'x' and axis != 'y' and axis != 'z':
             raise ValueError('axis must be x, y or z.')
         fx, fy, cx, cy = camera_matrix[0, 0], camera_matrix[1, 1], camera_matrix[0, 2], camera_matrix[1, 2]
@@ -145,32 +145,7 @@ class Formula:
         return solutions
 
     @staticmethod
-    def get_camera_matrix(fov_x=None, fov_y=None, width=None, height=None,
-                          fx=None, fy=None, cx=None, cy=None) -> np.ndarray:
-        if fx is None:
-            if fov_x is None or width is None:
-                raise ValueError('since fx wasn\'t given, fov_x and width must be given.')
-            fx = width / (2 * np.tan(np.deg2rad(fov_x)))
-        if fy is None:
-            if fov_y is None or height is None:
-                raise ValueError('since fy wasn\'t given, fov_y and height must be given.')
-            fy = height / (2 * np.tan(np.deg2rad(fov_y)))
-        if cx is None:
-            if width is None:
-                raise ValueError('since cx wasn\'t given, width must be given.')
-            cx = width / 2
-        if cy is None:
-            if height is None:
-                raise ValueError('since cy wasn\'t given, height must be given.')
-            cy = height / 2
-        return np.array([
-            [fx, 0, cx],
-            [0, fy, cy],
-            [0, 0, 1]
-        ])
-
-    @staticmethod
-    def graph_solutions(solutions: Dict[float, int], title: str,
+    def graph_solutions(solutions: Dict[float, int], title: str, image: np.ndarray = None,
                         save_to: str = None, show: bool = True, bars_count: int = 10, bar_width: float = 0.35):
         labels = []
         angles_occurrences = []
@@ -187,44 +162,62 @@ class Formula:
         ax.bar_label(bars, padding=3)
         fig.tight_layout()
         if save_to is not None:
-            try:
-                plt.savefig(save_to)
-            except (FileExistsError, Exception) as e:
-                print('failed to save figure.')
-                print(e)
+            plt.savefig(save_to)
+            graph = Image.open(save_to, 'r')
+            graph_width, graph_height = graph.size
+            frame_height, frame_width, _ = image.shape
+            image_width, image_height = graph_width + frame_width, max(graph_height, frame_height)
+            image = Image.new('RGBA', (image_width + 40, image_height), (255, 255, 255, 255))
+            image.paste(graph, (20, (image_height - graph_height) // 2))
+            image.paste(Image.fromarray(image), (40 + graph_width, (image_height - frame_height) // 2))
+            image.save(save_to)
+            if show:
+                image.show()
+                return
         if show:
             plt.show()
 
     @staticmethod
-    def run_on_data(path_to_data: str, camera_matrix: np.ndarray, axis: str, angle_step: float, data_name: str = '',
-                    save_path: str = None, show: bool = False, interval: Tuple[int, int] = (-50, 50),
-                    remove_zeros: bool = True):
+    def run_on_data(path_to_data: str, camera_matrix: np.ndarray, axis: str, title: str,
+                    angles: Union[float, str, np.ndarray], ignore_odd_frames: bool,
+                    save_path: str = None, show: bool = False, interval: Tuple[int, int] = (-50, 50)):
         if path_to_data.endswith('.h264') or path_to_data.endswith('.mp4'):
             motion_vectors = BlockMatching.extract_motion_data(path_to_data)
             base_frame = cv2.VideoCapture(path_to_data).read()[1]
         else:
             frames = []
-            for i in sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '').replace('.jpg', ''))):
+            for i in sorted(os.listdir(path_to_data), key=lambda x: int(x[:-5])):
                 frames.append(f'{path_to_data}/{i}')
             motion_vectors = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
             base_frame = cv2.imread(frames[0])
         base_frame = cv2.cvtColor(base_frame, cv2.COLOR_BGR2RGB)
         frame_height, frame_width, _ = base_frame.shape
-        for i, vectors in enumerate(motion_vectors):
-            if i % 2 == 1:
-                continue
-            save_to = f'{save_path}/{i // 2}.png'
-            base_image = BlockMatching.draw_motion_vectors(base_frame, vectors, color=(0, 0, 0))
-            solutions = Formula.calculate(vectors, camera_matrix, axis, interval=interval, remove_zeros=remove_zeros)
-            title = f'{data_name} - {axis.upper()} rotation by {round(angle_step * (1 + i // 2), 2)} degrees'
-            Formula.graph_solutions(solutions, title, save_to=save_to, show=show)
-            graph = Image.open(save_to, 'r')
-            graph_width, graph_height = graph.size
-            image_width, image_height = graph_width + frame_width, max(graph_height, frame_height)
-            image = Image.new('RGBA', (image_width + 40, image_height), (255, 255, 255, 255))
-            image.paste(graph, (20, (image_height - graph_height) // 2))
-            image.paste(Image.fromarray(base_image), (40 + graph_width, (image_height - frame_height) // 2))
-            image.save(save_to)
-            if show:
-                cv2.imshow(title, np.asarray(image))
-                cv2.waitKey()
+        if isinstance(angles, str):
+            file = open(angles, 'r')
+            angles = []
+            for i in file:
+                angles.append(float(i))
+            file.close()
+            angles = np.array(angles)
+        if ignore_odd_frames:
+            for i, vectors in enumerate(motion_vectors):
+                if i % 2 == 1:
+                    continue
+                save_to = f'{save_path}/{i // 2}.png'
+                base_image = BlockMatching.draw_motion_vectors(base_frame, vectors, color=(0, 0, 0))
+                solutions = Formula.calculate(vectors, camera_matrix, axis, interval=interval)
+                if isinstance(angles, np.ndarray):
+                    title %= angles[i // 2]
+                else:
+                    title %= angles * (1 + i // 2)
+                Formula.graph_solutions(solutions, title, base_image, save_to=save_to, show=show)
+        else:
+            for i, vectors in enumerate(motion_vectors):
+                save_to = f'{save_path}/{i}.png'
+                base_image = BlockMatching.draw_motion_vectors(base_frame, vectors, color=(0, 0, 0))
+                solutions = Formula.calculate(vectors, camera_matrix, axis, interval=interval)
+                if isinstance(angles, np.ndarray):
+                    title %= angles[i]
+                else:
+                    title %= angles * (1 + i)
+                Formula.graph_solutions(solutions, title, base_image, save_to=save_to, show=show)
