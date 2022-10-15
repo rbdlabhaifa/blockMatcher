@@ -85,39 +85,10 @@ class BlockMatching:
         return macro_blocks
 
     @staticmethod
-    def get_ffmpeg_motion_vectors(current_frame: Union[str, np.ndarray], reference_frame: Union[str, np.ndarray],
-                                  extract_path: str = None) -> List[Tuple[int, int, int, int]]:
-        """
-        Generates motion vectors from the reference frame to the current frame using ffmpeg.
-
-        :param current_frame: Either a path to an image of the current frame or the current frame as an array.
-        :param reference_frame: Either a path to an image of the reference frame or the reference frame an array.
-        :param extract_path: The path to the motionVectors executable, if None uses default path.
-        :return: A list that contains the motion vectors from the reference frame to the current frame.
-        """
-        temporary_directory = tempfile.mkdtemp()
-        try:
-            if isinstance(current_frame, str):
-                shutil.copyfile(current_frame, temporary_directory + '/0.png')
-            else:
-                cv2.imwrite(temporary_directory + '/0.png', current_frame)
-            if isinstance(reference_frame, str):
-                shutil.copyfile(reference_frame, temporary_directory + '/1.png')
-            else:
-                cv2.imwrite(temporary_directory + '/1.png', current_frame)
-            subprocess.run(['ffmpeg', '-i', f'%d.png', '-c:v', 'h264', '-preset',
-                            'ultrafast', '-pix_fmt', 'yuv420p', 'out.mp4'], cwd=temporary_directory)
-            motion_data = BlockMatching.extract_motion_data(temporary_directory + '/out.mp4', extract_path)
-            shutil.rmtree(temporary_directory, ignore_errors=True)
-            return motion_data[1]
-        except (OSError, Exception) as error:
-            shutil.rmtree(temporary_directory, ignore_errors=True)
-            raise error
-
-    @staticmethod
-    def get_ffmpeg_motion_vectors_with_cache(frames: List[Union[str, np.ndarray]], save_to: str = None,
-                                             extract_path: str = None, on_raspi: bool = False,
-                                             image_format: str = 'png') -> List[List[Tuple[int, int, int, int]]]:
+    def get_ffmpeg_motion_vectors(frames: List[Union[str, np.ndarray]], save_to: str = None,
+                                  extract_path: str = None, on_raspi: bool = False,
+                                  image_format: str = 'png',
+                                  repeat_first_frame: bool = True) -> List[List[Tuple[int, int, int, int]]]:
         """
         Generates motion vectors from the first frame to the rest of the frames with ffmpeg.
 
@@ -125,7 +96,8 @@ class BlockMatching:
         :param save_to: The path to save the video to. If None deletes the video.
         :param extract_path: The path to the motionVectors executable, if None uses default path.
         :param on_raspi: Set to True if the code is running on a raspberry pi to use hardware encoding.
-        :param image_format: The format of the images (png, jpg...).
+        :param image_format: The format of the images (png, jpg, ...).
+        :param repeat_first_frame: If true every even frame is the first frame.
         :return: A list that contains lists of motion vectors.
         """
         temporary_directory = tempfile.mkdtemp()
@@ -134,9 +106,12 @@ class BlockMatching:
             if isinstance(base_frame, str):
                 base_frame = cv2.imread(base_frame)
             frame_index = 0
-            for frame in frames[1:]:
+            if not repeat_first_frame:
                 cv2.imwrite(temporary_directory + f'/{frame_index}.{image_format}', base_frame)
-                frame_index += 1
+            for frame in frames[1:]:
+                if repeat_first_frame:
+                    cv2.imwrite(temporary_directory + f'/{frame_index}.{image_format}', base_frame)
+                    frame_index += 1
                 if isinstance(frame, str):
                     shutil.copyfile(frame, temporary_directory + f'/{frame_index}.{image_format}')
                 else:

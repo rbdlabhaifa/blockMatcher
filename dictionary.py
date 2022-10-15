@@ -141,7 +141,7 @@ class MVMapping:
             frames = BlockMatching.extract_motion_data(path_to_data)
         else:
             files = sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '').replace('.jpg', '')))
-            frames = BlockMatching.get_ffmpeg_motion_vectors_with_cache([f'{path_to_data}/{i}' for i in files])
+            frames = BlockMatching.get_ffmpeg_motion_vectors([f'{path_to_data}/{i}' for i in files])
         data = {}
         for i, mvs in enumerate(frames):
             if i % 2 == 1:
@@ -166,7 +166,7 @@ class MVMapping:
             frames = BlockMatching.extract_motion_data(path_to_data)
         else:
             files = sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '').replace('.jpg', '')))
-            frames = BlockMatching.get_ffmpeg_motion_vectors_with_cache([f'{path_to_data}/{i}' for i in files])
+            frames = BlockMatching.get_ffmpeg_motion_vectors([f'{path_to_data}/{i}' for i in files])
         data = {}
         for i, mvs in frames:
             if i % 2 == 1:

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 from block_matching import BlockMatching
-#from formula import *
+from formula import *
 
 
 def view_vectors(path_to_data, suffix='.png'):
@@ -16,7 +16,7 @@ def view_vectors(path_to_data, suffix='.png'):
     else:
         frames = [f'{path_to_data}/{i}' for i in
                   sorted(os.listdir(path_to_data), key=lambda x: int(x.replace(suffix, '')))]
-        motion_vectors = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
+        motion_vectors = BlockMatching.get_ffmpeg_motion_vectors(frames)
     for i, vectors in enumerate(motion_vectors):
         if suffix == '.png':
             if i % 2 == 1:
@@ -31,8 +31,6 @@ def view_vectors(path_to_data, suffix='.png'):
 
 
 if __name__ == '__main__':
-    frames = ['/data/optitrack/3/' + str(i) + '.png' for i in range(8)]
-    BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames,'/data/optitrack/3.h264',on_raspi=True)
     fov_x = 60
     fov_y = 60
     width, height = 1000, 1000
@@ -45,8 +43,9 @@ if __name__ == '__main__':
         [0, fy, cy],
         [0, 0, 1]
     ])
+    
     save_to = f'/home/rani/Desktop/graphs/computer/webcam/optitrack'
-    p = f'/home/rani/PycharmProjects/blockMatcher/data/optitrack/4.mp4'
+    p = f'/home/rani/PycharmProjects/blockMatcher/data/optitrack/8'
     mat = np.array(
         [[646.74302145  , 0. ,        341.39908641],
          [0.        , 649.06238853, 207.9928129],
@@ -54,30 +53,4 @@ if __name__ == '__main__':
 
 
     )
-    degs = [
-        -2.5,
-        -1.5,
-        -1.6,
-        -1.4,
-        -2.6,
-        -1.6,
-        -2,
-        -1.85,
-        -1.2,
-    ]
-
-    for i, mvs in enumerate(BlockMatching.extract_motion_data(p)):
-        im = cv2.imread(f'/home/rani/PycharmProjects/blockMatcher/data/optitrack/4/{i}.png')
-        im = BlockMatching.draw_motion_vectors(im, mvs)
-        im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-        frame_height, frame_width, _ = im.shape
-        sol = Formula.calculate(mvs, mat, 'y')
-        deg = degs[i]
-        Formula.graph_solutions(sol, f'Optitrack - ({deg}) degrees', save_to + '/' + str(i) + '.png', False)
-        graph = Image.open(save_to + '/' + str(i) + '.png', 'r')
-        graph_width, graph_height = graph.size
-        image_width, image_height = graph_width + frame_width, max(graph_height, frame_height)
-        image = Image.new('RGBA', (image_width + 40, image_height), (255, 255, 255, 255))
-        image.paste(graph, (20, (image_height - graph_height) // 2))
-        image.paste(Image.fromarray(im), (40 + graph_width, (image_height - frame_height) // 2))
-        image.save(save_to + '/' + str(i) + '.png')
+    Formula.run_on_data(p, mat, 'x', '%f', p + '.csv', False, show=True)

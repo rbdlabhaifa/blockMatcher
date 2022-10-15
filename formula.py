@@ -186,9 +186,9 @@ class Formula:
             base_frame = cv2.VideoCapture(path_to_data).read()[1]
         else:
             frames = []
-            for i in sorted(os.listdir(path_to_data), key=lambda x: int(x[:-5])):
+            for i in sorted(os.listdir(path_to_data), key=lambda x: int(x[:-4])):
                 frames.append(f'{path_to_data}/{i}')
-            motion_vectors = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
+            motion_vectors = BlockMatching.get_ffmpeg_motion_vectors(frames, repeat_first_frame=ignore_odd_frames)
             base_frame = cv2.imread(frames[0])
         base_frame = cv2.cvtColor(base_frame, cv2.COLOR_BGR2RGB)
         frame_height, frame_width, _ = base_frame.shape
@@ -207,17 +207,17 @@ class Formula:
                 base_image = BlockMatching.draw_motion_vectors(base_frame, vectors, color=(0, 0, 0))
                 solutions = Formula.calculate(vectors, camera_matrix, axis, interval=interval)
                 if isinstance(angles, np.ndarray):
-                    title %= angles[i // 2]
+                    graph_title = title % angles[i // 2]
                 else:
-                    title %= angles * (1 + i // 2)
-                Formula.graph_solutions(solutions, title, base_image, save_to=save_to, show=show)
+                    graph_title = title % (angles * (1 + i // 2))
+                Formula.graph_solutions(solutions, graph_title, base_image, save_to=save_to, show=show)
         else:
             for i, vectors in enumerate(motion_vectors):
-                save_to = f'{save_path}/{i}.png'
+                save_to = f'{save_path}/{i}.png' if save_path is not None else None
                 base_image = BlockMatching.draw_motion_vectors(base_frame, vectors, color=(0, 0, 0))
                 solutions = Formula.calculate(vectors, camera_matrix, axis, interval=interval)
                 if isinstance(angles, np.ndarray):
-                    title %= angles[i]
+                    graph_title = title % angles[i]
                 else:
-                    title %= angles * (1 + i)
-                Formula.graph_solutions(solutions, title, base_image, save_to=save_to, show=show)
+                    graph_title = title % (angles * (1 + i))
+                Formula.graph_solutions(solutions, graph_title, base_image, save_to=save_to, show=show)
