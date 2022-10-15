@@ -6,6 +6,3 @@ calibration matrix:
     [0, 0, 1]
 ]
 data 1, 2 are old.
-data 3, 5 are for large angles.
-data 4, 6 are for smaller angles.
-data 8 is with noise (light).
