@@ -31,59 +31,24 @@ def view_vectors(path_to_data, suffix='.png'):
 
 
 if __name__ == '__main__':
-    p = '/home/rani/Downloads/output.mp4'
-    # from mvextractor.videocap import VideoCap
-    import json
+    from mvextractor.videocap import VideoCap
+    vectors_cap = VideoCap()
+    vectors_cap.open('/home/rani/PycharmProjects/data/webcam/2.h264')
 
-    # Opening JSON file
-
-    cap = cv2.VideoCapture(p)
-    was_read, frame = cap.read()
-    mat = np.array([
-
-    ])
+    was_read, frame, vectors, frame_type, _ = vectors_cap.read()
     i = 0
-    total = 0
     while was_read:
-        mvs = []
-        try:
-            with open(f'/media/rani/mydisk/dany_room/{i + 1}.json') as json_file:
-                j = json.loads(json_file.read())
-                for data in j:
-                    mvs.append((data['src_x'], data['src_y'], data['dst_x'], data['dst_y']))
-        except Exception:
-            pass
-        frame = BlockMatching.draw_motion_vectors(frame, mvs)
-        if len(mvs):
-            total += abs(Formula.calculate(mvs, mat, 'y'))
-        was_read, frame = cap.read()
-    print(total)
-    # fov_x = 60
-    # fov_y = 60
-    # width, height = 1000, 1000
-    # fx = width / (2 * np.tan(np.deg2rad(fov_x)))
-    # fy = height / (2 * np.tan(np.deg2rad(fov_y)))
-    # cx, cy = width // 2, height // 2
-    # mat = np.array([
-    #     [fx, 0, cx],
-    #     [0, fy, cy],
-    #     [0, 0, 1]
-    # ])
-    #
-    # save_to = f'/home/rani/Desktop/graphs/computer/webcam/optitrack'
-    # p = f'/home/rani/PycharmProjects/blockMatcher/data/optitrack/8'
-    # mat = np.array(
-    #     [[646.74302145  , 0. ,        341.39908641],
-    #      [0.        , 649.06238853, 207.9928129],
-    #     [0., 0., 1.]]
-    #
-    #
-    # )
-    # # import os
-    # axis = 'x'
-    # p = f'/home/rani/PycharmProjects/blockMatcher/data/optitrack/7'
-    # BlockMatching.get_ffmpeg_motion_vectors([p + '/' + j for j in sorted(os.listdir(p), key=lambda x: x[:-4])], save_to='7.mp4', repeat_first_frame=False)
-    # mvs = BlockMatching.extract_motion_data(p)[0]
-    # a = Formula.calculate(mvs, mat, 'x')
-    # print(a[1.2])
-    # Formula.run_on_data(p, mat, axis, f'Experiment without Optitrack - {axis.upper()} rotation by %f degrees', 5, True, save_path=save_to)
+        if frame_type == 'I':
+            print(i)
+            # cv2.imwrite(f'images/{i}.png', frame)
+            was_read, frame, vectors, frame_type, _ = vectors_cap.read()
+            i += 1
+            continue
+        # mvs = vectors[:, 3:7]
+        # print(mvs)
+        # if len(mvs):
+            # frame = BlockMatching.draw_motion_vectors(frame, mvs)
+        # cv2.imwrite(f'images/{i}.png', frame)
+        was_read, frame, vectors, frame_type, _ = vectors_cap.read()
+
+        i += 1
