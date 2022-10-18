@@ -1,9 +1,10 @@
 step in degrees between images: 0.1 degrees.
-step in color is 100 (in y and z)
-step in latitude and longitude is 0.25 or 0.2
 camera matrix:
 [
     [1000 / (2 * tan(60)), 0, 500],
     [0, 1000 / (2 * tan(60)), 500],
     [0, 0, 1]
 ]
+to use the formula with x: fov_x = 100 fov_y = 50
+to use the formula with y: fov_x = 50  fov_y = 100
+to use the formula with z: fov_x = 100 fov_y = 100

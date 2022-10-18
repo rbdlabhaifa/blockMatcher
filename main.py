@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 from block_matching import BlockMatching
-#from formula import *
+from formula import *
 
 
 def view_vectors(path_to_data, suffix='.png'):
@@ -31,18 +31,17 @@ def view_vectors(path_to_data, suffix='.png'):
 
 
 if __name__ == '__main__':
-    # fov_x = 60
-    # fov_y = 60
-    # width, height = 1000, 1000
-    # fx = width / (2 * np.tan(np.deg2rad(fov_x)))
-    # fy = height / (2 * np.tan(np.deg2rad(fov_y)))
-    # cx, cy = width // 2, height // 2
-    # axis = 'y'
-    # mat = np.array([
-    #     [fx, 0, cx],
-    #     [0, fy, cy],
-    #     [0, 0, 1]
-    # ])
+    fov_x = 60
+    fov_y = 60
+    width, height = 1000, 1000
+    fx = width / (2 * np.tan(np.deg2rad(fov_x)))
+    fy = height / (2 * np.tan(np.deg2rad(fov_y)))
+    cx, cy = width // 2, height // 2
+    mat = np.array([
+        [fx, 0, cx],
+        [0, fy, cy],
+        [0, 0, 1]
+    ])
     #
     # save_to = f'/home/rani/Desktop/graphs/computer/webcam/optitrack'
     # p = f'/home/rani/PycharmProjects/blockMatcher/data/optitrack/8'
@@ -54,7 +53,9 @@ if __name__ == '__main__':
     #
     # )
     import os
-    #Formula.run_on_data(p, mat, 'x', '%f', p + '.csv', False, show=True)
-    i = f'/home/ben/PycharmProjects/blockMatcher/data/synthetic/rotation - x'
-    frames = [f'{i}/{j}' for j in sorted(os.listdir(i), key=lambda x: int(x[:-4]))]
-    BlockMatching.get_ffmpeg_motion_vectors(frames, i  +'.h264', on_raspi=True)
+    axis = 'y'
+    save_to = f'/home/rani/Desktop/graphs/raspberry pi 4/synthetic/{axis}'
+    p = f'/home/rani/PycharmProjects/blockMatcher/data/synthetic/rotation - {axis}.h264'
+    # mvs = BlockMatching.get_ffmpeg_motion_vectors([(p + '/' + i) for i in sorted(os.listdir(p), key=lambda x: int(x[:-4]))])
+    mvs = BlockMatching.extract_motion_data(save_to)
+    Formula.run_on_data(p, mat, axis, f'Synthetic Data - {axis.upper()} rotation by %f degrees', 0.1, True, save_path=save_to)

@@ -167,12 +167,12 @@ class Formula:
             graph_width, graph_height = graph.size
             frame_height, frame_width, _ = image.shape
             image_width, image_height = graph_width + frame_width, max(graph_height, frame_height)
-            image = Image.new('RGBA', (image_width + 40, image_height), (255, 255, 255, 255))
-            image.paste(graph, (20, (image_height - graph_height) // 2))
-            image.paste(Image.fromarray(image), (40 + graph_width, (image_height - frame_height) // 2))
-            image.save(save_to)
+            full_image = Image.new('RGBA', (image_width + 40, image_height), (255, 255, 255, 255))
+            full_image.paste(graph, (20, (image_height - graph_height) // 2))
+            full_image.paste(Image.fromarray(image), (40 + graph_width, (image_height - frame_height) // 2))
+            full_image.save(save_to)
             if show:
-                image.show()
+                full_image.show()
                 return
         if show:
             plt.show()
@@ -207,9 +207,9 @@ class Formula:
                 base_image = BlockMatching.draw_motion_vectors(base_frame, vectors, color=(0, 0, 0))
                 solutions = Formula.calculate(vectors, camera_matrix, axis, interval=interval)
                 if isinstance(angles, np.ndarray):
-                    graph_title = title % angles[i // 2]
+                    graph_title = title % round(angles[i // 2], 2)
                 else:
-                    graph_title = title % (angles * (1 + i // 2))
+                    graph_title = title % round(angles * (1 + i // 2), 2)
                 Formula.graph_solutions(solutions, graph_title, base_image, save_to=save_to, show=show)
         else:
             for i, vectors in enumerate(motion_vectors):
@@ -217,7 +217,7 @@ class Formula:
                 base_image = BlockMatching.draw_motion_vectors(base_frame, vectors, color=(0, 0, 0))
                 solutions = Formula.calculate(vectors, camera_matrix, axis, interval=interval)
                 if isinstance(angles, np.ndarray):
-                    graph_title = title % angles[i]
+                    graph_title = title % round(angles[i], 2)
                 else:
-                    graph_title = title % (angles * (1 + i))
+                    graph_title = title % round(angles * (1 + i), 2)
                 Formula.graph_solutions(solutions, graph_title, base_image, save_to=save_to, show=show)
