@@ -31,17 +31,28 @@ def view_vectors(path_to_data, suffix='.png'):
 
 
 if __name__ == '__main__':
-    fov_x = 60
-    fov_y = 60
-    width, height = 1000, 1000
-    fx = width / (2 * np.tan(np.deg2rad(fov_x)))
-    fy = height / (2 * np.tan(np.deg2rad(fov_y)))
-    cx, cy = width // 2, height // 2
-    mat = np.array([
-        [fx, 0, cx],
-        [0, fy, cy],
-        [0, 0, 1]
-    ])
+    p = '/home/rani/Downloads/output.mp4'
+    mvs = BlockMatching.extract_motion_data(p)
+    print(mvs)
+    cap = cv2.VideoCapture(p)
+    was_read, frame = cap.read()
+    i = 0
+    while was_read:
+        frame = BlockMatching.draw_motion_vectors(frame, mvs[i])
+        cv2.imshow('', frame)
+        i += 1
+        was_read, frame = cap.read()
+    # fov_x = 60
+    # fov_y = 60
+    # width, height = 1000, 1000
+    # fx = width / (2 * np.tan(np.deg2rad(fov_x)))
+    # fy = height / (2 * np.tan(np.deg2rad(fov_y)))
+    # cx, cy = width // 2, height // 2
+    # mat = np.array([
+    #     [fx, 0, cx],
+    #     [0, fy, cy],
+    #     [0, 0, 1]
+    # ])
     #
     # save_to = f'/home/rani/Desktop/graphs/computer/webcam/optitrack'
     # p = f'/home/rani/PycharmProjects/blockMatcher/data/optitrack/8'
@@ -52,10 +63,11 @@ if __name__ == '__main__':
     #
     #
     # )
-    import os
-    axis = 'y'
-    save_to = f'/home/rani/Desktop/graphs/raspberry pi 4/synthetic/{axis}'
-    p = f'/home/rani/PycharmProjects/blockMatcher/data/synthetic/rotation - {axis}.h264'
-    # mvs = BlockMatching.get_ffmpeg_motion_vectors([(p + '/' + i) for i in sorted(os.listdir(p), key=lambda x: int(x[:-4]))])
-    mvs = BlockMatching.extract_motion_data(save_to)
-    Formula.run_on_data(p, mat, axis, f'Synthetic Data - {axis.upper()} rotation by %f degrees', 0.1, True, save_path=save_to)
+    # # import os
+    # axis = 'x'
+    # p = f'/home/rani/PycharmProjects/blockMatcher/data/optitrack/7'
+    # BlockMatching.get_ffmpeg_motion_vectors([p + '/' + j for j in sorted(os.listdir(p), key=lambda x: x[:-4])], save_to='7.mp4', repeat_first_frame=False)
+    # mvs = BlockMatching.extract_motion_data(p)[0]
+    # a = Formula.calculate(mvs, mat, 'x')
+    # print(a[1.2])
+    # Formula.run_on_data(p, mat, axis, f'Experiment without Optitrack - {axis.upper()} rotation by %f degrees', 5, True, save_path=save_to)
