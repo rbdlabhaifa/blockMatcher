@@ -32,14 +32,26 @@ def view_vectors(path_to_data, suffix='.png'):
 
 if __name__ == '__main__':
     p = '/home/rani/Downloads/output.mp4'
-    mvs = BlockMatching.extract_motion_data(p)
-    print(mvs)
+
+    import json
+
+    # Opening JSON file
+
     cap = cv2.VideoCapture(p)
     was_read, frame = cap.read()
+
     i = 0
     while was_read:
-        frame = BlockMatching.draw_motion_vectors(frame, mvs[i])
-        cv2.imshow('', frame)
+        mvs = []
+        try:
+            with open(f'/media/rani/mydisk/dany_room/{i + 1}.json') as json_file:
+                j = json.loads(json_file.read())
+                for data in j:
+                    mvs.append((data['src_x'], data['src_y'], data['dst_x'], data['dst_y']))
+        except Exception:
+            pass
+        frame = BlockMatching.draw_motion_vectors(frame, mvs)
+        cv2.imwrite(f'images/{i}.png', frame)
         i += 1
         was_read, frame = cap.read()
     # fov_x = 60
