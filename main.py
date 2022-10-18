@@ -32,15 +32,18 @@ def view_vectors(path_to_data, suffix='.png'):
 
 if __name__ == '__main__':
     p = '/home/rani/Downloads/output.mp4'
-
+    # from mvextractor.videocap import VideoCap
     import json
 
     # Opening JSON file
 
     cap = cv2.VideoCapture(p)
     was_read, frame = cap.read()
+    mat = np.array([
 
+    ])
     i = 0
+    total = 0
     while was_read:
         mvs = []
         try:
@@ -51,9 +54,10 @@ if __name__ == '__main__':
         except Exception:
             pass
         frame = BlockMatching.draw_motion_vectors(frame, mvs)
-        cv2.imwrite(f'images/{i}.png', frame)
-        i += 1
+        if len(mvs):
+            total += abs(Formula.calculate(mvs, mat, 'y'))
         was_read, frame = cap.read()
+    print(total)
     # fov_x = 60
     # fov_y = 60
     # width, height = 1000, 1000
