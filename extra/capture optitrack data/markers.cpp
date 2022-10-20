@@ -225,7 +225,7 @@ int main( int argc, char* argv[] )
                 for( int i = 0; i < TT_RigidBodyCount(); i++ )
                 {
                     // std::ofstream pos_rigid_file("C:\\Users\\fares\\Documents\\OptiTrack\\Motive\\Samples\\markers\\x64\\Debug\\data\\pos_rigid_drone" + std::to_string(i) + ".csv", std::ios::app);
-                    std::ofstream rot_rigid_file(save_csv_to + std::to_string(i) + ".csv", std::ios::app);
+                    std::ofstream rot_rigid_file(save_csv_to + "/" + std::to_string(i) + ".csv", std::ios::app);
                     
                     TT_RigidBodyLocation( i, &x,&y,&z, &qx,&qy,&qz,&qw, &yaw,&pitch,&roll );
 
