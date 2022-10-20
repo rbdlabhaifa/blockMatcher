@@ -1,10 +1,3 @@
-//============================================================================================-----
-//== NaturalPoint Tracking Tools API Sample: Accessing Camera, Marker, and RigidBody Information
-//==
-//== This command-line application loads a Tracking Tools Project, lists cameras, and 3d marker
-//== count.
-//============================================================================================-----
-
 #include <windows.h>
 #include <conio.h>
 #include <stdio.h>
