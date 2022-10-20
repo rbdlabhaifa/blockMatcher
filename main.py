@@ -53,20 +53,33 @@ if __name__ == '__main__':
     i = 0
     total = 0
     print(frame.shape)
+    all_sols = {}
     while was_read:
         # if frame_type == 'I':
         #     print('i frame')
         #     was_read, frame, vectors, frame_type, _ = vectors_cap.read()
         #     continue
         mvs = vectors[:, 3:7]
-        # sols = Formula.calculate(mvs, camera_matrix, 'y', decimal_places=2, interval=(-5, 5), remove_zeros=True)
+        sols = Formula.calculate(mvs, camera_matrix, 'y', decimal_places=2, interval=(-2, 2), remove_zeros=True)
         # Formula.graph_solutions(sols, '', bars_count=5, show=True)
         was_read, frame, vectors, frame_type, _ = vectors_cap.read()
-        frame = BlockMatching.draw_motion_vectors(frame, mvs)
-        cv2.imshow('', frame)
-        cv2.waitKey()
-        # if len(sols):
-        #     max_sol = abs(max(sols.items(), key=lambda x: x[1])[0])
-        #     total += max_sol
+        # frame = BlockMatching.draw_motion_vectors(frame, mvs)
+        # cv2.imshow('', frame)
+        # cv2.waitKey()
+        if len(sols):
+            max_sol = abs(max(sols.items(), key=lambda x: x[1])[0])
+            total += max_sol
+            all_sols[i] = total
         i += 1
         print(i, total)
+    print(all_sols)
+    import matplotlib.pyplot as plt
+
+    Year = [i for i in all_sols.keys()]
+    Unemployment_Rate = [i for i in all_sols.values()]
+
+    plt.plot(Year, Unemployment_Rate)
+    # plt.title('Unemployment Rate Vs Year')
+    # plt.xlabel('sum of angles')
+    # plt.ylabel('Unemployment Rate')
+    plt.show()
