@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     Year = [i for i in all_sols.keys()]
     Unemployment_Rate = [i for i in all_sols.values()]
-
+    print('average:', Unemployment_Rate[-1] / len(Unemployment_Rate))
     plt.plot(Year, Unemployment_Rate)
     # plt.title('Unemployment Rate Vs Year')
     # plt.xlabel('sum of angles')
