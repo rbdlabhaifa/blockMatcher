@@ -27,10 +27,12 @@ def form():
     with open(p.replace('.mp4', '.csv'), 'r') as f:
         for i in f:
             pitch, yaw, roll = eval(i.replace(' ', ','))
-            angles.append(pitch)
+            angles.append(roll)
     delta_angles = []
     for i in range(len(angles) - 1):
-        delta_angles.append(abs(angles[i + 1] - angles[i]))
+        delta_angles.append(abs(round(angles[i + 1] - angles[i], 3)))
+    print('sum=', sum(delta_angles[0:1120]))
+    return
     vectors_cap = VideoCap()
     vectors_cap.open(p)
     was_read, frame, vectors, frame_type, _ = vectors_cap.read()
@@ -43,14 +45,15 @@ def form():
             was_read, frame, vectors, frame_type, _ = vectors_cap.read()
             continue
         mvs = vectors[:, 3:7]
-        sols = Formula.calculate(mvs, camera_matrix, 'y', decimal_places=2, interval=(-10, 10), remove_zeros=True)
+        sols = Formula.calculate(mvs, camera_matrix, 'y', decimal_places=3, interval=(-5, 5), remove_zeros=True)
         was_read, frame, vectors, frame_type, _ = vectors_cap.read()
         frame = BlockMatching.draw_motion_vectors(frame, mvs)
         cv2.imshow('', frame)
         cv2.waitKey()
         if len(sols):
             sol = max(sols.items(), key=lambda x: x[1])[0]
-            print('i:', i, 'real angle:', delta_angles[i], 'formula solution:', sol, 'error:', delta_angles[i] - sol)
+            print('i:', i, 'real angle:', delta_angles[i], 'formula solution:', sol, 'error:',
+                  abs(round(delta_angles[i] - sol, 3)))
         i += 1
     print(f'{iframes=}')
 
@@ -69,3 +72,21 @@ def form():
 if __name__ == '__main__':
     # rename('/home/rani/PycharmProjects/blockMatcher/data/drone/8')
     form()
+
+    # from djitellopy import Tello
+    # tello = Tello()
+    # tello.connect()
+    # tello.takeoff()
+    # import time
+    # time.sleep(5)
+    # tello.streamon()
+    # time.sleep(4)
+    # frameread = tello.get_frame_read()
+    # for i in range(6):
+    #     tello.send_rc_control(0, 0, 0, 20)
+    #     cv2.imshow('', frameread.frame)
+    #     cv2.waitKey(1)
+    #     time.sleep(1 / 30 - .01)
+
+
+
