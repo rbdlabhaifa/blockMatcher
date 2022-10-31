@@ -31,8 +31,7 @@ def form():
     delta_angles = []
     for i in range(len(angles) - 1):
         delta_angles.append(abs(round(angles[i + 1] - angles[i], 3)))
-    print('sum=', sum(delta_angles[0:1120]))
-    return
+    print('sum of optitrack angles =', sum(delta_angles[0:1180]))
     vectors_cap = VideoCap()
     vectors_cap.open(p)
     was_read, frame, vectors, frame_type, _ = vectors_cap.read()
