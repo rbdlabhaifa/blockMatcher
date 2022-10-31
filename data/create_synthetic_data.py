@@ -216,82 +216,7 @@ def project_manually(geometries: List['o3d.geometry.Geometry'], image_folder: st
                                                          width=window_width, height=window_height)
 
 
-# ===================================================== DRONE ======================================================= #
-
-
-def tello_drone(step_pointer: List[int] = (20,), image_folder: str = None):
-    try:
-        from djitello import Tello
-    except ImportError as error:
-        print(error)
-        exit(1)
-    print('You can now control the drone freely with your keyboard.')
-    print('Keys: w, a, s, d, e, q, r, f.')
-    print('Press esc to stop and space to capture image.')
-    tello = Tello()
-    tello.connect()
-    tello.takeoff()
-    tello.streamon()
-    image_number = 0
-    total_angle = 0
-    while True:
-        cv2.imshow('', tello.get_frame_read().frame)
-        key = cv2.waitKey(1) & 0xff
-        step = step_pointer[0]
-        if key == 27:
-            break
-        elif key == ord(' '):
-            cv2.imwrite(f'{image_folder}/{image_number}.png', tello.get_frame_read().frame)
-            image_number += 1
-            print(f'saved image to {image_folder}/{image_number}.png')
-        elif key == ord('w'):
-            tello.move_forward(step)
-            print('moved forward by', step)
-        elif key == ord('s'):
-            tello.move_back(step)
-            print('moved backwards by', step)
-        elif key == ord('a'):
-            tello.move_left(step)
-            print('moved left by', step)
-        elif key == ord('d'):
-            tello.move_right(step)
-            print('moved right by', step)
-        elif key == ord('e'):
-            tello.rotate_clockwise(step)
-            print('rotated clockwise by', step)
-            total_angle -= step
-            print('total rotation is', total_angle)
-        elif key == ord('q'):
-            tello.rotate_counter_clockwise(step)
-            print('rotated counter-clockwise by', step)
-            total_angle += step
-            print('total rotation is', total_angle)
-        elif key == ord('r'):
-            tello.move_up(step)
-            print('moved up by', step)
-        elif key == ord('f'):
-            tello.move_down(step)
-            print('moved down by', step)
-    tello.streamoff()
-    tello.land()
-
-
 # ===================================================== MAIN ======================================================== #
-
-
-def main_drone():
-    image_folder = ''
-    step = [20]
-    drone_control_thread = threading.Thread(target=lambda *args: tello_drone(step, image_folder))
-    drone_control_thread.run()
-    while True:
-        try:
-            user_input = input('enter step or break: ')
-            if user_input == 'break':
-                break
-            step[0] = int(user_input)
-        except (ValueError, Exception):
-            continue
 
 
 def main_open3D():
@@ -345,7 +270,6 @@ def main_openCV():
 
 
 if __name__ == '__main__':
-    # main_drone()
     # main_open3D()
-    main_openCV()
+    # main_openCV()
     pass
