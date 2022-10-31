@@ -44,10 +44,12 @@ def main_drone():
 
 
 def rename(path):
-    p  =path
-    m = min([int(x[:-4]) for x in os.listdir(p)])
-    for i in sorted(os.listdir(p), key=lambda x: int(x[:-4])):
-        os.rename(p + '/' + i, p + '/' + str(int(i[:-4]) - m) + '.png')
+    p = path
+    m = 2
+    ar = os.listdir(p)
+    ar.remove('info.txt')
+    for i in sorted(ar, key=lambda x: int(x[:1])):
+        os.rename(p + '/' + i, p + '/' + str(int(i[:1]) - m) + (i[1:] if len(i) > 1 else ''))
 
 
 def form():
@@ -108,5 +110,5 @@ def form():
 
 if __name__ == '__main__':
     # main_drone()
-    # rename('/home/rani/PycharmProjects/blockMatcher/data/drone/8')
-    form()
+    rename('/home/rani/PycharmProjects/blockMatcher/data/optitrack')
+    # form()
