@@ -9,47 +9,11 @@ import numpy as np
 from djitellopy import Tello
 
 
-def main_drone():
-    cont = True
-    def film():
-        f = tello.get_frame_read()
-        i = 0
-        w = 0.5 / 30
-        while cont:
-            frame = f.frame
-            cv2.imwrite(f'data/drone/8/{i}.png', frame)
-            i += 1
-            cv2.imshow('', frame)
-            cv2.waitKey(1)
-            time.sleep(w)
-
-    thread = threading.Thread(target=film)
-    tello = Tello()
-
-    tello.connect()
-    tello.streamon()
-    thread.start()
-    tello.takeoff()
-    time.sleep(1)
-    tello.move_up(100)
-    # for i in range(8):
-    time.sleep(0.5)
-    for i in range(11):
-        tello.send_rc_control(0, 0, 0, 15)
-        time.sleep(6)
-    cont = False
-    thread.join()
-    tello.streamoff()
-    tello.land()
-
-
 def rename(path):
     p = path
-    m = 2
-    ar = os.listdir(p)
-    ar.remove('info.txt')
-    for i in sorted(ar, key=lambda x: int(x[:1])):
-        os.rename(p + '/' + i, p + '/' + str(int(i[:1]) - m) + (i[1:] if len(i) > 1 else ''))
+    m = min([int(x[:-4]) for x in os.listdir(p)])
+    for i in sorted(os.listdir(p), key=lambda x: int(x[:-4])):
+        os.rename(p + '/' + i, p + '/' + str(int(i[:-4]) - m) + '.png')
 
 
 def form():
@@ -58,57 +22,50 @@ def form():
         [0, 907.55348533, 346.90456115],
         [0, 0, 1]
     ])
-    p = '/home/rani/PycharmProjects/blockMatcher/data/drone/8_4.mp4'
-    # BlockMatching.get_ffmpeg_motion_vectors(
-    #     [f'{p}/{i}.png' for i in range(3, 1253, 4)], save_to='/home/rani/PycharmProjects/blockMatcher/data/drone/8_4.mp4',
-    #     repeat_first_frame=False
-    # )
-
+    p = '/home/rani/PycharmProjects/blockMatcher/data/optitrack/7.mp4'
+    angles = []
+    with open(p.replace('.mp4', '.csv'), 'r') as f:
+        for i in f:
+            pitch, yaw, roll = eval(i.replace(' ', ','))
+            angles.append(pitch)
+    delta_angles = []
+    for i in range(len(angles) - 1):
+        delta_angles.append(abs(angles[i + 1] - angles[i]))
     vectors_cap = VideoCap()
     vectors_cap.open(p)
     was_read, frame, vectors, frame_type, _ = vectors_cap.read()
     i = 0
-    total = 0
-    print(frame.shape)
-    all_sols = {}
-    c = 0
+    iframes = 0
     while was_read:
         if frame_type == 'I':
             print('i frame')
-            c += 1
+            iframes += 1
             was_read, frame, vectors, frame_type, _ = vectors_cap.read()
             continue
         mvs = vectors[:, 3:7]
-
-        sols = Formula.calculate(mvs, camera_matrix, 'y', decimal_places=5, interval=(-10, 10), remove_zeros=True)
-        # Formula.gr aph_solutions(sols, '', bars_count=5, show=True)x
+        sols = Formula.calculate(mvs, camera_matrix, 'y', decimal_places=2, interval=(-10, 10), remove_zeros=True)
         was_read, frame, vectors, frame_type, _ = vectors_cap.read()
-        # frame = BlockMatching.draw_motion_vectors(frame, mvs)
-        # cv2.imshow('', frame)
-        # cv2.waitKey()
+        frame = BlockMatching.draw_motion_vectors(frame, mvs)
+        cv2.imshow('', frame)
+        cv2.waitKey()
         if len(sols):
-            max_sol = max(sols.items(), key=lambda x: x[1])[0]
-            total += max_sol
-            all_sols[i] = total
+            sol = max(sols.items(), key=lambda x: x[1])[0]
+            print('i:', i, 'real angle:', delta_angles[i], 'formula solution:', sol, 'error:', delta_angles[i] - sol)
         i += 1
-        print(i, total)
-    print(all_sols)
-    print(c)
-    import matplotlib.pyplot as plt
+    print(f'{iframes=}')
 
-    Year = [i for i in all_sols.keys()]
-    Unemployment_Rate = [i for i in all_sols.values()]
-
-    plt.plot(Year, Unemployment_Rate)
-    # plt.title('Unemployment Rate Vs Year')
-    # plt.xlabel('sum of angles')
-    # plt.ylabel('Unemployment Rate')
-    plt.show()
-
-
+    # import matplotlib.pyplot as plt
+    #
+    # Year = [i for i in all_sols.keys()]
+    # Unemployment_Rate = [i for i in all_sols.values()]
+    #
+    # plt.plot(Year, Unemployment_Rate)
+    # # plt.title('Unemployment Rate Vs Year')
+    # # plt.xlabel('sum of angles')
+    # # plt.ylabel('Unemployment Rate')
+    # plt.show()
 
 
 if __name__ == '__main__':
-    # main_drone()
-    rename('/home/rani/PycharmProjects/blockMatcher/data/optitrack')
-    # form()
+    # rename('/home/rani/PycharmProjects/blockMatcher/data/drone/8')
+    form()
