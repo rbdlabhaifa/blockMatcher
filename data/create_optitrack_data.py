@@ -2,6 +2,13 @@ from typing import Tuple
 
 
 def drone_computer(start_time: Tuple[int, int, int], stop_time: int, image_folder: str):
+    """
+    Run this on a computer that is connected to the drone and to the internet.
+
+    :param start_time: The UTC time to start the script at.
+    :param stop_time: The amount of minutes the scripts runs.
+    :param image_folder: The folder to save the frames to.
+    """
 
     from djitellopy import Tello
     from time import sleep
@@ -42,13 +49,21 @@ def drone_computer(start_time: Tuple[int, int, int], stop_time: int, image_folde
 
 
 def optitrack_computer(start_time: Tuple[int, int, int], stop_time: int, file_path: str, rigid_body_name: str):
+    """
+    Run this on a computer that is connected to the internet and has Motive running with data broadcasting .
 
-    import natnetclient as natnet
+    :param start_time: The UTC time to start the script at.
+    :param stop_time: The amount of minutes the scripts runs.
+    :param file_path: The file to save the Optitrack data to.
+    :param rigid_body_name: The name of the rigid body of the drone in Motive.
+    """
+
+    from natnetclient import NatClient
     from time import sleep
     from urllib.request import urlopen
 
     # The natnet client.
-    client = natnet.NatClient(client_ip='127.0.0.1', data_port=1511, comm_port=1510)
+    client = NatClient(client_ip='127.0.0.1', data_port=1511, comm_port=1510)
 
     # The rigid body to track.
     rigid_body = client.rigid_bodies[rigid_body_name]
