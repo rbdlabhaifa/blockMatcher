@@ -1,12 +1,11 @@
 import os
-import threading
-import time
-from formula import Formula
-from mvextractor.videocap import VideoCap
+
 import cv2
+
+from formula import Formula
 from block_matching import BlockMatching
 import numpy as np
-from djitellopy import Tello
+import matplotlib.pyplot as plt
 
 
 def rename(path):
@@ -16,76 +15,71 @@ def rename(path):
         os.rename(p + '/' + i, p + '/' + str(int(i[:-4]) - m) + '.png')
 
 
-def form():
+def formula():
+
+    path_to_data = '/media/rani/BENJOBI/runs/3'
+
+    tello_frames = []
+    tello_times = []
+    for i in sorted(set(os.listdir(path_to_data)) ^ {'rotation.csv', 'translation.csv'}, key=lambda x: int(x[:-4])):
+        tello_frames.append(f'{path_to_data}/{i}')
+        tello_times.append(int(i[:-4]))
+
+    """
+    opti_angles = []
+    opti_times = []
+    with open(f'{path_to_data}/rotation.csv') as file:
+        file.readline()
+        for i in file:
+            pitch, yaw, roll, time = i.split()
+            opti_angles.append(round(abs(float(roll)), 2))
+            opti_times.append(int(time))
+
+    angles = []
+    sum_of_angles = 0
+    start_from = 0
+    for tello_time in tello_times:
+        for i, opti_time in enumerate(opti_times):
+            if i <= start_from:
+                continue
+            sum_of_angles += opti_angles[i]
+            if tello_time < opti_time:
+                angles.append(sum_of_angles)
+                sum_of_angles = 0
+                start_from = i
+                break
+    """
     camera_matrix = np.array([
         [907.15425425, 0, 478.97775485],
         [0, 907.55348533, 346.90456115],
         [0, 0, 1]
     ])
-    p = '/home/rani/PycharmProjects/blockMatcher/data/optitrack/7.mp4'
-    angles = []
-    with open(p.replace('.mp4', '.csv'), 'r') as f:
-        for i in f:
-            pitch, yaw, roll = eval(i.replace(' ', ','))
-            angles.append(roll)
-    delta_angles = []
-    for i in range(len(angles) - 1):
-        delta_angles.append(abs(round(angles[i + 1] - angles[i], 3)))
-    print('sum of optitrack angles =', sum(delta_angles[0:1180]))
-    vectors_cap = VideoCap()
-    vectors_cap.open(p)
-    was_read, frame, vectors, frame_type, _ = vectors_cap.read()
-    i = 0
-    iframes = 0
-    while was_read:
-        if frame_type == 'I':
-            print('i frame')
-            iframes += 1
-            was_read, frame, vectors, frame_type, _ = vectors_cap.read()
+    frame_vectors = BlockMatching.get_ffmpeg_motion_vectors(tello_frames, save_to=f'{path_to_data}/vid.h264', on_raspi=True, repeat_first_frame=False)
+    frame_angle_diff = []
+    for i, vectors in enumerate(frame_vectors):
+        formula_solutions = Formula.calculate(vectors, camera_matrix, 'y', decimal_places=2, interval=(-10, 10))
+        if len(formula_solutions) == 0:
+            frame_angle_diff.append(None)
             continue
-        mvs = vectors[:, 3:7]
-        sols = Formula.calculate(mvs, camera_matrix, 'y', decimal_places=3, interval=(-5, 5), remove_zeros=True)
-        was_read, frame, vectors, frame_type, _ = vectors_cap.read()
-        frame = BlockMatching.draw_motion_vectors(frame, mvs)
-        cv2.imshow('', frame)
-        cv2.waitKey()
-        if len(sols):
-            sol = max(sols.items(), key=lambda x: x[1])[0]
-            print('i:', i, 'real angle:', delta_angles[i], 'formula solution:', sol, 'error:',
-                  abs(round(delta_angles[i] - sol, 3)))
-        i += 1
-    print(f'{iframes=}')
+        formula_solutions = abs(max(formula_solutions.items(), key=lambda x: x[1])[0])
+        angle_diff = angles[i + 1] - formula_solutions
+        frame_angle_diff.append(abs(angle_diff))
 
-    # import matplotlib.pyplot as plt
-    #
-    # Year = [i for i in all_sols.keys()]
-    # Unemployment_Rate = [i for i in all_sols.values()]
-    #
-    # plt.plot(Year, Unemployment_Rate)
-    # # plt.title('Unemployment Rate Vs Year')
-    # # plt.xlabel('sum of angles')
-    # # plt.ylabel('Unemployment Rate')
-    # plt.show()
+    print(frame_angle_diff)
+
+    x_axis, y_axis = [], []
+    for i in range(len(frame_angle_diff)):
+        if frame_angle_diff[i] is not None:
+            y_axis.append(frame_angle_diff[i])
+            x_axis.append(i + 2)
+
+    plt.scatter(x_axis, y_axis, c='blue')
+    plt.title('Difference of OptiTrack angle and motion-vectors angle per frame')
+    plt.xlabel('Frame Number')
+    plt.ylabel('Angle difference')
+    plt.show()
 
 
 if __name__ == '__main__':
     # rename('/home/rani/PycharmProjects/blockMatcher/data/drone/8')
-    form()
-
-    # from djitellopy import Tello
-    # tello = Tello()
-    # tello.connect()
-    # tello.takeoff()
-    # import time
-    # time.sleep(5)
-    # tello.streamon()
-    # time.sleep(4)
-    # frameread = tello.get_frame_read()
-    # for i in range(6):
-    #     tello.send_rc_control(0, 0, 0, 20)
-    #     cv2.imshow('', frameread.frame)
-    #     cv2.waitKey(1)
-    #     time.sleep(1 / 30 - .01)
-
-
-
+    formula()
