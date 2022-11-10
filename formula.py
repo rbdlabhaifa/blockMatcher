@@ -5,6 +5,9 @@ import mpmath
 import pickle
 from typing import Tuple, List, Callable, Dict
 import matplotlib.pyplot as plt
+from block_matching import BlockMatching
+import cv2
+from PIL import Image
 
 
 def calculate_expression(axis, save_to: str = None) -> List[Expr]:
@@ -191,3 +194,38 @@ class Formula:
                 print(e)
         if show:
             plt.show()
+
+    @staticmethod
+    def run_on_data(path_to_data: str, camera_matrix: np.ndarray, axis: str, angle_step: float, data_name: str = '',
+                    save_path: str = None, show: bool = False, interval: Tuple[int, int] = (-50, 50),
+                    remove_zeros: bool = True):
+        if path_to_data.endswith('.h264') or path_to_data.endswith('.mp4'):
+            motion_vectors = BlockMatching.extract_motion_data(path_to_data)
+            base_frame = cv2.VideoCapture(path_to_data).read()[1]
+        else:
+            frames = []
+            for i in sorted(os.listdir(path_to_data), key=lambda x: int(x.replace('.png', '').replace('.jpg', ''))):
+                frames.append(f'{path_to_data}/{i}')
+            motion_vectors = BlockMatching.get_ffmpeg_motion_vectors_with_cache(frames)
+            base_frame = cv2.imread(frames[0])
+        base_frame = cv2.cvtColor(base_frame, cv2.COLOR_BGR2RGB)
+        frame_height, frame_width, _ = base_frame.shape
+        for i, vectors in enumerate(motion_vectors):
+            if i % 2 == 1:
+                continue
+            save_to = f'{save_path}/{i // 2}.png'
+            base_image = BlockMatching.draw_motion_vectors(base_frame, vectors, color=(0, 0, 0))
+            solutions = Formula.calculate(vectors, camera_matrix, axis, interval=interval, remove_zeros=remove_zeros)
+            # print(list(sorted(solutions.items(), key=lambda x: x[1], reverse=True)))
+            title = f'{data_name} - {axis.upper()} rotation by {round(angle_step * (1 + i // 2), 2)} degrees'
+            Formula.graph_solutions(solutions, title, save_to=save_to, show=show)
+            graph = Image.open(save_to, 'r')
+            graph_width, graph_height = graph.size
+            image_width, image_height = graph_width + frame_width, max(graph_height, frame_height)
+            image = Image.new('RGBA', (image_width + 40, image_height), (255, 255, 255, 255))
+            image.paste(graph, (20, (image_height - graph_height) // 2))
+            image.paste(Image.fromarray(base_image), (40 + graph_width, (image_height - frame_height) // 2))
+            image.save(save_to)
+            if show:
+                cv2.imshow(title, np.asarray(image))
+                cv2.waitKey()
