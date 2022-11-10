@@ -31,8 +31,8 @@ def view_vectors(path_to_data, suffix='.png'):
 
 
 if __name__ == '__main__':
-    fov_x = 100
-    fov_y = 100
+    fov_x = 60
+    fov_y = 60
     width, height = 1000, 1000
     fx = width / (2 * np.tan(np.deg2rad(fov_x)))
     fy = height / (2 * np.tan(np.deg2rad(fov_y)))
@@ -44,7 +44,7 @@ if __name__ == '__main__':
         [0, 0, 1]
     ])
     save_to = f'/home/rani/Desktop/graphs/computer/synthetic/y'
-    p = f'/home/rani/PycharmProjects/blockMatcher/data/synthetic/rotation - y'
+    p = f'/home/rani/Desktop/7'
     # mat = np.array(
     #     [
     #         [629.94662448, 0, 316.23232917],
