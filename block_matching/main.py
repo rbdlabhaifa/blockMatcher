@@ -88,7 +88,8 @@ class BlockMatching:
     def get_ffmpeg_motion_vectors(frames: List[Union[str, np.ndarray]], save_to: str = None,
                                   extract_path: str = None, on_raspi: bool = False,
                                   image_format: str = 'png',
-                                  repeat_first_frame: bool = True) -> List[List[Tuple[int, int, int, int]]]:
+                                  repeat_first_frame: bool = True,
+                                  first_frame_interval: int = None) -> List[List[Tuple[int, int, int, int]]]:
         """
         Generates motion vectors from the first frame to the rest of the frames with ffmpeg.
 
@@ -98,6 +99,7 @@ class BlockMatching:
         :param on_raspi: Set to True if the code is running on a raspberry pi to use hardware encoding.
         :param image_format: The format of the images (png, jpg, ...).
         :param repeat_first_frame: If true every even frame is the first frame.
+        :param first_frame_interval: Changes the repeated frame by the interval.
         :return: A list that contains lists of motion vectors.
         """
         temporary_directory = tempfile.mkdtemp()
@@ -112,6 +114,8 @@ class BlockMatching:
                 if repeat_first_frame:
                     cv2.imwrite(temporary_directory + f'/{frame_index}.{image_format}', base_frame)
                     frame_index += 1
+                    if repeat_first_frame is not None and (frame_index // 2) % first_frame_interval == 0:
+                        base_frame = cv2.imread(frame) if isinstance(frame, str) else frame
                 if isinstance(frame, str):
                     shutil.copyfile(frame, temporary_directory + f'/{frame_index}.{image_format}')
                 else:
