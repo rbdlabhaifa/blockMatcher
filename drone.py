@@ -5,19 +5,16 @@ The drones video stream is saved to images and OptiTrack rotation and translatio
 
 """
 
-
 import sys
 from ctypes import c_int, c_char_p, c_float, byref, POINTER, cdll
 from djitellopy import Tello
 import cv2
-from time import sleep
 
 
 # Parameters.
 PROJECT_PATH = sys.argv[1].encode()             # Path to the .ttp project.
 OUTPUT_DIRECTORY_PATH = sys.argv[2].encode()    # Path to a directory to save the output to.
 LIBRARY_PATH = sys.argv[3]                      # Path to the NPTrackingToolsx64.dll file.
-print(f'{OUTPUT_DIRECTORY_PATH.decode()}/rotation.csv')
 
 # Load the Motive API library.
 print('Loading dll:', LIBRARY_PATH)
@@ -157,7 +154,7 @@ while key != ord('q'):
     motive.TT_Update()
     if not motive.TT_IsRigidBodyTracked(drone_rigid_body_index):
         print('Drone not tracked.')
-        key = cv2.waitKey(33) & 0xff
+        key = cv2.waitKey(1) & 0xff
         continue
     frame = frame_read.frame
     x, y, z = c_float(), c_float(), c_float()
@@ -167,14 +164,16 @@ while key != ord('q'):
                                 byref(qw), byref(pitch), byref(yaw), byref(roll))
     print(f'Position:', (x.value, y.value, z.value))
     print(f'Orientation:', (pitch.value, yaw.value, roll.value), (qx.value, qy.value, qz.value, qw.value))
-    cv2.imwrite(f'{i}.png', frame)
+    cv2.imwrite(f'{OUTPUT_DIRECTORY_PATH.decode()}/{i}.png', frame)
     translation_file.write(f'{x},{y},{z}\n')
     rotation_file.write(f'{pitch},{yaw},{roll}\n')
     cv2.imshow('Tello Stream', frame)
-    key = cv2.waitKey(33) & 0xff
+    key = cv2.waitKey(1) & 0xff
     i += 1
 
 # Close files and OptiTrack.
+tello.streamoff()
+tello.land()
 rotation_file.close()
 translation_file.close()
 check_return_code(motive.TT_Shutdown())
