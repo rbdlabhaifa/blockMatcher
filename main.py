@@ -17,11 +17,10 @@ def rename(path):
 
 
 def formula(path_to_data, raspi, repeating, interval):
-
     tello_frames = []
     tello_times = []
-    for i in sorted(set(os.listdir(path_to_data)) ^ {'vid.h264', 'rotation.csv', 'translation.csv'},
-                    key=lambda x: int(x[:-4])):
+    for i in sorted(set(os.listdir(path_to_data)).difference({'.~lock.rotation.csv#', 'vid.h264', 'rotation.csv', 'translation.csv'}),
+                    key=lambda x: int(x[:-4]) ):
         tello_frames.append(f'{path_to_data}/{i}')
         tello_times.append(int(i[:-4]))
 
@@ -110,9 +109,17 @@ def formula(path_to_data, raspi, repeating, interval):
     return x_axis2, y_axis2
 
 
-def graph(x_axis, y_rasp, y_pc, title='Angle error to the number of frames with that error'):
-    plt.plot(x_axis, y_rasp, c='orange', label="Raspberry Pi 0")
-    plt.plot(x_axis, y_pc, c='blue', label="Computer")
+def graph(x_axis, y_pc, raspi, compare, title='Angle error to the number of frames with that error'):
+    if raspi:
+        lbl = "Raspberry Pi 0"
+        lbl_compare = "Computer"
+    else:
+        lbl = "Computer"
+        lbl_compare = "Raspberry Pi 0"
+    if compare:
+        xa_rasp, ya_rasp = formula('/media/txp1/BENJOBI/runs/1',True , False, 0)
+        plt.plot(x_axis, ya_rasp, c='orange', label=lbl_compare)
+    plt.plot(x_axis, y_pc, c='blue', label=lbl)
     plt.title(title)
     plt.xlabel('error in %')
     plt.ylabel('# of frames')
@@ -121,6 +128,7 @@ def graph(x_axis, y_rasp, y_pc, title='Angle error to the number of frames with 
 
 
 if __name__ == '__main__':
-    xa_comp, ya_comp = formula('/media/rani/BENJOBI/runs/1', False, False, 0)
-    xa_rasp, ya_rasp = formula('/media/rani/BENJOBI/runs/1', True, False, 0)
-    graph(xa_comp, ya_comp, ya_rasp)
+    raspi = True
+    compare = False
+    xa_comp, ya_comp = formula('/media/txp1/BENJOBI/runs/1', raspi, True, 10)
+    graph(xa_comp, ya_comp, raspi, compare)
